@@ -17,6 +17,7 @@ class ScoutConfig:
 
 The `shodan_api_key` attribute represents the Shodan API key
 
+
 ```python
 @dataclasses.dataclass(frozen=True)
 class ShodanTask:
