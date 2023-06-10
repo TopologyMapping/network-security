@@ -1,8 +1,8 @@
 # security-modules
 Modules for security audits
-# scout
+# shodan_docker
 
-Scout Module for Security Scanning
+Shodan Module for Security Scanning
 
 ## Shodan module configuration
 
@@ -16,9 +16,7 @@ class ScoutConfig:
     docker_timeout: int = 5
 ```
 
-The `credentials_file` should contain the AWS credentials and will be mounted at `/root/.aws/credentials` inside the container, so Scout can authenticate seamlessly.
-
-> The `tests/testrun.py` script assumes that the credentials file is copied to `security-modules/scout/dev/aws-credentials`.
+The `credentials_file` should contain the API Key and will be mounted at `/root/api_key.txt` inside the container.
 
 The `output_dir` should point to a directory where the Scout outputs will be placed.  For each submitted task (see below), we generate a new directory `output_dir/{task.label}` with the outputs.
 
