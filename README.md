@@ -19,7 +19,7 @@ class ScoutConfig:
 
 ##
 
-The `ShodanTask`class includes an attribute called `ip_prefix`.
+The `ShodanTask`class now includes an attribute called `ip_prefix`.
 
 ```python
 @dataclasses.dataclass(frozen=True)
@@ -30,7 +30,7 @@ class ShodanTask:
 
 ## 
 
-The `enqueue` method of the `Shodan` class receives a `taskcfg` parameter, which represents the IP prefixes to be executed by the shodan_script.py.
+The `enqueue` method of the `Shodan` class receives a `taskcfg` parameter, which represents the IP prefixes to be executed by the `shodan_script.py`.
 
 ```python
 command=[
@@ -39,6 +39,10 @@ command=[
         taskcfg.ip_address
         ]
 ```
+
+## shodan_script.py
+
+This script is one possible implementation for scanning a network using the Shodan API. <!-- I chose this method since it provides a simple and straightforward solution.` -->
 
 ## Testing Shodan module
 
