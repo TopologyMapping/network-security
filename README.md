@@ -42,8 +42,10 @@ command=[
 
 ## shodan_script.py
 
-This script is one possible implementation for scanning a network using the Shodan API. <!-- I chose this method since it provides a simple and straightforward solution.` -->
-
+This script is one possible implementation for scanning a network using the Shodan API.
+```plaintext
+I chose this method since it provides a simple and straightforward solution.
+```
 ## Testing Shodan module
 
 * Shodan API Key: `obtain a Shodan API on the Account Overview page`
