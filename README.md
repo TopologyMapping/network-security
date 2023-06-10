@@ -15,7 +15,7 @@ class ScoutConfig:
     docker_timeout: int = 5
 ```
 
-`shodan_api_key`: This attribute represents the Shodan API key
+The `shodan_api_key`attribute represents the Shodan API key
 
 ## 
 
