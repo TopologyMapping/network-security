@@ -24,3 +24,9 @@ The `output_dir` should point to a directory where the Scout outputs will be pla
 
 * Shodan API Key: `obtain a Shodan API on the Account Overview page`
 * Test using Docker running `docker compose run -ti scout`
+
+The `api.search()` method in the Shodan API allows to search the Shodan database for specific information or services using various search filters. It helps to find devices or services based on specific criteria, such as IP address, port, hostname, operating system, or even specific banners. This method is useful for exploring the Shodan database and finding devices or services based on a specific criteria.
+
+The results returned by `api.search()` are limited based on the Shodan API plan and privileges. Higher-tier plans provide access to more results and additional search filters.
+
+
