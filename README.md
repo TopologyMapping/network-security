@@ -62,15 +62,7 @@ The results returned by `api.search()` are limited based on the Shodan API plan 
 
 The code saves the search results to JSON files. After performing the search with the specified network criteria, the code stores the JSON files in the `scans` folder. Each JSON file represents the search results for a specific network or IP address.
 
-The `enqueue` method of the `Shodan` class receives a `taskcfg` parameter, which represents the IP prefixes to be executed by the shodan_script.py.
-
-```python
-command=[
-        "python",
-        "./shodan_script.py",
-        taskcfg.ip_address
-        ]
-```
+##
 
 ## Testing Shodan module
 
