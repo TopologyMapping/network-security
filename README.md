@@ -26,7 +26,7 @@ class ShodanTask:
     ip_prefix: str
 ```
 
-The `ShodanTask`class now includes an additional attribute called ip_prefix.
+The `ShodanTask`class now includes an additional attribute called `ip_prefix`.
 
 ## 
 
