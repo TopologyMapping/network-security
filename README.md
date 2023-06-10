@@ -15,7 +15,16 @@ class ScoutConfig:
     docker_timeout: int = 5
 ```
 
-The `shodan_api_key`attribute represents the Shodan API key
+The `shodan_api_key` attribute represents the Shodan API key
+
+```python
+@dataclasses.dataclass(frozen=True)
+class ShodanTask:
+    label: str
+    ip_prefix: str
+```
+
+The `ShodanTask`class now includes an additional attribute called ip_prefix.
 
 ## 
 
