@@ -20,6 +20,7 @@ DOCKER_STATUSCODE_KEY = "StatusCode"
 OUTDIR_CONTAINER_MOUNT = "/root/output"
 SHODAN_TASK_LABEL_KEY = "shodan-task-id"
 
+
 class ContainerState(enum.Enum):
     CREATED = "created"
     RESTARTING = "restarting"
@@ -52,16 +53,21 @@ class ShodanTask:
     label: str
     ip_prefix: str
 
+
 TaskCompletionCallback = Callable[[str, bool], None]
+
 
 class ScanModule(Protocol):
     def __init__(self, config: Any, callback: TaskCompletionCallback) -> None:
         ...
+
     def enqueue(self, taskcfg: Task) -> None:
         ...
+
     def shutdown(self, wait: bool) -> None:
         ...
-    
+
+
 class Shodan(ScanModule):
     def __init__(self, config: ShodanConfig, callback: TaskCompletionCallback) -> None:
         def get_docker_client() -> docker.DockerClient:
@@ -81,7 +87,6 @@ class Shodan(ScanModule):
         )
         self.thread.start()
 
-    
     def enqueue(self, taskcfg: Task) -> None:
         assert isinstance(taskcfg, ShodanTask)
         outfp = self.config.output_dir / taskcfg.label
@@ -89,18 +94,12 @@ class Shodan(ScanModule):
         try:
             ctx = self.docker.containers.run(
                 self.config.docker_image,
-                command=[
-                    "python",
-                    "./shodan_script.py",
-                    taskcfg.ip_address
-                ],
+                command=["python", "./shodan_script.py", taskcfg.ip_address],
                 detach=True,
                 labels={SHODAN_TASK_LABEL_KEY: taskcfg.label},
                 stdout=True,
                 stderr=True,
-                environment={
-                    "shodan_api_key": self.config.api_key
-                },
+                environment={"shodan_api_key": self.config.api_key},
                 volumes={
                     str(outfp): {
                         "bind": OUTDIR_CONTAINER_MOUNT,
@@ -128,10 +127,8 @@ class Shodan(ScanModule):
         else:
             self.handle_finished_containers()
             self.thread.join()
-            
+
         logging.info("Joined Shodan polling thread, module shut down")
-
-
 
     def shodan_polling_thread(self) -> None:
         while self.running or self.containers:
@@ -151,9 +148,9 @@ class Shodan(ScanModule):
 
                 if not ContainerState(ctx.status).is_done():
                     continue
-                
+
                 assert cfg.label == ctx.labels[SHODAN_TASK_LABEL_KEY]
-                
+
                 r = ctx.wait(timeout=self.config.docker_timeout)
                 r["stdout"] = ctx.logs(
                     stdout=True, stderr=False, timestamps=True
@@ -173,11 +170,13 @@ class Shodan(ScanModule):
                 completed.add((ctx, cfg))
 
             self.containers -= completed
-           
+
             logging.info(
                 "Running %d ShodanSuite containers, waiting %d seconds to refresh",
                 len(self.containers),
                 self.config.docker_poll_interval,
             )
+        for ctx, _cfg in completed:
+            ctx.remove()
         for ctx, _cfg in completed:
             ctx.remove()
