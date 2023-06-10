@@ -29,4 +29,6 @@ The `api.search()` method in the Shodan API allows to search the Shodan database
 
 The results returned by `api.search()` are limited based on the Shodan API plan and privileges. Higher-tier plans provide access to more results and additional search filters.
 
+The code saves the search results to JSON files. After performing the search with the specified network criteria, the code stores the JSON files in the `scans` folder. Each JSON file represents the search results for a specific network or IP address.
+
 
