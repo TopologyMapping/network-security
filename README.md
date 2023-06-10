@@ -4,17 +4,20 @@ Modules for security audits
 
 Shodan Module for Security Scanning
 
-## Shodan module configuration
+## Module configuration
 
 ```python
 class ScoutConfig:
-    credentials_file: pathlib.Path
-    output_dir: pathlib.Path
+    shodan_api_key: str
     docker_image: str = "shodan-image"
     docker_poll_interval: float = 16.0
     docker_socket: str | None = None
     docker_timeout: int = 5
 ```
+
+`shodan_api_key`: This attribute represents the Shodan API key
+
+## 
 
 The `credentials_file` should contain the API Key and will be mounted at `/root/api_key.txt` inside the container.
 
@@ -31,7 +34,7 @@ The results returned by `api.search()` are limited based on the Shodan API plan 
 
 The code saves the search results to JSON files. After performing the search with the specified network criteria, the code stores the JSON files in the `scans` folder. Each JSON file represents the search results for a specific network or IP address.
 
-The `enqueue` method of the `Shodan` class receives a `taskcfg` parameter, which represents the IP prefixes to be executed by Shodan.
+The `enqueue` method of the `Shodan` class receives a `taskcfg` parameter, which represents the IP prefixes to be executed by the shodan_script.py.
 
 ```python
 command=[
