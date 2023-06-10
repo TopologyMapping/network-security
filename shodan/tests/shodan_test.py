@@ -17,8 +17,9 @@ SHODAN_MOD_PATH = CWD.parent
 def callback(label: str, success: bool) -> None:
     logging.info("Callback for %s running, success=%s", label, success)
 
-def test_shodan(s, taskcfg):    
-    commands_shodan = ["ip_address","python","./shodan2.py",taskcfg.ip_address]
+
+def test_shodan(s, taskcfg):
+    commands_shodan = ["ip_address", "python", "./shodan2.py", taskcfg.ip_address]
 
     logging.info("RUNNING TEST_SHODAN")
     s.enqueue(taskcfg, commands_shodan)
@@ -39,8 +40,7 @@ def main():
     s = shodan_script.Shodan(cfg, callback)
     logging.info("Submitting task to Shodan module")
     taskcfg = shodan_script.ShodanTask(
-        time.strftime("shodan-%Y%m%d-%H%M%S"),
-        "ip_address"
+        time.strftime("shodan-%Y%m%d-%H%M%S"), "ip_address"
     )
 
     test_shodan(s, taskcfg)
