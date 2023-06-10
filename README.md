@@ -6,6 +6,8 @@ Shodan Module for Security Scanning
 
 ## Module configuration
 
+The `shodan_api_key` attribute represents the Shodan API key
+
 ```python
 class ScoutConfig:
     shodan_api_key: str
@@ -15,9 +17,9 @@ class ScoutConfig:
     docker_timeout: int = 5
 ```
 
-The `shodan_api_key` attribute represents the Shodan API key
-
 ##
+
+The `ShodanTask`class includes an attribute called `ip_prefix`.
 
 ```python
 @dataclasses.dataclass(frozen=True)
@@ -26,13 +28,17 @@ class ShodanTask:
     ip_prefix: str
 ```
 
-The `ShodanTask`class includes an attribute called `ip_prefix`.
-
 ## 
 
-The `credentials_file` should contain the API Key and will be mounted at `/root/api_key.txt` inside the container.
+The `enqueue` method of the `Shodan` class receives a `taskcfg` parameter, which represents the IP prefixes to be executed by the shodan_script.py.
 
-The `output_dir` should point to a directory where the Scout outputs will be placed.  For each submitted task (see below), we generate a new directory `output_dir/{task.label}` with the outputs.
+```python
+command=[
+        "python",
+        "./shodan_script.py",
+        taskcfg.ip_address
+        ]
+```
 
 ## Testing Shodan module
 
