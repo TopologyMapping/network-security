@@ -15,6 +15,8 @@ from typing import Any, Callable, Protocol
 
 import docker
 
+import sys
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 DOCKER_STATUSCODE_KEY = "StatusCode"
 OUTDIR_CONTAINER_MOUNT = "/root/output"
@@ -38,11 +40,10 @@ class ContainerState(enum.Enum):
 class ShodanConfig:
     output_dir: pathlib.Path
     shodan_api_key: str
-    docker_image: str = "shodan-image"
+    docker_image: str
     docker_poll_interval: float = 16.0
     docker_socket: str | None = None
     docker_timeout: int = 5
-
 
 class Task(Protocol):
     label: str
@@ -51,7 +52,7 @@ class Task(Protocol):
 @dataclasses.dataclass(frozen=True)
 class ShodanTask:
     label: str
-    ip_prefix: str
+    command: str
 
 
 TaskCompletionCallback = Callable[[str, bool], None]
@@ -94,12 +95,11 @@ class Shodan(ScanModule):
         try:
             ctx = self.docker.containers.run(
                 self.config.docker_image,
-                command=["python", "./shodan_script.py", taskcfg.ip_address],
+                command= taskcfg.command,
                 detach=True,
                 labels={SHODAN_TASK_LABEL_KEY: taskcfg.label},
                 stdout=True,
                 stderr=True,
-                environment={"shodan_api_key": self.config.api_key},
                 volumes={
                     str(outfp): {
                         "bind": OUTDIR_CONTAINER_MOUNT,
@@ -108,12 +108,20 @@ class Shodan(ScanModule):
                 },
                 working_dir="/root",
             )
+            output = ctx.wait()
+            stdout = ctx.logs(stdout=True, stderr=False)
+            stderr = ctx.logs(stdout=False, stderr=True)
+            print("Container Output (stdout):")
+            print(stdout.decode())
+            print("Container Output (stderr):")
+            print(stderr.decode())
         except docker.errors.APIError as e:
             logging.error("Shodan execution failed: %s", str(e))
             self.task_completion_callback(taskcfg.label, False)
             return
         with self.lock:
             self.containers.add((ctx, taskcfg))
+
 
     def shutdown(self, wait: bool = True) -> None:
         logging.info("Shodan shutting down (wait=%s)", wait)
@@ -143,7 +151,7 @@ class Shodan(ScanModule):
                 try:
                     ctx.reload()
                 except docker.erros.NotFound:
-                    logging.warning("Contanier not found: %s", cfg.label)
+                    logging.warning("Container not found: %s", cfg.label)
                     continue
 
                 if not ContainerState(ctx.status).is_done():
@@ -178,5 +186,24 @@ class Shodan(ScanModule):
             )
         for ctx, _cfg in completed:
             ctx.remove()
-        for ctx, _cfg in completed:
-            ctx.remove()
+
+shodan_config = ShodanConfig(
+    output_dir=pathlib.Path("/path/to/output"),
+    shodan_api_key="gOuH5CYm3qd6n3hxndKIj4f4H8vIawwf",
+    docker_image="crazymax/shodan:latest",
+    docker_poll_interval=16.0,
+    docker_socket=None,
+    docker_timeout=5
+)
+
+def callback(label: str, success: bool):
+    print(f"Task {label} completed. Success: {success}")
+
+shodan = Shodan(shodan_config, callback)
+
+task = ShodanTask(
+    label="scan-1",
+    command="init gOuH5CYm3qd6n3hxndKIj4f4H8vIawwf"
+)
+
+shodan.enqueue(task)
