@@ -1,0 +1,352 @@
+http                 (2 ports) {80, 9080}
+ldaps                (1 ports) {3269}
+http-simple-new      (17 ports) {8000, 49153, 8001, 5985, 49152, 8800, 1024, 9191, 8008, 5801, 9000, 9090, 5000, 5357, 8086, 8888, 8090}
+nomachine            (1 ports) {4000}
+https                (3 ports) {443, 8443, 9443}
+ssh                  (2 ports) {2222, 22}
+smtp                 (1 ports) {25}
+imap-ssl             (1 ports) {993}
+msmq                 (1 ports) {1801}
+https-simple-new     (8 ports) {31337, 8880, 10000, 8083, 8181, 7001, 4443, 4444}
+iscsi                (1 ports) {3260}
+dahua-dvr            (1 ports) {37777}
+amqp                 (1 ports) {5672}
+mqtt                 (1 ports) {1883}
+auto                 (5 ports) {8032, 8099, 8048, 6001, 62078}
+openvpn              (1 ports) {1194}
+pop3-ssl             (1 ports) {995}
+printer-job-language (1 ports) {9100}
+ntp                  (1 ports) {123}
+dns-tcp              (1 ports) {53}
+onvif                (1 ports) {3702}
+ftp                  (1 ports) {21}
+ajp                  (1 ports) {8009}
+nodata-tcp           (2 ports) {8649, 33060}
+xmpp                 (1 ports) {5222}
+dicom                (1 ports) {104}
+snmp_v3              (1 ports) {161}
+Unique modules:27
+
+Services provided:['asn', 'ntlm', 'node_exporter', 'transport', 'vulns', 'location', 'ip_str', 'opts', 'port', 'version', 'ssh', 'ftp', 'tags', 'iscsi', 'mysqlx', 'snmp', 'hostnames', 'ip', 'domains', 'dahua_dvr_web', '_shodan', 'amqp', 'ntp', 'org', 'product', 'info', 'isp', 'dns', 'mqtt', 'hash', 'cpe', 'timestamp', 'http', 'cpe23', 'ssl', 'platform', 'os', 'data']
+
+Unique Ips:317
+
+IPS: 
+
+150.164.68.124 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.57.110 {'cpe:2.3:a:mortbay:jetty:6.1.x', 'cpe:2.3:a:jquery:jquery'}
+150.164.9.109 {'cpe:2.3:a:f5:nginx'}
+150.164.76.121 {'cpe:2.3:a:apache:http_server'}
+150.164.76.65 
+150.164.173.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.5.25 {'cpe:2.3:a:f5:nginx'}
+150.164.99.120 {'cpe:2.3:a:f5:nginx'}
+150.164.73.240 
+150.164.107.115 {'cpe:2.3:a:f5:nginx:1.23.1'}
+150.164.24.221 
+150.164.95.196 {'cpe:2.3:a:adobe:dreamweaver'}
+150.164.5.223 {'cpe:2.3:a:igor_sysoev:nginx', 'cpe:2.3:a:f5:nginx'}
+150.164.76.183 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.250.190 
+150.164.32.100 {'cpe:2.3:a:openbsd:openssh:7.4'}
+150.164.64.83 
+150.164.164.145 
+150.164.116.235 {'cpe:2.3:a:php:php:7.4.33', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.83.230 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:papercut:papercut_mf', 'cpe:2.3:a:apache:http_server:2.4.56'}
+150.164.90.117 {'cpe:2.3:a:apache:http_server:2.2.3'}
+150.164.250.8 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.164.135 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.5.210 {'cpe:2.3:a:igor_sysoev:nginx', 'cpe:2.3:a:f5:nginx'}
+150.164.30.99 {'cpe:2.3:a:apache:http_server:2.4.51'}
+150.164.18.117 {'cpe:2.3:a:openbsd:openssh:8.8'}
+150.164.90.99 {'cpe:2.3:a:apache:http_server:2.4.29'}
+150.164.5.133 {'cpe:2.3:a:igor_sysoev:nginx'}
+150.164.13.1 {'cpe:2.3:a:php:php:5.3.3', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.76.88 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.164.56 
+150.164.76.95 {'cpe:2.3:a:igor_sysoev:nginx'}
+150.164.79.2 
+150.164.144.251 
+150.164.12.93 {'cpe:2.3:a:php:php:5.3.3', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.250.74 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.99.141 {'cpe:2.3:a:apache:http_server'}
+150.164.5.22 {'cpe:2.3:a:f5:nginx'}
+150.164.14.83 {'cpe:2.3:a:php:php:7.2.24', 'cpe:2.3:a:apache:http_server:2.4.37', 'cpe:2.3:a:openssl:openssl:1.1.1k'}
+150.164.107.13 {'cpe:2.3:a:openbsd:openssh:8.8'}
+150.164.100.18 {'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server'}
+150.164.203.80 {'cpe:2.3:a:ruby-lang:ruby', 'cpe:2.3:a:rubyonrails:rails', 'cpe:2.3:a:f5:nginx:1.18.0'}
+150.164.250.77 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.76.179 
+150.164.68.79 {'cpe:2.3:a:apache:http_server'}
+150.164.12.77 {'cpe:2.3:a:apache:http_server'}
+150.164.164.74 
+150.164.90.12 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:php:php', 'cpe:2.3:a:moodle:moodle', 'cpe:2.3:a:apache:http_server:2.4.37', 'cpe:2.3:a:openssl:openssl:1.1.1c'}
+150.164.14.50 
+150.164.25.2 
+150.164.250.78 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.55.18 
+150.164.76.87 {'cpe:2.3:a:apache:http_server:2.2.3'}
+150.164.128.95 
+150.164.76.32 {'cpe:2.3:o:microsoft:windows', 'cpe:2.3:a:microsoft:internet_information_services:10.0'}
+150.164.90.80 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:o:canonical:ubuntu_linux', 'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:f5:nginx:1.18.0'}
+150.164.90.17 {'cpe:2.3:a:openbsd:openssh:8.7'}
+150.164.76.48 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.10.100 {'cpe:2.3:a:f5:nginx:1.14.2'}
+150.164.203.3 {'cpe:2.3:a:python:python', 'cpe:2.3:a:vmware:rabbitmq:2.7.1', 'cpe:2.3:a:apache:http_server:2.2.22', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:djangoproject:django'}
+150.164.51.129 
+150.164.250.70 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.23.85 
+150.164.76.4 {'cpe:2.3:a:f5:nginx:1.14.1'}
+150.164.76.59 {'cpe:2.3:a:f5:nginx'}
+150.164.255.8 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:f5:nginx', 'cpe:2.3:a:getbootstrap:bootstrap'}
+150.164.161.32 
+150.164.65.253 
+150.164.1.223 
+150.164.250.81 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.230.58 {'cpe:2.3:a:lighttpd:lighttpd:1.4.45'}
+150.164.192.30 
+150.164.90.106 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:o:canonical:ubuntu_linux', 'cpe:2.3:a:f5:nginx:1.18.0'}
+150.164.2.50 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:igor_sysoev:nginx:1.18.0'}
+150.164.250.84 
+150.164.32.3 
+150.164.98.47 {'cpe:2.3:a:php:php:7.2.24', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:apache:http_server:2.4.37', 'cpe:2.3:a:openssl:openssl:1.1.1c'}
+150.164.250.11 {'cpe:2.3:a:f5:nginx:1.10.1'}
+150.164.122.54 {'cpe:2.3:a:igor_sysoev:nginx'}
+150.164.64.71 
+150.164.72.217 {'cpe:2.3:a:openbsd:openssh'}
+150.164.108.1 
+150.164.102.75 
+150.164.122.59 {'cpe:2.3:a:f5:nginx'}
+150.164.203.48 {'cpe:2.3:a:igor_sysoev:nginx:1.1.19'}
+150.164.250.64 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:ruby-lang:ruby', 'cpe:2.3:a:rubyonrails:rails', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.77.114 
+150.164.244.8 
+150.164.76.41 {'cpe:2.3:a:f5:nginx:1.17.10'}
+150.164.76.46 {'cpe:2.3:a:apache:http_server:2.4.37', 'cpe:2.3:a:openssl:openssl:1.1.1k'}
+150.164.90.41 {'cpe:2.3:a:apache:http_server:2.4.29'}
+150.164.250.63 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.76.40 {'cpe:2.3:a:f5:nginx:1.17.10'}
+150.164.20.217 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.11.129 
+150.164.136.247 
+150.164.95.10 {'cpe:2.3:a:jquery:jquery'}
+150.164.10.18 
+150.164.0.193 
+150.164.41.97 
+150.164.99.96 {'cpe:2.3:a:f5:nginx'}
+150.164.108.2 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:php:php:5.4.16', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.95.75 
+150.164.255.30 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.64.37 
+150.164.128.64 {'cpe:2.3:a:joomla:joomla', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:php:php:5.6.40', 'cpe:2.3:a:joomla:joomla:3.9.23', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server:2.4.6', 'cpe:2.3:a:php:php', 'cpe:2.3:a:openbsd:openssh:7.4'}
+150.164.108.165 {'cpe:2.3:a:jquery:jquery'}
+150.164.18.2 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:php:php', 'cpe:2.3:a:apache:http_server:2.4.37', 'cpe:2.3:a:php:php:8.2.12', 'cpe:2.3:a:mysql:mysql', 'cpe:2.3:a:wordpress:wordpress:6.3.2', 'cpe:2.3:a:openssl:openssl:1.1.1k'}
+150.164.32.241 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:o:debian:debian_linux', 'cpe:2.3:a:openbsd:openssh:7.4p1'}
+150.164.99.94 {'cpe:2.3:a:f5:nginx'}
+150.164.192.17 {'cpe:2.3:a:f5:nginx:1.10.3'}
+150.164.30.50 {'cpe:2.3:o:microsoft:windows'}
+150.164.13.20 
+150.164.22.31 {'cpe:2.3:a:php:php:7.4.33', 'cpe:2.3:a:php:php', 'cpe:2.3:a:adminer:adminer:4.8.1'}
+150.164.24.54 {'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.46.217 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:openbsd:openssh:9.2p1', 'cpe:2.3:o:debian:debian_linux'}
+150.164.203.50 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:f5:nginx:1.8.0'}
+150.164.99.150 {'cpe:2.3:a:apache:http_server'}
+150.164.0.133 
+150.164.51.81 {'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.212.5 
+150.164.67.122 
+150.164.90.19 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:php:php', 'cpe:2.3:a:apache:http_server:2.4.29', 'cpe:2.3:a:wordpress:wordpress', 'cpe:2.3:a:mysql:mysql'}
+150.164.231.199 
+150.164.29.21 
+150.164.12.31 {'cpe:2.3:a:lighttpd:lighttpd', 'cpe:2.3:a:jquery:jquery_ui:1.8.16', 'cpe:2.3:a:jquery:jquery:1.7.1'}
+150.164.90.8 {'cpe:2.3:a:openbsd:openssh'}
+150.164.120.157 
+150.164.95.38 {'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.53.96 
+150.164.90.23 {'cpe:2.3:a:apache:http_server:2.4.29'}
+150.164.99.2 {'cpe:2.3:o:microsoft:windows', 'cpe:2.3:a:microsoft:internet_information_services:10.0'}
+150.164.64.35 
+150.164.195.251 
+150.164.164.62 
+150.164.77.61 
+150.164.95.16 {'cpe:2.3:a:apache:http_server:2.4.53'}
+150.164.76.139 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.203.16 {'cpe:2.3:a:apache:http_server:2.2.22', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:php:php:5.3.10-1ubuntu3.21', 'cpe:2.3:a:php:php', 'cpe:2.3:a:wordpress:wordpress', 'cpe:2.3:a:wordpress:wordpress:6.0.6', 'cpe:2.3:a:mysql:mysql'}
+150.164.90.18 {'cpe:2.3:a:apache:http_server:2.4.52', 'cpe:2.3:a:mysql:mysql', 'cpe:2.3:a:wordpress:wordpress', 'cpe:2.3:a:php:php'}
+150.164.90.35 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:php:php', 'cpe:2.3:a:apache:http_server:2.4.52', 'cpe:2.3:a:mysql:mysql', 'cpe:2.3:a:wordpress:wordpress:4.5.29'}
+150.164.20.35 
+150.164.108.32 
+150.164.76.64 
+150.164.104.187 {'cpe:2.3:a:php:php:7.4.16', 'cpe:2.3:a:f5:nginx:1.14.1', 'cpe:2.3:a:php:php', 'cpe:2.3:a:adminer:adminer:4.8.0'}
+150.164.162.251 {'cpe:2.3:o:microsoft:windows'}
+150.164.10.15 {'cpe:2.3:a:openssl:openssl:3.0.7', 'cpe:2.3:a:apache:http_server:2.4.57'}
+150.164.41.15 
+150.164.114.14 {'cpe:2.3:a:angularjs:angular.js'}
+150.164.144.16 
+150.164.99.144 {'cpe:2.3:a:f5:nginx', 'cpe:2.3:a:php:php', 'cpe:2.3:a:moodle:moodle'}
+150.164.44.155 
+150.164.1.222 {'cpe:2.3:a:f5:nginx:1.20.1'}
+150.164.84.1 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:apache:http_server:2.4.6', 'cpe:2.3:a:php:php:5.4.16', 'cpe:2.3:a:jquery:jquery_ui'}
+150.164.32.17 {'cpe:2.3:a:apache:http_server:2.4.38'}
+150.164.104.60 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.250.192 
+150.164.12.4 {'cpe:2.3:a:apache:http_server:2.4.37', 'cpe:2.3:a:openssl:openssl:1.1.1k'}
+150.164.93.1 {'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.27.78 
+150.164.5.3 {'cpe:2.3:a:igor_sysoev:nginx'}
+150.164.65.4 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.228.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.192.46 
+150.164.247.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.99.160 {'cpe:2.3:a:f5:nginx'}
+150.164.76.234 {'cpe:2.3:a:apache:http_server:2.4.41'}
+150.164.186.113 
+150.164.1.193 
+150.164.124.4 {'cpe:2.3:a:apache:http_server:2.4.52'}
+150.164.170.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.248.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.87.33 
+150.164.142.249 
+150.164.100.12 {'cpe:2.3:a:apache:http_server'}
+150.164.9.1 
+150.164.90.36 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:o:canonical:ubuntu_linux', 'cpe:2.3:a:f5:nginx:1.10.3'}
+150.164.233.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.248.77 
+150.164.100.77 
+150.164.32.248 {'cpe:2.3:a:apache:http_server:2.4.10'}
+150.164.61.44 
+150.164.76.174 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.252.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.194.237 
+150.164.90.15 
+150.164.65.254 
+150.164.245.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.32.35 {'cpe:2.3:a:apache:http_server:2.4.38'}
+150.164.162.248 
+150.164.183.6 
+150.164.136.244 
+150.164.177.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.187.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.69.45 {'cpe:2.3:a:openbsd:openssh'}
+150.164.104.5 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:php:php:5.6.40', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server:2.4.6', 'cpe:2.3:a:jquery:jquery_ui:1.13.2'}
+150.164.213.1 
+150.164.250.3 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.76.241 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.20.245 {'cpe:2.3:a:prototypejs:prototype:1.7.2', 'cpe:2.3:a:f5:nginx'}
+150.164.232.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.98.248 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:public_knowledge_project:open_journal_systems:2.4.8.4', 'cpe:2.3:a:php:php', 'cpe:2.3:a:apache:http_server:2.4.6', 'cpe:2.3:a:php:php:5.4.16'}
+150.164.10.81 {'cpe:2.3:a:apache:http_server:2.4.52'}
+150.164.195.244 {'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.74.129 
+150.164.255.4 {'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.23.241 {'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.250.54 {'cpe:2.3:a:joomla:joomla:3.0.3', 'cpe:2.3:a:php:php:5.6.31', 'cpe:2.3:a:joomla:joomla', 'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:php:php', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.30.125 {'cpe:2.3:a:apache:http_server:2.4.38', 'cpe:2.3:a:php:php:7.2.31'}
+150.164.49.175 
+150.164.5.220 {'cpe:2.3:a:f5:nginx'}
+150.164.183.230 {'cpe:2.3:a:apache:http_server:2.4.56'}
+150.164.76.54 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.246.5 
+150.164.183.16 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:wordpress:wordpress:5.0.20', 'cpe:2.3:a:php:php', 'cpe:2.3:a:apache:http_server:2.4.6', 'cpe:2.3:a:wordpress:wordpress', 'cpe:2.3:a:php:php:5.4.16', 'cpe:2.3:a:mysql:mysql'}
+150.164.102.72 {'cpe:2.3:a:apache:http_server:2.4.18', 'cpe:2.3:a:php:php', 'cpe:2.3:a:moodle:moodle'}
+150.164.76.161 
+150.164.87.27 {'cpe:2.3:a:apache:http_server'}
+150.164.32.39 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:openbsd:openssh:3.8.1p1', 'cpe:2.3:o:debian:debian_linux'}
+150.164.183.235 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.95.195 {'cpe:2.3:a:adobe:dreamweaver'}
+150.164.120.252 
+150.164.90.82 {'cpe:2.3:a:python:python', 'cpe:2.3:a:djangoproject:django', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:apache:http_server'}
+150.164.226.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.113.57 
+150.164.2.1 
+150.164.183.224 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.183.214 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:php:php:7.4.30', 'cpe:2.3:a:php:php', 'cpe:2.3:a:apache:http_server:2.4.6', 'cpe:2.3:a:wordpress:wordpress', 'cpe:2.3:a:mysql:mysql'}
+150.164.231.254 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.183.237 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:php:php:7.4.33', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.24.238 {'cpe:2.3:a:openbsd:openssh:6.6'}
+150.164.195.110 
+150.164.98.236 {'cpe:2.3:a:python:python', 'cpe:2.3:a:plone:plone', 'cpe:2.3:a:jquery:jquery'}
+150.164.122.1 {'cpe:2.3:a:f5:nginx', 'cpe:2.3:a:pureftpd:pure-ftpd'}
+150.164.53.10 {'cpe:2.3:o:microsoft:windows'}
+150.164.1.228 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:igor_sysoev:nginx:1.10.3'}
+150.164.26.235 {'cpe:2.3:a:angularjs:angular.js'}
+150.164.76.99 {'cpe:2.3:a:f5:nginx:1.23.4'}
+150.164.5.221 {'cpe:2.3:a:apache:http_server'}
+150.164.164.4 
+150.164.30.223 {'cpe:2.3:a:igor_sysoev:nginx:1.16.1', 'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:ruby-lang:ruby', 'cpe:2.3:a:rubyonrails:rails'}
+150.164.114.11 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:drupal:drupal', 'cpe:2.3:a:php:php', 'cpe:2.3:a:yahoo:yui', 'cpe:2.3:o:canonical:ubuntu_linux', 'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:jquery:jquery_ui', 'cpe:2.3:a:f5:nginx:1.18.0'}
+150.164.230.55 {'cpe:2.3:o:linux:linux_kernel'}
+150.164.5.215 {'cpe:2.3:a:f5:nginx'}
+150.164.38.174 
+150.164.162.249 
+150.164.183.216 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.253.84 
+150.164.250.210 
+150.164.59.46 
+150.164.124.15 
+150.164.76.102 {'cpe:2.3:a:apache:http_server'}
+150.164.20.222 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.250.68 {'cpe:2.3:a:openssl:openssl:1.0.1e', 'cpe:2.3:a:apache:http_server:2.2.15'}
+150.164.192.9 {'cpe:2.3:a:f5:nginx'}
+150.164.3.82 {'cpe:2.3:a:apache:http_server:2.4.18'}
+150.164.183.218 {'cpe:2.3:a:apache:http_server:2.4.56'}
+150.164.183.212 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.123.207 {'cpe:2.3:o:microsoft:windows', 'cpe:2.3:a:microsoft:internet_information_services', 'cpe:2.3:a:microsoft:internet_information_services:10.0'}
+150.164.100.20 {'cpe:2.3:a:apache:http_server:2.2.9'}
+150.164.247.150 
+150.164.183.207 {'cpe:2.3:a:openssl:openssl:1.0.2k', 'cpe:2.3:a:apache:http_server:2.4.6'}
+150.164.40.217 {'cpe:2.3:a:apache:http_server'}
+150.164.82.154 
+150.164.162.245 
+150.164.76.114 {'cpe:2.3:a:openbsd:openssh:7.4'}
+150.164.44.154 
+150.164.250.49 {'cpe:2.3:o:microsoft:windows', 'cpe:2.3:a:microsoft:internet_information_services:10.0'}
+150.164.70.140 
+150.164.90.102 {'cpe:2.3:a:apache:http_server:2.4.52'}
+150.164.32.242 {'cpe:2.3:a:openbsd:openssh'}
+150.164.32.215 {'cpe:2.3:a:apache:http_server:2.4.29'}
+150.164.99.207 {'cpe:2.3:a:apache:http_server'}
+150.164.244.3 
+150.164.98.152 {'cpe:2.3:o:linux:linux_kernel', 'cpe:2.3:a:openbsd:openssh:9.2p1', 'cpe:2.3:o:debian:debian_linux'}
+150.164.113.207 
+150.164.1.65 
+150.164.1.221 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:apache:http_server:2.4.18', 'cpe:2.3:a:getbootstrap:bootstrap'}
+150.164.102.217 
+150.164.113.159 
+150.164.164.218 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.193.238 
+150.164.76.158 
+150.164.63.210 {'cpe:2.3:a:openbsd:openssh'}
+150.164.7.205 {'cpe:2.3:a:igor_sysoev:nginx:1.18.0'}
+150.164.130.103 
+150.164.5.205 {'cpe:2.3:a:igor_sysoev:nginx'}
+150.164.41.36 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:apache:http_server:2.4.56'}
+150.164.86.50 
+150.164.244.21 
+150.164.5.222 {'cpe:2.3:a:f5:nginx'}
+150.164.2.42 {'cpe:2.3:a:f5:nginx'}
+150.164.164.37 
+150.164.23.250 
+150.164.11.161 
+150.164.121.71 
+150.164.164.6 
+150.164.44.156 
+150.164.76.60 
+150.164.76.110 {'cpe:2.3:a:openbsd:openssh:7.4'}
+150.164.0.129 
+150.164.64.215 
+150.164.76.198 {'cpe:2.3:o:microsoft:windows', 'cpe:2.3:a:microsoft:internet_information_services', 'cpe:2.3:a:microsoft:internet_information_services:10.0'}
+150.164.76.109 
+150.164.255.132 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap', 'cpe:2.3:a:angularjs:angular.js'}
+150.164.32.57 {'cpe:2.3:a:openbsd:openssh'}
+150.164.180.29 
+150.164.164.118 
+150.164.76.200 {'cpe:2.3:a:igor_sysoev:nginx:1.16.1'}
+150.164.100.197 
+150.164.76.130 
+150.164.72.49 
+150.164.81.139 
+150.164.76.195 
+150.164.192.6 
+150.164.183.211 {'cpe:2.3:a:apache:http_server:2.4.56'}
+150.164.90.212 {'cpe:2.3:a:jquery:jquery', 'cpe:2.3:a:getbootstrap:bootstrap'}
