@@ -1,79 +1,98 @@
 # Motivation: Understand how the data are collected and the quantity / quality os measurements made for each ip
-
+import argparse
 import json
 import os
+from typing import List
 
-# Ufmg ips directory
-directory = "../ufmg_ips/"
+def return_input_parameters():
+    parser = argparse.ArgumentParser(description='Inform the directory with shodan data.')
+    parser.add_argument('inputDirectory', type=str, help='directory with shodan data')
+    parser.add_argument('outputPath', type=str, help='path to the output file')
+    args = parser.parse_args()
 
+    return args
 
-# info to be collected
-daysScan = {}
-uniqueIps = [0]
-allIps = []
-repeatedIpScan = [0]
-ipScanedAgainOnTheSameDay = [0]
-ipsScanned = [0]
-index = 0
+def temporal_scan_ip_shodan(args):
+    # Ufmg ips directory
+    directory = args.inputDirectory
 
-#read file names first to order and open files in temporal order
-files = [file.name for file in os.scandir(directory) if file.is_file() and file.name.endswith(".json")]
-sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(directory, x)))
+    if not (os.path.exists(directory) and os.path.isdir(directory)):
+        raise Exception('Directory not valid or not exists')
 
-for file in sorted_files:
+    # info to be collected
+    daysScan : dict() = {}
+    uniqueIps : List[str] = [0]
+    allIps : List[str] = []
+    repeatedIpScan: List[str] = [0]
+    ipScanedAgainOnTheSameDay : List[str]= [0]
+    ipsScanned : List[str]= [0]
+    index = 0
 
-    data = json.load(open(f"../ufmg_ips/{file}", 'r'))
+    # read file names first to order and open files in temporal order
+    files = [file.name for file in os.scandir(directory) if file.is_file() and file.name.endswith(".json") and file.name.split('.')[1] ]
+    sorted_files = sorted(files)
 
-    # Get number of modules and port range
-    for scan in data:      
-        ip = scan["ip_str"]
-        timestamp = scan["timestamp"][:10] #truncate date format to get just date, not hours
-        if (timestamp < '2023-11-00'): # Ignore data whose date is not in the month to be analyzed
-            continue
-        ipsScanned[index] += 1
+    for file in sorted_files:
 
-        if daysScan.__contains__(ip):
-            
-            if ((daysScan[ip]['timestamp'].__contains__(timestamp))):
-                ipScanedAgainOnTheSameDay[index] += 1
-            else:
-                repeatedIpScan[index] += 1
-            
-            daysScan[ip]['timestamp'].add(timestamp)
-            daysScan[ip]['scans'] += 1
-        else: 
-            daysScan[ip] = set()
-            daysScan[ip] = {'timestamp': {timestamp}, 'scans': 1}
+        data = json.load(open(f"{directory}{file}", 'r'))
 
-        if (not(allIps.__contains__(ip))):
-            allIps.append(ip)
-            uniqueIps[index] += 1
+        # Get number of modules and port range
+        for scan in data:      
+            ip = scan["ip_str"]
+            timestamp = scan["timestamp"][:10] #truncate date format to get just date, not hours
+            if (timestamp < '2023-11-00'): # Ignore data whose date is not in the month to be analyzed
+                continue
+            ipsScanned[index] += 1
 
-    index +=1
-    ipsScanned.append(0)
-    uniqueIps.append(0)
-    repeatedIpScan.append(0)
-    ipScanedAgainOnTheSameDay.append(0)
+            if ip in daysScan:
+                
+                if ((timestamp) in (daysScan[ip]['timestamp'])):
+                    ipScanedAgainOnTheSameDay[index] += 1
+                else:
+                    repeatedIpScan[index] += 1
+                
+                daysScan[ip]['timestamp'].add(timestamp)
+                daysScan[ip]['scans'] += 1
+            else: 
+                daysScan[ip] = set()
+                daysScan[ip] = {'timestamp': {timestamp}, 'scans': 1}
 
-for ip, data in daysScan.items():
-    daysScan[ip]['timestamp'] = sorted(data['timestamp'])
+            if (not((ip) in allIps)):
+                allIps.append(ip)
+                uniqueIps[index] += 1
 
-#sort ips by the number os scans
-sorted_daysScan = sorted(daysScan.items(), key=lambda x: x[1]['scans'], reverse=True)
+        # prepare variables for the next file
+        index +=1
+        ipsScanned.append(0)
+        uniqueIps.append(0)
+        repeatedIpScan.append(0)
+        ipScanedAgainOnTheSameDay.append(0)
 
-with open('../results/temporal_coverage_ips_shodan.txt', 'w') as file:
-    file.write("analysing days 2023/11/01 to 2023/11/29 \n\n")
-    for i in range(0, len(ipsScanned)-1):
-        file.write(f"Day {i+1:<7}: IpsScanned: {ipsScanned[i]:<7} UniqueIps: {uniqueIps[i]:<7} RepeatedIpScan: {repeatedIpScan[i]:<7} IpScanedAgainOnTheSameDay: {ipScanedAgainOnTheSameDay[i]:<7}\n")
-    
-    file.write("\n")
-    for i in sorted_daysScan:
-        file.write(str(i))
-        file.write("\n")
+    for ip, data in daysScan.items():
+        daysScan[ip]['timestamp'] = sorted(data['timestamp'])
 
+    #sort ips by the number os scans
+    sorted_daysScan = sorted(daysScan.items(), key=lambda x: x[1]['scans'], reverse=True)
 
-# TO DO:
-# Group information based on: (ip: module:port) so will be possible to differenciate the data collected
-# Collect time in the "Timestamp" field to be able to plot CDF over the time between measurements for same IPS
-# cdf ips repeated
-    # understand about ips verificated just once
+    # group data to write json
+    data = {
+        "days_summary": [
+            {
+                "Day": i + 1,
+                "IpsScanned": ipsScanned[i],
+                "UniqueIps": uniqueIps[i],
+                "RepeatedIpScan": repeatedIpScan[i],
+                "IpScanedAgainOnTheSameDay": ipScanedAgainOnTheSameDay[i]
+            } for i in range(len(ipsScanned)-1)
+        ],
+        "sorted_daysScan": sorted_daysScan
+    }
+    path_output_file = args.outputPath
+    with open(path_output_file, 'w') as file:
+        json.dump(data, file, indent=6)
+
+if __name__ == "__main__":
+    args = return_input_parameters()
+    temporal_scan_ip_shodan(args)
+        
+
