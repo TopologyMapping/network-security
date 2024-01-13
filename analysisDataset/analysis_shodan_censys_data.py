@@ -450,7 +450,7 @@ def return_input_parameters():
 
     parser.add_argument('--directoryCensys', dest='directoryCensys', action='store', metavar='directory-censys', type=str, help='directory with censys data (will be parsed to shodan format)', required=False)
 
-    parser.add_argument('ipUFMG', action='store', metavar='ipUFMG', type=str, help='UFMG ip to filter input data')
+    parser.add_argument('--ipUFMG', dest='ipUFMG', action='store', metavar='ipUFMG', type=str, help='UFMG ip to filter input data (required if is passed shodan directory)', required=False)
 
     parser.add_argument('outputDirectory', action='store', metavar='outputDirectory', type=str, help='existing directory to store results and intermediate data')
        
@@ -480,6 +480,10 @@ if __name__ == "__main__":
 
      
     if (args.directoryShodan):
+
+        if (not args.ipUFMG):
+            logging.info("It is necessary to inform ipUFMG to analyze the shodan data")
+            raise Exception("Missing ipUFMG parameter")
 
         # will be created a new directory to store filtered shodan data --> the following functions will read ufmg shodan data formatted from this directory
         newFolderFilteredShodanUFMG = os.path.join(args.directoryShodan, NEW_FOLDER_STORE_UFMG_SHODAN_DATA)
