@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import datetime
 import bz2
@@ -8,12 +9,13 @@ from typing import Optional
 import argparse
 from argparse import RawTextHelpFormatter
 
-
 CPE_FIELD_IN_SHODAN = 'cpe23'
 IP_FIELD_IN_SHODAN = 'ip_str'
 PORT_FIELD_IN_SHODAN = 'port'
 MODULE_FIELD_IN_SHODAN = 'module'
 PREFIX_MODULE_FIELD_IN_SHODAN = '_shodan'
+NEW_FOLDER_STORE_UFMG_SHODAN_DATA = 'shodan_UFMG/'
+NEW_FOLDER_STORE_CENSYS_IN_SHODAN_FORMAT = 'censys_formated/'
 
 class Location(BaseModel):
     city: str
@@ -63,7 +65,17 @@ class Shodan(BaseModel):
         autonomous_system_data = scan.get('autonomous_system', {})
         autonomous_system = AutonomousSystem(**autonomous_system_data) if autonomous_system_data else None
 
-        timestamp = scan.get('last_updated_at', '')
+        # handling the different date formats in Censys
+        timestampField = scan.get('last_updated_at', '')
+        if '.' in timestampField:
+            # Timestamp with fractional seconds
+            timestamp = datetime.strptime(timestampField, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=None).isoformat()
+        elif '+' in timestampField:
+            timestamp = datetime.strptime(timestampField, "%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None).isoformat()
+        else:
+            # Timestamp without fractional seconds
+           timestamp = datetime.strptime(timestampField, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=None).replace(microsecond=1).isoformat()
+        
         
         dns_data = scan.get('dns', {})
         dns = dns_data if dns_data else {}
@@ -86,82 +98,63 @@ class Shodan(BaseModel):
             _shodan=shodan_module
         )
 
-def return_input_parameters():
-    parser = argparse.ArgumentParser(description='''Inform the parameter of each function to be used.
-    Filter ufmg shodan: 
-        requires: month, startDay, timespanDays, inputDirectoryFilterUFMG and outputDirectoryFilterUFMG
-    
-    Load censys in shodan format: 
-        requires: inputDirectoryLoadCensys and outputDirectoryLoadCensys
-    
-    Probe data shodan and censys: 
-        requires: inputDirectoryProbeData and outputPathProbeData:
-    
-    Temporal scan ip shodan: 
-        requires: inputDirectoryTemporalScan and outputhPathTemporalScan
-    ''', formatter_class=RawTextHelpFormatter)
-
-    parser.add_argument('--month', dest='month', action='store', metavar='month', type=int, help='month to be analized', required=False)
-    parser.add_argument('--startDay', dest='startDay', action='store', metavar='startDay', type=int, help='start day to be analized', required=False)
-    parser.add_argument('--timespanDays', dest='timespanDays', action='store', metavar='timespanDays', type=int, help='number of days to be analyzed', required=False)
-    parser.add_argument('--inputDirectoryFilterUFMG', dest='inputDirectoryFilterUFMG', action='store', metavar='inputDirectoryFilterUFMG', type=str, help='directory with raw shodan data (.json.bz2)', required=False)
-    parser.add_argument('--outputDirectoryFilterUFMG', dest='outputDirectoryFilterUFMG', action='store', metavar='outputDirectoryFilterUFMG', type=str, help='output to store UFMG shodan data filtered', required=False)
-
-    parser.add_argument('--inputDirectoryLoadCensys', dest='inputDirectoryLoadCensys', action='store', metavar='inputDirectoryLoadCensys', type=str, help='directory with censys input data (.json) to be parsed in shodan format', required=False)
-    parser.add_argument('--outputDirectoryLoadCensys', dest='outputDirectoryLoadCensys', action='store', metavar='outputDirectoryLoadCensys',type=str, help='directory to store censys data in shodan format', required=False)
-    
-    parser.add_argument('--inputDirectoryProbeData', dest='inputDirectoryProbeData', action='store', metavar='inputDirectoryProbeData', type=str, help='input directory with censys or shodan data (.json) to be analyzed', required=False)
-    parser.add_argument('--outputPathProbeData', dest='outputPathProbeData', action='store', metavar='outputPathProbeData',type=str, help='output directory with results', required=False)
-    
-    parser.add_argument('--inputDirectoryTemporalScan', dest='inputDirectoryTemporalScan', action='store', metavar='inputDirectoryTemporalScan', type=str, help='input directory with censys or shodan data (.json) to be analyzed throughout the days', required=False)
-    parser.add_argument('--outputPathTemporalScan', dest='outputPathTemporalScan', action='store', metavar='outputPathTemporalScan',type=str, help='output path with the temporal analysis result', required=False)
-    
-    args = parser.parse_args()
-    
-    return args
 
 """
 class to load, filter and make analysis in shodan and censys data
 """
 class Analysis_shodan_censys_data:
 
-    def load_censys_in_shodan_format(self, args):
+    """
+        load_censys_in_shodan_format: parse censys file (.json.bz2) to shodan format (.json)
+
+        input: directory with initial data and output direcoty to store censys file in shodan format
+
+        return: none. Will be stored censys file in shodan format in the path: .../inputDirectory/censys_formated/
+    """
+    def load_censys_in_shodan_format(self, inputDirectoryLoadCensys, outputDirectoryLoadCensys) :
+
         # Ufmg ips directory
-        directory = args.inputDirectoryLoadCensys
+        directory = inputDirectoryLoadCensys
 
         if not (os.path.exists(directory) and os.path.isdir(directory)):
-            raise Exception('Directory not valid or not exists')
+            logging.warning(f"Invalid directory: {directory}")
+            raise Exception('Directory not valid or not exists') 
 
-        #infoCensysToShodanFormat : List[Dict[str, Union[str, Dict[str, str], List[str]]]]= []
-        infoCensysToShodanFormat : list[dict] = []
-
-        fileName = ''
         for file in os.scandir(directory):
-            fileName, _ = os.path.splitext(file.name)
 
             # Skip dirs and non-json files
-            if (not file.is_file() or not file.path.endswith(".json")):
-                continue
+            if (not file.is_file() or not file.name.endswith(".json.bz2") or not file.name.lower().startswith("censys")):
+                logging.warning(f"Invalid file: {file.name}. Skipping ...")
+                continue 
 
-            data = json.load(open(file.path, 'r'))
-
+            infoCensysToShodanFormat : list[dict] = []
+        
             # read all scans
-            for scan in data:
+            with bz2.open(file, 'rt') as f:
+                
+                content = f.read()
 
-                for i in scan["services"]:
-                    #module = i["extended_service_name"]
-                    #port = i["port"]
+                scan = json.loads(content)
 
-                    scan['services'] = i
+                for line in scan:
 
-                    infoScanned = Shodan.parse_row(scan)
+                    for i in line["services"]:
+                        line['services'] = i
 
-                    infoCensysToShodanFormat.append(infoScanned.model_dump(exclude=None, by_alias=True))
-                    infoScanned = {} # clean the dict
+                        # parse the information using pydantic class
+                        infoScanned = Shodan.parse_row(line)
 
-        outputDirectory = args.outputDirectoryLoadCensys
-        with open(f'{outputDirectory}{fileName}_formated.json', 'w') as file:
-            json.dump(infoCensysToShodanFormat, file, indent=6)
+                        infoCensysToShodanFormat.append(infoScanned.model_dump(exclude=None, by_alias=True))
+                        infoScanned = {} # clean the dict
+
+            # create new filename and ignoring extension .json.bz2
+            filenameOutput = file.name.split(".")[0] + ".formated." + file.name.split(".")[1] 
+            
+            logging.info(f"Creating new folder: {outputDirectoryLoadCensys}")
+            os.makedirs(outputDirectoryLoadCensys, exist_ok=True)
+
+            with open(f'{outputDirectoryLoadCensys}{filenameOutput}.json', 'w') as file:
+                json.dump(infoCensysToShodanFormat, file, indent=6)
 
 
     """
@@ -169,24 +162,29 @@ class Analysis_shodan_censys_data:
 
         input: directory with initial data and output path to store results
 
-        return: info about scanning modules, analyzed ips and services provided by the scan
+        return: none. Will be stored info about scanning modules, analyzed ips and services provided by the scan in the path: .../outputDirectory/modules_and_ports.json"
     """
-    def probe_data_shodan_and_censys (self, args): 
+    def probe_data_shodan_and_censys (self, inputDirectoryProbeData, outputDirectoryProbeData): 
         # Ufmg ips directory
-        directory : str = args.inputDirectoryProbeData
-
-        if not (os.path.exists(directory) and os.path.isdir(directory)):
+        
+        if not (os.path.exists(inputDirectoryProbeData) and os.path.isdir(inputDirectoryProbeData)):
+            logging.warning(f"Invalid directory: {inputDirectoryProbeData}.")
             raise Exception('Directory not valid or not exists')
 
         # Modules found across all scans, unique ips and services
         modulesShodan : dict[str, set[str]] = {}
         ipsScanned : dict[str, set] = {}
         servicesProvided : list[str] = []
+        filenames : list[str] = []
 
-        for file in os.scandir(directory):
+        for file in os.scandir(inputDirectoryProbeData):
             # Skip dirs and non-json files
             if (not file.is_file() or not file.path.endswith(".json")):
+                logging.warning(f"Invalid file: {file.path}. Skipping ...")
                 continue
+            
+            # saving names of analyzed files
+            filenames.append(file.path.split("/")[-1])
 
             data = json.load(open(file.path, 'r'))
 
@@ -239,6 +237,7 @@ class Analysis_shodan_censys_data:
         }
 
         data_to_be_dumped = {
+            "filesScanned": filenames, 
             "modulesShodan": modules_shodan_serializable,
             "uniqueModulesCount": len(modulesShodan),
             "servicesProvided": formatedServicesProvided,
@@ -247,24 +246,26 @@ class Analysis_shodan_censys_data:
         }
 
         # write info collected in a file
-        path_output_file = args.outputPathProbeData
-        with open(path_output_file, 'w') as file:
+        outputPath = f"{outputDirectoryProbeData}/modules_and_ports.json"
+        if (outputDirectoryProbeData.endswith("/")):
+                outputPath = f"{outputDirectoryProbeData}modules_and_ports.json"
+        
+        with open(outputPath, 'w') as file:
             json.dump(data_to_be_dumped, file, indent=4)
-
     
     """
         temporal_scan_ip_shodan: temporal analysis in shodan and censys (in shodan format) data
 
-        input: directory with initial data and outputPath to store results
+        input: input directory with initial data and output directory to store results
 
-        return: info about the IPs analyzed throughout the days
+        return: none. Will be stored info about the IPs analyzed throughout the days in the path: .../outputDirectory/TemporalScan_from_{starting date analyzed}_to_{final date analyzed}.json"
     """    
-    def temporal_scan_ip_shodan(self, args):
-        # Ufmg ips directory
-        directory = args.inputDirectoryTemporalScan
+    def temporal_scan_ip_shodan(self, inputDirectoryTemporalScan, outputDirectoryTemporalScan):
 
-        if not (os.path.exists(directory) and os.path.isdir(directory)):
-            raise Exception('Directory not valid or not exists')
+        # Ufmg ips directory
+        if not (os.path.exists(inputDirectoryTemporalScan) and os.path.isdir(inputDirectoryTemporalScan)):
+            logging.info(f"The input directory {inputDirectoryTemporalScan} does not exists")
+            raise Exception('Directory not valid or does not exists')
 
         # info to be collected
         daysScan : dict[str, dict] = {}
@@ -276,15 +277,26 @@ class Analysis_shodan_censys_data:
         index = 0
 
         # read file names first to order and open files in temporal order
-        files = [file.name for file in os.scandir(directory) if file.is_file() and file.name.endswith(".json") and file.name.split('.')[1] ]
-        sorted_files = sorted(files)
+        files = [file.name for file in os.scandir(inputDirectoryTemporalScan) if file.is_file() and file.name.endswith(".json")]
+        sortedFiles = sorted(files)
 
-        for file in sorted_files:
+        if (sortedFiles == []):
+            logging.error(f"No valid .json files to do temporal analysis in the directory: {inputDirectoryTemporalScan}")
+            raise Exception('No valid files in the input directory')
 
-            data = json.load(open(f"{directory}{file}", 'r'))
+        # reading date by the filename
+        # dates are in the end of the filename, before .json
+        initialDate = datetime.strptime(sortedFiles[0].split(".")[-2] , "%Y%m%d").date()
+        finalDate = datetime.strptime(sortedFiles[-1].split(".")[-2] , "%Y%m%d").date()
+
+        for file in sortedFiles:
+
+            inputPath = os.path.join(inputDirectoryTemporalScan, file) 
+            data = json.load(open(inputPath, 'r'))
 
             # Get number of modules and port range
             for scan in data:      
+
                 ip = scan["ip_str"]
                 timestamp = datetime.strptime(scan['timestamp'], "%Y-%m-%dT%H:%M:%S.%f").isoformat()
 
@@ -316,8 +328,6 @@ class Analysis_shodan_censys_data:
             repeatedIpScan.append(0)
             ipScanedAgainOnTheSameDay.append(0)
 
-            break
-
         for ip, data in daysScan.items():
             daysScan[ip]['timestamp'] = sorted(data['timestamp'])
 
@@ -337,42 +347,53 @@ class Analysis_shodan_censys_data:
             ],
             "sorted_daysScan": sorted_daysScan
         }
-        path_output_file = args.outputPathTemporalScan
-        with open(path_output_file, 'w') as file:
+        
+        # format output file name        
+        outputPath = f"{outputDirectoryTemporalScan}/TemporalScan_from_{initialDate}_to_{finalDate}.json"
+        if (outputDirectoryTemporalScan.endswith("/")):
+            outputPath = f"{outputDirectoryTemporalScan}TemporalScan_from_{initialDate}_to_{finalDate}.json"
+        
+        with open(outputPath, 'w') as file:
             json.dump(data, file, indent=6)
 
-    
 
-    # filter ufmg information in shodan data
-    # the filter consider that the date os scan is in the filename
     """
-        filter_ufmg_shodan: filter ufmg information in shodan and censys (in shodan format) data. The filter consider that the date os scan is in the filename
+        filter_ufmg_shodan: filter ufmg information in shodan data. The filter consider that the date of the scan is in the filename
 
-        input: month, start day and timespan days to make the filter, the input directory with initial data and output directory
+        input: ipUFMG to filter the data, the directory with the initial shodan files and the directory where the results will be saved (filtered shodan files)
 
-        return: json file with shodan/censys data with UFMG information
+        return: none. Will be stored the new shodan files in the path: ...inputDirectory/shodan_UFMG/
     """
-    def filter_ufmg_shodan(self, args):
-            
-        IP_FIELD_IN_SHODAN="ip_str"
+    def filter_ufmg_shodan(self, inputIpUFMG, inputDirectoryFilterUFMG, outputDirectoryFilterUFMG):            
+        
         # UFMG ips
         jsonUFMG = []
 
         # UFMG subnet
-        ipUFMG = ip_network('150.164.0.0/16')
+        ipUFMG = ip_network(inputIpUFMG) # using ip_network to use function subnet_of
 
-        # Shodan scan window
-        month = args.month
-        startDay = args.startDay
-        timespanDays = args.timespanDays
+        if not (os.path.exists(inputDirectoryFilterUFMG) and os.path.isdir(inputDirectoryFilterUFMG)):
+            logging.error(f"Invalid directory: {inputDirectoryFilterUFMG}.")
+            raise Exception('Directory not valid or not exists')
 
-        inputDirectory = args.inputDirectoryFilterUFMG
-        for d in range(timespanDays):
-            day = startDay + d
-            filename = f"{inputDirectory}BR.2023{str(month).rjust(2, '0')}{str(day).rjust(2, '0')}.json.bz2"
+        files = [file.name for file in os.scandir(inputDirectoryFilterUFMG) if file.is_file() and file.name.endswith(".json.bz2") and file.name.split('.')[1] ]
+        sorted_files = sorted(files)
+
+        for file in sorted_files:
+
+            if (not file.endswith(".json.bz2") or not file.startswith("BR.")):
+                logging.warning(f"Invalid file: {file}. Skipping ...")
+                continue
+        
+            filename = f"{inputDirectoryFilterUFMG}{file}"
+
             qty = 0
 
             f = bz2.open(filename, 'rt')
+            
+            if (f == None):
+                logging.warning(f"Invalid file: {filename}. Skipping ...")
+                continue
 
             for line in f:
                 singleJson = json.loads(line)
@@ -383,28 +404,93 @@ class Analysis_shodan_censys_data:
                     jsonUFMG.append(singleJson)
                     qty += 1
             
-            print(f"Found {qty} UFMG IPs")
+            logging.info(f"Found {qty} UFMG IPs in file: {file}")
 
-            # Save stuff
-            outputDirectory = args.outputDirectoryFilterUFMG
-            with open(f"{outputDirectory}BR.2023{str(month).rjust(2, '0')}{str(day).rjust(2, '0')}.json", 'w') as f:
-                json.dump([jsonUFMG], f, indent=6)
+            # Save stuff and format output path
+            filenameOutput = file.split(".")[0] + ".UFMG." + file.split(".")[1] # ignoring file name extension .json.bz2
+            outputPath = os.path.join(outputDirectoryFilterUFMG, filenameOutput)
+
+            logging.info(f"Creating new folder: {outputDirectoryFilterUFMG}")
+            os.makedirs(outputDirectoryFilterUFMG, exist_ok=True) 
+
+            with open(f"{outputPath}.json", 'w') as f:
+                json.dump(jsonUFMG, f, indent=6)
+
+            f.close()
+
+
+def return_input_parameters():
+    parser = argparse.ArgumentParser(description='''--> Inform the parameters to run all the following functions listed above:
+
+    * Important: Is considered that the Shodan files respect the following name formats "BR.YYYYMMDD.json.bz2" or "BR.YYYYMMDD.json" and the Censys file "CENSYS-UFMG.YYYYMMDD.json.bz2" or "CENSYS-UFMG.YYYYMMDD.json" where YYYY is the year, MM the month and DD the day.
+                                     
+    Required parameters:
+        --directory-shodan = used if will be informed Shodan data
+        --directory-censys = used if will be informed Censys data
+        ipUFMG = UFMG ip to filter input data
+        outputDirectory = existing directory to store results and intermediate data
+
+    --> Funcitions that will be executed:
+                                                        
+    Filter ufmg shodan: 
+        Filter UFMG data in shodan file.
+    
+    Load censys in shodan format: 
+        Used if the input file is from Censys -> will be parsed to shodan format
+    
+    Probe data shodan and censys: 
+        Find information about modules, ports and ips from shodan data.
+    
+    Temporal scan ip shodan: 
+        Make a temporal analysis from shodan and censys (in shodan format) data.
+                                     
+    ''', formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument('--directoryShodan', dest='directoryShodan', action='store', metavar='directory-Shodan', type=str, help='directory with Shodan data', required=False)
+
+    parser.add_argument('--directoryCensys', dest='directoryCensys', action='store', metavar='directory-censys', type=str, help='directory with censys data (will be parsed to shodan format)', required=False)
+
+    parser.add_argument('ipUFMG', action='store', metavar='ipUFMG', type=str, help='UFMG ip to filter input data')
+
+    parser.add_argument('outputDirectory', action='store', metavar='outputDirectory', type=str, help='existing directory to store results and intermediate data')
+       
+    args = parser.parse_args()
+    
+    return args
+
 
 if __name__ == "__main__":
+    
+    logging.basicConfig(level=logging.DEBUG)
+
     args = return_input_parameters()
 
     analysis: Analysis_shodan_censys_data =  Analysis_shodan_censys_data()
-    
-    if (args.month and args.startDay and args.timespanDays and args.inputDirectoryFilterUFMG and args.outputDirectoryFilterUFMG):
-        analysis.filter_ufmg_shodan
-    
-    if (args.inputDirectoryLoadCensys and args.outputDirectoryLoadCensys):
-        analysis.load_censys_in_shodan_format(args)
-    
-    if (args.inputDirectoryProbeData and args.outputPathProbeData):
-        analysis.probe_data_shodan_and_censys(args)
-    
-    if (args.inputDirectoryTemporalScan and args.outputPathTemporalScan):
-        analysis.probe_data_shodan_and_censys(args)
 
+    newFolder = ''
+
+    if (args.directoryCensys):
+
+        # will be created a new directory to store censys data formatted --> the following funcionts will read censys data formatted from this directory
+        newFolderCensysInShodanFormat = os.path.join(args.directoryCensys, NEW_FOLDER_STORE_CENSYS_IN_SHODAN_FORMAT)
+        newFolder = newFolderCensysInShodanFormat
+
+        logging.info("Starting function: load_censys_in_shodan_format")
+        analysis.load_censys_in_shodan_format(args.directoryCensys, newFolderCensysInShodanFormat)
+
+     
+    if (args.directoryShodan):
+
+        # will be created a new directory to store filtered shodan data --> the following functions will read ufmg shodan data formatted from this directory
+        newFolderFilteredShodanUFMG = os.path.join(args.directoryShodan, NEW_FOLDER_STORE_UFMG_SHODAN_DATA)
+        newFolder = newFolderFilteredShodanUFMG
         
+        logging.info("Starting function: filter_ufmg_shodan")
+        analysis.filter_ufmg_shodan(args.ipUFMG, args.directoryShodan, newFolderFilteredShodanUFMG) 
+
+    
+    logging.info("Starting function: probe_data_shodan_and_censys")
+    analysis.probe_data_shodan_and_censys(newFolder, args.outputDirectory)
+
+    logging.info("Starting function: temporal_scan_ip_shodan")
+    analysis.temporal_scan_ip_shodan(newFolder, args.outputDirectory)
