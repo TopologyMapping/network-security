@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 import bz2
-from ipaddress import ip_network
+from ipaddress import ip_address, ip_network
 from pydantic import BaseModel, Field
 from typing import Optional
 import argparse
@@ -400,7 +400,7 @@ class Analysis_shodan_censys_data:
 
                 ip = singleJson.get(IP_FIELD_IN_SHODAN)
 
-                if (ip != None and ip_network(ip).subnet_of(ipUFMG)): # type: ignore
+                if (ip != None and ip_address(ip) in (ipUFMG)):
                     jsonUFMG.append(singleJson)
                     qty += 1
             
