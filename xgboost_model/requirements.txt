@@ -1,0 +1,5 @@
+faker
+pandas
+scikit-learn
+matplotlib
+xgboost
