@@ -1,13 +1,14 @@
+import argparse
+import bz2
 import json
 import logging
 import os
-from datetime import datetime
-import bz2
-from ipaddress import ip_address, ip_network
-from pydantic import BaseModel, Field
-from typing import Optional
-import argparse
 from argparse import RawTextHelpFormatter
+from datetime import datetime
+from ipaddress import ip_address, ip_network
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 CPE_FIELD_IN_SHODAN = 'cpe23'
 IP_FIELD_IN_SHODAN = 'ip_str'
