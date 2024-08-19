@@ -103,7 +103,7 @@ class Shodan(BaseModel):
 """
 class to load, filter and make analysis in shodan and censys data
 """
-class Analysis_shodan_censys_data:
+class AnalysisShodanCensysData:
 
     """
         load_censys_in_shodan_format: parse censys file (.json.bz2) to shodan format (.json)
@@ -466,7 +466,7 @@ if __name__ == "__main__":
 
     args = return_input_parameters()
 
-    analysis: Analysis_shodan_censys_data =  Analysis_shodan_censys_data()
+    analysis: AnalysisShodanCensysData =  AnalysisShodanCensysData()
 
     newFolder = ''
 
