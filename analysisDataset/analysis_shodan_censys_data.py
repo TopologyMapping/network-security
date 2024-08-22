@@ -504,6 +504,8 @@ def return_input_parameters():
 
     * Important: Is considered that the Shodan files respect the following name formats "BR.YYYYMMDD.json.bz2" or "BR.YYYYMMDD.json" and the Censys file "CENSYS-UFMG.YYYYMMDD.json.bz2" or "CENSYS-UFMG.YYYYMMDD.json" where YYYY is the year, MM the month and DD the day.
 
+    * Important: Is considered that Censys data are from UFMG.
+
     Required parameters:
         --directoryShodan = used if will be informed Shodan data
         --directoryCensys = used if will be informed Censys data
@@ -559,7 +561,6 @@ def return_input_parameters():
         help="directory with censys data (will be parsed to shodan format)",
         required=False,
     )
-    
 
     parser.add_argument(
         "--directoryStoreCensysShodanFormat",
