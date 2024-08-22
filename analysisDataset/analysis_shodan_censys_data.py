@@ -15,9 +15,6 @@ IP_FIELD_IN_SHODAN = "ip_str"
 PORT_FIELD_IN_SHODAN = "port"
 MODULE_FIELD_IN_SHODAN = "module"
 PREFIX_MODULE_FIELD_IN_SHODAN = "_shodan"
-NEW_FOLDER_STORE_UFMG_SHODAN_DATA = "shodan_UFMG/"
-NEW_FOLDER_STORE_CENSYS_IN_SHODAN_FORMAT = "censys_formated/"
-
 
 class Location(BaseModel):
     city: str
@@ -508,8 +505,10 @@ def return_input_parameters():
     * Important: Is considered that the Shodan files respect the following name formats "BR.YYYYMMDD.json.bz2" or "BR.YYYYMMDD.json" and the Censys file "CENSYS-UFMG.YYYYMMDD.json.bz2" or "CENSYS-UFMG.YYYYMMDD.json" where YYYY is the year, MM the month and DD the day.
                                      
     Required parameters:
-        --directory-shodan = used if will be informed Shodan data
-        --directory-censys = used if will be informed Censys data
+        --directoryShodan = used if will be informed Shodan data
+        --directoryCensys = used if will be informed Censys data
+        --directoryStoreCensysShodanFormat = used if will be parsed Censys data do Shodan format
+        --directoryStoreUFMGShodanData = used if will be filtered the UFMG data in Shodan files
         ipUFMG = UFMG ip to filter input data
         outputDirectory = existing directory to store results and intermediate data
 
@@ -542,12 +541,32 @@ def return_input_parameters():
     )
 
     parser.add_argument(
+        "--directoryStoreUFMGShodanData",
+        dest="directoryStoreUFMGShodanData",
+        action="store",
+        metavar="directory-StoreUFMGShodanData",
+        type=str,
+        help="inform the directory name that will be created to store UFMG info filtered from Shodan data",
+        required=False,
+    )
+
+    parser.add_argument(
         "--directoryCensys",
         dest="directoryCensys",
         action="store",
         metavar="directory-censys",
         type=str,
         help="directory with censys data (will be parsed to shodan format)",
+        required=False,
+    )
+
+    parser.add_argument(
+        "--directoryStoreCensysShodanFormat",
+        dest="directoryStoreCensysShodanFormat",
+        action="store",
+        metavar="directory-StoreCensysShodanFormat",
+        type=str,
+        help="inform the directory name that will be created to store Censys data in Shodan format",
         required=False,
     )
 
@@ -586,9 +605,13 @@ if __name__ == "__main__":
 
     if args.directoryCensys:
 
+        if not args.directoryStoreCensysShodanFormat:
+            logging.info("It is necessary to inform the directory to store Censys data in Shodan format")
+            raise Exception("Missing directoryStoreCensysShodanFormat parameter")
+
         # will be created a new directory to store censys data formatted --> the following funcionts will read censys data formatted from this directory
         newFolderCensysInShodanFormat = os.path.join(
-            args.directoryCensys, NEW_FOLDER_STORE_CENSYS_IN_SHODAN_FORMAT
+            args.directoryCensys, args.directoryStoreCensysShodanFormat
         )
         newFolder = newFolderCensysInShodanFormat
 
@@ -603,9 +626,13 @@ if __name__ == "__main__":
             logging.info("It is necessary to inform ipUFMG to analyze the shodan data")
             raise Exception("Missing ipUFMG parameter")
 
+        if not args.directoryStoreUFMGShodanData:
+            logging.info("It is necessary to inform the directory to store UFMG data from Shodan")
+            raise Exception("Missing directoryStoreCensysShodanFormat parameter")
+
         # will be created a new directory to store filtered shodan data --> the following functions will read ufmg shodan data formatted from this directory
         newFolderFilteredShodanUFMG = os.path.join(
-            args.directoryShodan, NEW_FOLDER_STORE_UFMG_SHODAN_DATA
+            args.directoryShodan, args.directoryStoreUFMGShodanData
         )
         newFolder = newFolderFilteredShodanUFMG
 
