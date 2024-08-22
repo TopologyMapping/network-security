@@ -603,8 +603,6 @@ if __name__ == "__main__":
 
     analysis: AnalysisShodanCensysData = AnalysisShodanCensysData()
 
-    newFolder = ""
-
     if args.directoryCensys:
 
         if not args.directoryStoreCensysShodanFormat:
@@ -625,7 +623,7 @@ if __name__ == "__main__":
         analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
 
         logging.info("Starting function: temporal_scan_ip_shodan_censys")
-        analysis.temporal_scan_ip_shodan_censys(newFolder, args.outputDirectory)
+        analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
 
     if args.directoryShodan:
 
@@ -651,7 +649,7 @@ if __name__ == "__main__":
         analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
 
         logging.info("Starting function: temporal_scan_ip_shodan_censys")
-        analysis.temporal_scan_ip_shodan_censys(newFolder, args.outputDirectory)
+        analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
 
 
 
