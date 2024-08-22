@@ -301,14 +301,14 @@ class AnalysisShodanCensysData:
             json.dump(data_to_be_dumped, file, indent=4)
 
     """
-        temporal_scan_ip_shodan: temporal analysis in shodan and censys (in shodan format) data
+        temporal_scan_ip_shodan_censys: temporal analysis in shodan and censys (in shodan format) data
 
         input: input directory with initial data and output directory to store results
 
         return: none. Will be stored info about the IPs analyzed throughout the days in the path: .../outputDirectory/TemporalScan_from_{starting date analyzed}_to_{final date analyzed}.json"
     """
 
-    def temporal_scan_ip_shodan(
+    def temporal_scan_ip_shodan_censys(
         self, inputDirectoryTemporalScan, outputDirectoryTemporalScan
     ):
 
@@ -503,7 +503,7 @@ def return_input_parameters():
         description="""--> Inform the parameters to run all the following functions listed above:
 
     * Important: Is considered that the Shodan files respect the following name formats "BR.YYYYMMDD.json.bz2" or "BR.YYYYMMDD.json" and the Censys file "CENSYS-UFMG.YYYYMMDD.json.bz2" or "CENSYS-UFMG.YYYYMMDD.json" where YYYY is the year, MM the month and DD the day.
-                                     
+
     Required parameters:
         --directoryShodan = used if will be informed Shodan data
         --directoryCensys = used if will be informed Censys data
@@ -521,7 +521,7 @@ def return_input_parameters():
         Used if the input file is from Censys -> will be parsed to shodan format
     
     Probe data shodan and censys: 
-        Find information about modules, ports and ips from shodan data.
+        Find information about modules, ports and ips from shodan and censys (in shodan format) data.
     
     Temporal scan ip shodan: 
         Make a temporal analysis from shodan and censys (in shodan format) data.
@@ -559,6 +559,7 @@ def return_input_parameters():
         help="directory with censys data (will be parsed to shodan format)",
         required=False,
     )
+    
 
     parser.add_argument(
         "--directoryStoreCensysShodanFormat",
@@ -613,12 +614,17 @@ if __name__ == "__main__":
         newFolderCensysInShodanFormat = os.path.join(
             args.directoryCensys, args.directoryStoreCensysShodanFormat
         )
-        newFolder = newFolderCensysInShodanFormat
 
         logging.info("Starting function: load_censys_in_shodan_format")
         analysis.load_censys_in_shodan_format(
             args.directoryCensys, newFolderCensysInShodanFormat
         )
+
+        logging.info("Starting function: probe_data_shodan_and_censys")
+        analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
+
+        logging.info("Starting function: temporal_scan_ip_shodan_censys")
+        analysis.temporal_scan_ip_shodan_censys(newFolder, args.outputDirectory)
 
     if args.directoryShodan:
 
@@ -634,15 +640,18 @@ if __name__ == "__main__":
         newFolderFilteredShodanUFMG = os.path.join(
             args.directoryShodan, args.directoryStoreUFMGShodanData
         )
-        newFolder = newFolderFilteredShodanUFMG
 
         logging.info("Starting function: filter_ufmg_shodan")
         analysis.filter_ufmg_shodan(
             args.ipUFMG, args.directoryShodan, newFolderFilteredShodanUFMG
         )
 
-    logging.info("Starting function: probe_data_shodan_and_censys")
-    analysis.probe_data_shodan_and_censys(newFolder, args.outputDirectory)
+        logging.info("Starting function: probe_data_shodan_and_censys")
+        analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
 
-    logging.info("Starting function: temporal_scan_ip_shodan")
-    analysis.temporal_scan_ip_shodan(newFolder, args.outputDirectory)
+        logging.info("Starting function: temporal_scan_ip_shodan_censys")
+        analysis.temporal_scan_ip_shodan_censys(newFolder, args.outputDirectory)
+
+
+
+
