@@ -595,6 +595,54 @@ def return_input_parameters():
     return args
 
 
+def censys_analysis(args, analysis):
+    if not args.directoryStoreCensysShodanFormat:
+        logging.info("It is necessary to inform the directory to store Censys data in Shodan format")
+        raise Exception("Missing directoryStoreCensysShodanFormat parameter")
+
+    # will be created a new directory to store censys data formatted --> the following funcionts will read censys data formatted from this directory
+    newFolderCensysInShodanFormat = os.path.join(
+        args.directoryCensys, args.directoryStoreCensysShodanFormat
+    )
+
+    logging.info("Starting function: load_censys_in_shodan_format")
+    analysis.load_censys_in_shodan_format(
+        args.directoryCensys, newFolderCensysInShodanFormat
+    )
+
+    logging.info("Starting function: probe_data_shodan_and_censys")
+    analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
+
+    logging.info("Starting function: temporal_scan_ip_shodan_censys")
+    analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
+
+def shodan_analysis(args, analysis):
+    if not args.ipUFMG:
+        logging.info("It is necessary to inform ipUFMG to analyze the shodan data")
+        raise Exception("Missing ipUFMG parameter")
+
+    if not args.directoryStoreUFMGShodanData:
+        logging.info("It is necessary to inform the directory to store UFMG data from Shodan")
+        raise Exception("Missing directoryStoreCensysShodanFormat parameter")
+
+    # will be created a new directory to store filtered shodan data --> the following functions will read ufmg shodan data formatted from this directory
+    newFolderFilteredShodanUFMG = os.path.join(
+        args.directoryShodan, args.directoryStoreUFMGShodanData
+    )
+
+    logging.info("Starting function: filter_ufmg_shodan")
+    analysis.filter_ufmg_shodan(
+        args.ipUFMG, args.directoryShodan, newFolderFilteredShodanUFMG
+    )
+
+    logging.info("Starting function: probe_data_shodan_and_censys")
+    analysis.probe_data_shodan_and_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
+
+    logging.info("Starting function: temporal_scan_ip_shodan_censys")
+    analysis.temporal_scan_ip_shodan_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
+
+
+
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.DEBUG)
@@ -605,52 +653,8 @@ if __name__ == "__main__":
 
     if args.directoryCensys:
 
-        if not args.directoryStoreCensysShodanFormat:
-            logging.info("It is necessary to inform the directory to store Censys data in Shodan format")
-            raise Exception("Missing directoryStoreCensysShodanFormat parameter")
-
-        # will be created a new directory to store censys data formatted --> the following funcionts will read censys data formatted from this directory
-        newFolderCensysInShodanFormat = os.path.join(
-            args.directoryCensys, args.directoryStoreCensysShodanFormat
-        )
-
-        logging.info("Starting function: load_censys_in_shodan_format")
-        analysis.load_censys_in_shodan_format(
-            args.directoryCensys, newFolderCensysInShodanFormat
-        )
-
-        logging.info("Starting function: probe_data_shodan_and_censys")
-        analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
-
-        logging.info("Starting function: temporal_scan_ip_shodan_censys")
-        analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
+        censys_analysis(args, analysis)
 
     if args.directoryShodan:
 
-        if not args.ipUFMG:
-            logging.info("It is necessary to inform ipUFMG to analyze the shodan data")
-            raise Exception("Missing ipUFMG parameter")
-
-        if not args.directoryStoreUFMGShodanData:
-            logging.info("It is necessary to inform the directory to store UFMG data from Shodan")
-            raise Exception("Missing directoryStoreCensysShodanFormat parameter")
-
-        # will be created a new directory to store filtered shodan data --> the following functions will read ufmg shodan data formatted from this directory
-        newFolderFilteredShodanUFMG = os.path.join(
-            args.directoryShodan, args.directoryStoreUFMGShodanData
-        )
-
-        logging.info("Starting function: filter_ufmg_shodan")
-        analysis.filter_ufmg_shodan(
-            args.ipUFMG, args.directoryShodan, newFolderFilteredShodanUFMG
-        )
-
-        logging.info("Starting function: probe_data_shodan_and_censys")
-        analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
-
-        logging.info("Starting function: temporal_scan_ip_shodan_censys")
-        analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
-
-
-
-
+        shodan_analysis(args, analysis)
