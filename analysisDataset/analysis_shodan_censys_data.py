@@ -353,36 +353,37 @@ class AnalysisShodanCensysData:
         for file in sortedFiles:
 
             inputPath = os.path.join(inputDirectoryTemporalScan, file)
-            data = json.load(open(inputPath, "r"))
 
-            # Get number of modules and port range
-            for scan in data:
+            with open(inputPath, 'r') as f:
+                for line in f:
+                    # Get number of modules and port range
+                    scan = json.loads(line.strip())
 
-                ip = scan["ip_str"]
-                timestamp = datetime.strptime(
-                    scan["timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
-                ).isoformat()
+                    ip = scan["ip_str"]
+                    timestamp = datetime.strptime(
+                        scan["timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
+                    ).isoformat()
 
-                ipsScanned[index] += 1
+                    ipsScanned[index] += 1
 
-                if ip in daysScan:
+                    if ip in daysScan:
 
-                    if (timestamp) in (daysScan[ip]["timestamp"]):
-                        ipScanedAgainOnTheSameDay[index] += 1
+                        if (timestamp) in (daysScan[ip]["timestamp"]):
+                            ipScanedAgainOnTheSameDay[index] += 1
+                        else:
+                            repeatedIpScan[index] += 1
+
+                        daysScan[ip]["timestamp"].add(timestamp)
+                        daysScan[ip]["scans"] += 1
                     else:
-                        repeatedIpScan[index] += 1
+                        daysScan[ip] = {"timestamp": set(), "scans": 0}
 
-                    daysScan[ip]["timestamp"].add(timestamp)
-                    daysScan[ip]["scans"] += 1
-                else:
-                    daysScan[ip] = {"timestamp": set(), "scans": 0}
+                        daysScan[ip]["timestamp"].add(timestamp)
+                        daysScan[ip]["scans"] += 1
 
-                    daysScan[ip]["timestamp"].add(timestamp)
-                    daysScan[ip]["scans"] += 1
-
-                if ip not in allIps:
-                    allIps.append(ip)
-                    uniqueIps[index] += 1
+                    if ip not in allIps:
+                        allIps.append(ip)
+                        uniqueIps[index] += 1
 
             # prepare variables for the next file
             index += 1
