@@ -380,7 +380,7 @@ class AnalysisShodanCensysData:
                     daysScan[ip]["timestamp"].add(timestamp)
                     daysScan[ip]["scans"] += 1
 
-                if not ((ip) in allIps):
+                if ip not in allIps:
                     allIps.append(ip)
                     uniqueIps[index] += 1
 
