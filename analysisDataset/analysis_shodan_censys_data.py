@@ -478,6 +478,7 @@ class AnalysisShodanCensysData:
 
             if f == None:
                 logging.warning(f"Invalid file: {filename}. Skipping ...")
+                f.close()
                 continue
 
             for line in f:
