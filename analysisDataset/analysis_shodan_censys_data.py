@@ -354,8 +354,14 @@ class AnalysisShodanCensysData:
 
             inputPath = os.path.join(inputDirectoryTemporalScan, file)
 
+            print(inputPath)
+
             with open(inputPath, 'r') as f:
                 for line in f:
+
+                    if not line or line == []:
+                        continue
+
                     # Get number of modules and port range
                     scan = json.loads(line.strip())
 
@@ -463,7 +469,8 @@ class AnalysisShodanCensysData:
                 logging.warning(f"Invalid file: {file}. Skipping ...")
                 continue
 
-            filename = f"{inputDirectoryFilterUFMG}{file}"
+            #filename = f"{inputDirectoryFilterUFMG}{file}"
+            filename = os.path.join(inputDirectoryFilterUFMG, file)
 
             qty = 0
 
@@ -584,9 +591,11 @@ def return_input_parameters():
     )
 
     parser.add_argument(
-        "outputDirectory",
+        "--outputDirectory",
         action="store",
+        dest="outputDirectory",
         metavar="outputDirectory",
+        required=True,
         type=str,
         help="existing directory to store results and intermediate data",
     )
@@ -649,6 +658,10 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     args = return_input_parameters()
+
+    if not args.outputDirectory:
+        logging.info("It is necessary to inform where to store the results")
+        raise Exception("Missing outputDirectory parameter")
 
     analysis: AnalysisShodanCensysData = AnalysisShodanCensysData()
 
