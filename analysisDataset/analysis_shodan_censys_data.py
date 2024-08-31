@@ -6,15 +6,83 @@ import os
 from argparse import RawTextHelpFormatter
 from datetime import datetime
 from ipaddress import ip_address, ip_network
-from typing import Optional
+from typing import Optional 
+from pydantic import BaseModel, Field 
 
-from pydantic import BaseModel, Field
 
 CPE_FIELD_IN_SHODAN = "cpe23"
 IP_FIELD_IN_SHODAN = "ip_str"
 PORT_FIELD_IN_SHODAN = "port"
 MODULE_FIELD_IN_SHODAN = "module"
 PREFIX_MODULE_FIELD_IN_SHODAN = "_shodan"
+
+class FileSummary:
+    
+    def __init__(self):
+        self.daysScan: dict[str, dict] = {}
+        self.uniqueIps: list[int] = [0]
+        self.allIps: list[str] = []
+        self.repeatedIpScan: list[int] = [0]
+        self.ipScanedAgainOnTheSameDay: list[int] = [0]
+        self.ipsScanned: list[int] = [0]
+
+    def add(self, ip: str, timestamp: datetime, index: int):
+        date = f'{timestamp.year}:{timestamp.month}:{timestamp.day}'
+
+        self.ipsScanned[index] += 1
+        
+        if ip in self.daysScan:
+
+            if date in self.daysScan[ip]["timestamp"]:
+                self.ipScanedAgainOnTheSameDay[index] += 1
+            else:
+                self.repeatedIpScan[index] += 1
+
+            self.daysScan[ip]["timestamp"].add(date)
+            self.daysScan[ip]["scans"] += 1
+        else:
+            self.daysScan[ip] = {"timestamp": set(), "scans": 1}
+            self.daysScan[ip]["timestamp"].add(date)
+
+        if ip not in self.allIps:
+            self.allIps.append(ip)
+            self.uniqueIps[index] += 1
+
+
+    def update_info_temporal_scan(self):
+        self.ipsScanned.append(0)
+        self.uniqueIps.append(0)
+        self.repeatedIpScan.append(0)
+        self.ipScanedAgainOnTheSameDay.append(0)
+
+    def dump(self, output_directory: str, initial_date, final_date):
+        # Sort ips by the number of scans
+        
+        for ip, data in self.daysScan.items():
+            self.daysScan[ip]["timestamp"] = sorted(data["timestamp"])
+
+        sorted_daysScan = sorted(self.daysScan.items(), key=lambda x: x[1]["scans"], reverse=True)
+
+        # Group data for JSON output
+        data = {
+            "days_summary": [
+                {
+                    "Day": i + 1,
+                    "IpsScanned": self.ipsScanned[i],
+                    "UniqueIps": self.uniqueIps[i],
+                    "RepeatedIpScan": self.repeatedIpScan[i],
+                    "IpScanedAgainOnTheSameDay": self.ipScanedAgainOnTheSameDay[i],
+                }
+                for i in range(len(self.ipsScanned) - 1)
+            ],
+            "sorted_daysScan": sorted_daysScan,
+        }
+
+        # Format output file name
+        output_path = os.path.join(output_directory, f"TemporalScan_from_{initial_date}_to_{final_date}.json")
+
+        with open(output_path, "w") as file:
+            json.dump(data, file, indent=6)
 
 class Location(BaseModel):
     city: str
@@ -133,7 +201,6 @@ class Shodan(BaseModel):
 class to load, filter and make analysis in shodan and censys data
 """
 
-
 class AnalysisShodanCensysData:
     """
     load_censys_in_shodan_format: parse censys file (.json.bz2) to shodan format (.json)
@@ -156,6 +223,7 @@ class AnalysisShodanCensysData:
 
         for file in os.scandir(directory):
 
+            
             # Skip dirs and non-json files
             if (
                 not file.is_file()
@@ -164,6 +232,8 @@ class AnalysisShodanCensysData:
             ):
                 logging.warning(f"Invalid file: {file.name}. Skipping ...")
                 continue
+
+            logging.info(f"Opening file: {file}")
 
             infoCensysToShodanFormat: list[dict] = []
 
@@ -229,6 +299,8 @@ class AnalysisShodanCensysData:
             if not file.is_file() or not file.path.endswith(".json"):
                 logging.warning(f"Invalid file: {file.path}. Skipping ...")
                 continue
+
+            logging.info(f"Opening file: {file}")
 
             # saving names of analyzed files
             filenames.append(file.path.split("/")[-1])
@@ -308,126 +380,65 @@ class AnalysisShodanCensysData:
         return: none. Will be stored info about the IPs analyzed throughout the days in the path: .../outputDirectory/TemporalScan_from_{starting date analyzed}_to_{final date analyzed}.json"
     """
 
-    def temporal_scan_ip_shodan_censys(
-        self, inputDirectoryTemporalScan, outputDirectoryTemporalScan
-    ):
+    def temporal_scan_ip_shodan_censys(self, input_directory: str, output_directory: str):
 
-        # Ufmg ips directory
-        if not (
-            os.path.exists(inputDirectoryTemporalScan)
-            and os.path.isdir(inputDirectoryTemporalScan)
-        ):
-            logging.info(
-                f"The input directory {inputDirectoryTemporalScan} does not exists"
-            )
-            raise Exception("Directory not valid or does not exists")
+        # UFMG ips directory
+        if not (os.path.exists(input_directory) and os.path.isdir(input_directory)):
+            logging.info(f"The input directory {input_directory} does not exist")
+            raise Exception("Directory not valid or does not exist")
 
-        # info to be collected
-        daysScan: dict[str, dict] = {}
-        uniqueIps: list[int] = [0]
-        allIps: list[str] = []
-        repeatedIpScan: list[int] = [0]
-        ipScanedAgainOnTheSameDay: list[int] = [0]
-        ipsScanned: list[int] = [0]
-        index = 0
+        file_summary = FileSummary()
 
-        # read file names first to order and open files in temporal order
-        files = [
-            file.name
-            for file in os.scandir(inputDirectoryTemporalScan)
-            if file.is_file() and file.name.endswith(".json")
-        ]
-        sortedFiles = sorted(files)
+        # Read file names first to order and open files in temporal order
+        files = [file.name for file in os.scandir(input_directory) if file.is_file() and file.name.endswith(".json")]
+        sorted_files = sorted(files)
 
-        if sortedFiles == []:
-            logging.error(
-                f"No valid .json files to do temporal analysis in the directory: {inputDirectoryTemporalScan}"
-            )
+        if not sorted_files:
+            logging.error(f"No valid .json files to do temporal analysis in the directory: {input_directory}")
             raise Exception("No valid files in the input directory")
 
-        # reading date by the filename
-        # dates are in the end of the filename, before .json
-        initialDate = datetime.strptime(sortedFiles[0].split(".")[-2], "%Y%m%d").date()
-        finalDate = datetime.strptime(sortedFiles[-1].split(".")[-2], "%Y%m%d").date()
+        # Reading date by the filename
+        initial_date = datetime.strptime(sorted_files[0].split(".")[-2], "%Y%m%d").date()
+        final_date = datetime.strptime(sorted_files[-1].split(".")[-2], "%Y%m%d").date()
 
-        for file in sortedFiles:
+        for file_name in sorted_files:
 
-            inputPath = os.path.join(inputDirectoryTemporalScan, file)
+            logging.info(f"Opening file: {file_name}")
 
-            print(inputPath)
+            input_path = os.path.join(input_directory, file_name)
 
-            with open(inputPath, 'r') as f:
-                for line in f:
+            index = 0
+            with open(input_path, 'r') as file:
+                ip = ''
+                timestamp = ''
 
-                    if not line or line == []:
+                for line in file:
+                    line = line.strip()
+
+                    if ip != '' and timestamp != '':
                         continue
 
-                    # Get number of modules and port range
-                    scan = json.loads(line.strip())
+                    if (not line) or line in ["[", "{"] or ('ip_str' not in line and 'timestamp' not in line):
+                        continue
 
-                    ip = scan["ip_str"]
-                    timestamp = datetime.strptime(
-                        scan["timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
-                    ).isoformat()
+                    if '"ip_str":' in line:
+                        ip = line.split('":')[1].strip().replace(',', '').replace('"', '')
+                    elif '"timestamp":' in line:
+                        timestamp_value = line.split('":')[1].strip().replace(',', '').replace('"', '')
+                        try:
+                            timestamp = datetime.strptime(timestamp_value, "%Y-%m-%dT%H:%M:%S.%f")
+                        except ValueError:
+                            continue
 
-                    ipsScanned[index] += 1
-
-                    if ip in daysScan:
-
-                        if (timestamp) in (daysScan[ip]["timestamp"]):
-                            ipScanedAgainOnTheSameDay[index] += 1
-                        else:
-                            repeatedIpScan[index] += 1
-
-                        daysScan[ip]["timestamp"].add(timestamp)
-                        daysScan[ip]["scans"] += 1
-                    else:
-                        daysScan[ip] = {"timestamp": set(), "scans": 0}
-
-                        daysScan[ip]["timestamp"].add(timestamp)
-                        daysScan[ip]["scans"] += 1
-
-                    if ip not in allIps:
-                        allIps.append(ip)
-                        uniqueIps[index] += 1
-
-            # prepare variables for the next file
+                    if ip and timestamp:
+                        file_summary.add(ip, timestamp, index)
+                        ip = ''
+                        timestamp = ''
+            
             index += 1
-            ipsScanned.append(0)
-            uniqueIps.append(0)
-            repeatedIpScan.append(0)
-            ipScanedAgainOnTheSameDay.append(0)
+            file_summary.update_info_temporal_scan()
 
-        for ip, data in daysScan.items():
-            daysScan[ip]["timestamp"] = sorted(data["timestamp"])
-
-        # sort ips by the number os scans
-        sorted_daysScan = sorted(
-            daysScan.items(), key=lambda x: x[1]["scans"], reverse=True
-        )
-
-        # group data to write json
-        data = {
-            "days_summary": [
-                {
-                    "Day": i + 1,
-                    "IpsScanned": ipsScanned[i],
-                    "UniqueIps": uniqueIps[i],
-                    "RepeatedIpScan": repeatedIpScan[i],
-                    "IpScanedAgainOnTheSameDay": ipScanedAgainOnTheSameDay[i],
-                }
-                for i in range(len(ipsScanned) - 1)
-            ],
-            "sorted_daysScan": sorted_daysScan,
-        }
-
-        # format output file name
-        outputPath = f"{outputDirectoryTemporalScan}/TemporalScan_from_{initialDate}_to_{finalDate}.json"
-        if outputDirectoryTemporalScan.endswith("/"):
-            outputPath = f"{outputDirectoryTemporalScan}TemporalScan_from_{initialDate}_to_{finalDate}.json"
-
-        with open(outputPath, "w") as file:
-            json.dump(data, file, indent=6)
+        file_summary.dump(output_directory, initial_date, final_date)
 
     """
         filter_ufmg_shodan: filter ufmg information in shodan data. The filter consider that the date of the scan is in the filename
@@ -468,6 +479,9 @@ class AnalysisShodanCensysData:
             if not file.endswith(".json.bz2") or not file.startswith("BR."):
                 logging.warning(f"Invalid file: {file}. Skipping ...")
                 continue
+            
+            logging.info(f"Opening file: {file}")
+
 
             #filename = f"{inputDirectoryFilterUFMG}{file}"
             filename = os.path.join(inputDirectoryFilterUFMG, file)
@@ -616,7 +630,7 @@ def censys_analysis(args, analysis):
         args.directoryCensys, args.directoryStoreCensysShodanFormat
     )
 
-    logging.info("Starting function: load_censys_in_shodan_format")
+    logging.info("Starting function: load_censys_in_shodan_format in path")
     analysis.load_censys_in_shodan_format(
         args.directoryCensys, newFolderCensysInShodanFormat
     )
