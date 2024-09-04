@@ -8,6 +8,7 @@ from datetime import datetime
 from ipaddress import ip_address, ip_network
 from typing import Optional 
 from pydantic import BaseModel, Field 
+import ijson
 
 
 CPE_FIELD_IN_SHODAN = "cpe23"
@@ -26,7 +27,7 @@ class FileSummary:
         self.ipScanedAgainOnTheSameDay: list[int] = [0]
         self.ipsScanned: list[int] = [0]
 
-    def add(self, ip: str, timestamp: datetime, index: int):
+    def add_info_temporal_scan(self, ip: str, timestamp: datetime, index: int):
         date = f'{timestamp.year}:{timestamp.month}:{timestamp.day}'
 
         self.ipsScanned[index] += 1
@@ -55,7 +56,7 @@ class FileSummary:
         self.repeatedIpScan.append(0)
         self.ipScanedAgainOnTheSameDay.append(0)
 
-    def dump(self, output_directory: str, initial_date, final_date):
+    def dump_info_temporal_scan(self, output_directory: str, initial_date, final_date):
         # Sort ips by the number of scans
         
         for ip, data in self.daysScan.items():
@@ -409,36 +410,22 @@ class AnalysisShodanCensysData:
 
             index = 0
             with open(input_path, 'r') as file:
-                ip = ''
-                timestamp = ''
+                objects = ijson.items(file, 'item')
+                
+                # Print the value of the 'name' key directly for each dictionary
+                for scan in objects:
+                    ip = scan['ip_str']
 
-                for line in file:
-                    line = line.strip()
+                    timestamp = datetime.strptime(
+                        scan["timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
+                    )
 
-                    if ip != '' and timestamp != '':
-                        continue
+                    file_summary.add_info_temporal_scan(ip, timestamp, index)
 
-                    if (not line) or line in ["[", "{"] or ('ip_str' not in line and 'timestamp' not in line):
-                        continue
-
-                    if '"ip_str":' in line:
-                        ip = line.split('":')[1].strip().replace(',', '').replace('"', '')
-                    elif '"timestamp":' in line:
-                        timestamp_value = line.split('":')[1].strip().replace(',', '').replace('"', '')
-                        try:
-                            timestamp = datetime.strptime(timestamp_value, "%Y-%m-%dT%H:%M:%S.%f")
-                        except ValueError:
-                            continue
-
-                    if ip and timestamp:
-                        file_summary.add(ip, timestamp, index)
-                        ip = ''
-                        timestamp = ''
-            
             index += 1
             file_summary.update_info_temporal_scan()
 
-        file_summary.dump(output_directory, initial_date, final_date)
+        file_summary.dump_info_temporal_scan(output_directory, initial_date, final_date)
 
     """
         filter_ufmg_shodan: filter ufmg information in shodan data. The filter consider that the date of the scan is in the filename
@@ -630,13 +617,13 @@ def censys_analysis(args, analysis):
         args.directoryCensys, args.directoryStoreCensysShodanFormat
     )
 
-    logging.info("Starting function: load_censys_in_shodan_format in path")
+    """ logging.info("Starting function: load_censys_in_shodan_format in path")
     analysis.load_censys_in_shodan_format(
         args.directoryCensys, newFolderCensysInShodanFormat
     )
 
     logging.info("Starting function: probe_data_shodan_and_censys")
-    analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
+    analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory) """
 
     logging.info("Starting function: temporal_scan_ip_shodan_censys")
     analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
@@ -655,13 +642,13 @@ def shodan_analysis(args, analysis):
         args.directoryShodan, args.directoryStoreUFMGShodanData
     )
 
-    logging.info("Starting function: filter_ufmg_shodan")
+    """ logging.info("Starting function: filter_ufmg_shodan")
     analysis.filter_ufmg_shodan(
         args.ipUFMG, args.directoryShodan, newFolderFilteredShodanUFMG
     )
 
     logging.info("Starting function: probe_data_shodan_and_censys")
-    analysis.probe_data_shodan_and_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
+    analysis.probe_data_shodan_and_censys(newFolderFilteredShodanUFMG, args.outputDirectory) """
 
     logging.info("Starting function: temporal_scan_ip_shodan_censys")
     analysis.temporal_scan_ip_shodan_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
