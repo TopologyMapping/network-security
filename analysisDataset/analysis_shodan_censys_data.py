@@ -290,9 +290,9 @@ class AnalysisShodanCensysData:
             raise Exception("Directory not valid or not exists")
 
         # Modules found across all scans, unique ips and services
-        modulesShodan: dict[str, set[str]] = {}
-        ipsScanned: dict[str, set] = {}
-        servicesProvided: list[str] = []
+        scanModules: dict[str, set[str]] = {}
+        cpeByIp: dict[str, set] = {}
+        attributesCollected: list[str] = []
         filenames: list[str] = []
 
         for file in os.scandir(inputDirectoryProbeData):
@@ -307,62 +307,78 @@ class AnalysisShodanCensysData:
             filenames.append(file.path.split("/")[-1])
 
             data = json.load(open(file.path, "r"))
+##
+            index = 0
+            with open(file.path, 'r') as file:
+                objects = ijson.items(file, 'item')
+                
+                # Print the value of the 'name' key directly for each dictionary
+                for scan in objects:
+                    ip = scan['ip_str']
+
+
+                    file_summary.add_info_probe_data(ip, cpe, module, port, index)
+
+            index += 1
+            file_summary.update_info_temporal_scan()
+##
+
 
             # Get number of modules and port range
             for scan in data:
 
-                keysDict = scan.keys()
-                if not (keysDict) in servicesProvided:
-                    servicesProvided.append(keysDict)
+                scanAttributes = scan.keys()
+                if not (scanAttributes) in attributesCollected:
+                    attributesCollected.append(scanAttributes)
 
                 ip = scan["ip_str"]
 
-                if (ip) in ipsScanned:
+                if (ip) in cpeByIp:
                     if "cpe23" in scan:
                         cpe = scan["cpe23"]
                         for j in cpe:
-                            ipsScanned[ip].add(j)
+                            cpeByIp[ip].add(j)
                 else:
-                    ipsScanned[ip] = set()
+                    cpeByIp[ip] = set()
                     if "cpe23" in scan:
                         cpe = scan["cpe23"]
                         for j in cpe:
-                            ipsScanned[ip].add(j)
+                            cpeByIp[ip].add(j)
 
                 module = scan["_shodan"]["module"]
 
-                if (module) in modulesShodan:
-                    modulesShodan[module].add(scan["port"])
+                if (module) in scanModules:
+                    scanModules[module].add(scan["port"])
                 else:
-                    modulesShodan[module] = set()
-                    modulesShodan[module].add(scan["port"])
+                    scanModules[module] = set()
+                    scanModules[module].add(scan["port"])
 
         # different info collected
-        servicesProvided = [(keysDict) for keysDict in servicesProvided]
+        attributesCollected = [(keysDict) for keysDict in attributesCollected]
 
-        formatedServicesProvided = []
-        for i in servicesProvided:
-            formatedServicesProvided.extend(i)
+        formatedAttributesCollected = []
+        for i in attributesCollected:
+            formatedAttributesCollected.extend(i)
 
-        formatedServicesProvided = list(set(formatedServicesProvided))
+        formatedAttributesCollected = list(set(formatedAttributesCollected))
 
         # format data to build json
         modules_shodan_serializable = {
             module: {"ports": list(ports), "count": len(ports)}
-            for module, ports in modulesShodan.items()
+            for module, ports in scanModules.items()
         }
 
         ips_scanned_serializable = {
-            ip: {"cpe": list(cpe)} for ip, cpe in ipsScanned.items()
+            ip: {"cpe": list(cpe)} for ip, cpe in cpeByIp.items()
         }
 
         data_to_be_dumped = {
             "filesScanned": filenames,
-            "modulesShodan": modules_shodan_serializable,
-            "uniqueModulesCount": len(modulesShodan),
-            "servicesProvided": formatedServicesProvided,
-            "uniqueIpsCount": len(ipsScanned),
-            "ipsScanned": ips_scanned_serializable,
+            "scanModules": modules_shodan_serializable,
+            "uniqueModulesCount": len(scanModules),
+            "attributesCollected": formatedAttributesCollected,
+            "uniqueIpsCount": len(cpeByIp),
+            "cpeByIp": ips_scanned_serializable,
         }
 
         # write info collected in a file
