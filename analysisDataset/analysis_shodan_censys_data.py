@@ -20,61 +20,85 @@ PREFIX_MODULE_FIELD_IN_SHODAN = "_shodan"
 class FileSummary:
     
     def __init__(self):
-        self.daysScan: dict[str, dict] = {}
-        self.uniqueIps: list[int] = [0]
-        self.allIps: list[str] = []
-        self.repeatedIpScan: list[int] = [0]
-        self.ipScanedAgainOnTheSameDay: list[int] = [0]
-        self.ipsScanned: list[int] = [0]
+        self.days_scan: dict[str, dict] = {}
+        self.unique_ips: list[int] = [0]
+        self.all_ips: list[str] = []
+        self.repeated_ip_scan: list[int] = [0]
+        self.ip_scaned_again_same_day: list[int] = [0]
+        self.ips_scanned: list[int] = [0]
+        self.attributes_collected: list[str] = ['']
+        self.scan_modules: dict[str, set[str]] = {}
+        self.cpe_by_ip: dict[str, set] = {}
 
     def add_info_temporal_scan(self, ip: str, timestamp: datetime, index: int):
         date = f'{timestamp.year}:{timestamp.month}:{timestamp.day}'
 
-        self.ipsScanned[index] += 1
+        self.ips_scanned[index] += 1
         
-        if ip in self.daysScan:
+        if ip in self.days_scan:
 
-            if date in self.daysScan[ip]["timestamp"]:
-                self.ipScanedAgainOnTheSameDay[index] += 1
+            if date in self.days_scan[ip]["timestamp"]:
+                self.ip_scaned_again_same_day[index] += 1
             else:
-                self.repeatedIpScan[index] += 1
+                self.repeated_ip_scan[index] += 1
 
-            self.daysScan[ip]["timestamp"].add(date)
-            self.daysScan[ip]["scans"] += 1
+            self.days_scan[ip]["timestamp"].add(date)
+            self.days_scan[ip]["scans"] += 1
         else:
-            self.daysScan[ip] = {"timestamp": set(), "scans": 1}
-            self.daysScan[ip]["timestamp"].add(date)
+            self.days_scan[ip] = {"timestamp": set(), "scans": 1}
+            self.days_scan[ip]["timestamp"].add(date)
 
-        if ip not in self.allIps:
-            self.allIps.append(ip)
-            self.uniqueIps[index] += 1
+        if ip not in self.all_ips:
+            self.all_ips.append(ip)
+            self.unique_ips[index] += 1
+    
+    def add_info_probe_data(self, ip: str, port:str, scan_attributes: str, module: str, cpe: list | None):
 
+        if not (scan_attributes) in self.attributes_collected:
+            self.attributes_collected.append(scan_attributes)
+
+        if (ip) in self.cpe_by_ip:
+            if cpe:
+                for j in cpe:
+                    self.cpe_by_ip[ip].add(j)
+        else:
+            self.cpe_by_ip[ip] = set()
+            if cpe:
+                for j in cpe:
+                    self.cpe_by_ip[ip].add(j)
+
+
+        if (module) in self.scan_modules:
+            self.scan_modules[module].add(port)
+        else:
+            self.scan_modules[module] = set()
+            self.scan_modules[module].add(port)
 
     def update_info_temporal_scan(self):
-        self.ipsScanned.append(0)
-        self.uniqueIps.append(0)
-        self.repeatedIpScan.append(0)
-        self.ipScanedAgainOnTheSameDay.append(0)
+        self.ips_scanned.append(0)
+        self.unique_ips.append(0)
+        self.repeated_ip_scan.append(0)
+        self.ip_scaned_again_same_day.append(0)
 
     def dump_info_temporal_scan(self, output_directory: str, initial_date, final_date):
-        # Sort ips by the number of scans
         
-        for ip, data in self.daysScan.items():
-            self.daysScan[ip]["timestamp"] = sorted(data["timestamp"])
+        # Sort ips by the number of scans        
+        for ip, data in self.days_scan.items():
+            self.days_scan[ip]["timestamp"] = sorted(data["timestamp"])
 
-        sorted_daysScan = sorted(self.daysScan.items(), key=lambda x: x[1]["scans"], reverse=True)
+        sorted_daysScan = sorted(self.days_scan.items(), key=lambda x: x[1]["scans"], reverse=True)
 
         # Group data for JSON output
         data = {
             "days_summary": [
                 {
                     "Day": i + 1,
-                    "IpsScanned": self.ipsScanned[i],
-                    "UniqueIps": self.uniqueIps[i],
-                    "RepeatedIpScan": self.repeatedIpScan[i],
-                    "IpScanedAgainOnTheSameDay": self.ipScanedAgainOnTheSameDay[i],
+                    "IpsScanned": self.ips_scanned[i],
+                    "UniqueIps": self.unique_ips[i],
+                    "RepeatedIpScan": self.repeated_ip_scan[i],
+                    "IpScanedAgainOnTheSameDay": self.ip_scaned_again_same_day[i],
                 }
-                for i in range(len(self.ipsScanned) - 1)
+                for i in range(len(self.ips_scanned) - 1)
             ],
             "sorted_daysScan": sorted_daysScan,
         }
@@ -84,6 +108,42 @@ class FileSummary:
 
         with open(output_path, "w") as file:
             json.dump(data, file, indent=6)
+    
+    def dump_info_probe_data(self, output_directory: str):
+
+        # store info collected with parentheses
+        self.attributes_collected = [(keysDict) for keysDict in self.attributes_collected]
+
+        formated_services_provided = []
+        for i in self.attributes_collected:
+            formated_services_provided.extend(i)
+
+        formated_services_provided = list(set(formated_services_provided))
+
+        # format data to build json
+        modules_shodan_serializable = {
+            module: {"ports": list(ports), "count": len(ports)}
+            for module, ports in self.scan_modules.items()
+        }
+
+        ips_scanned_serializable = {
+            ip: {"cpe": list(cpe)} for ip, cpe in self.cpe_by_ip.items()
+        }
+
+        data = {
+            "modulesShodan": modules_shodan_serializable,
+            "uniqueModulesCount": len(self.scan_modules),
+            "servicesProvided": formated_services_provided,
+            "uniqueIpsCount": len(self.cpe_by_ip),
+            "ipsScanned": ips_scanned_serializable,
+        }
+
+        # Format output file name
+        output_path = os.path.join(output_directory, "modules_and_ports.json")
+
+        with open(output_path, "w") as file:
+            json.dump(data, file, indent=4)
+
 
 class Location(BaseModel):
     city: str
@@ -212,11 +272,11 @@ class AnalysisShodanCensysData:
     """
 
     def load_censys_in_shodan_format(
-        self, inputDirectoryLoadCensys, outputDirectoryLoadCensys
+        self, input_directory_load_Censys, output_directory_load_Censys
     ):
 
         # Ufmg ips directory
-        directory = inputDirectoryLoadCensys
+        directory = input_directory_load_Censys
 
         if not (os.path.exists(directory) and os.path.isdir(directory)):
             logging.warning(f"Invalid directory: {directory}")
@@ -236,7 +296,7 @@ class AnalysisShodanCensysData:
 
             logging.info(f"Opening file: {file}")
 
-            infoCensysToShodanFormat: list[dict] = []
+            info_Censys_to_Shodan_format: list[dict] = []
 
             # read all scans
             with bz2.open(file, "rt") as f:
@@ -251,23 +311,23 @@ class AnalysisShodanCensysData:
                         line["services"] = i
 
                         # parse the information using pydantic class
-                        infoScanned = Shodan.parse_row(line)
+                        info_scanned = Shodan.parse_row(line)
 
-                        infoCensysToShodanFormat.append(
-                            infoScanned.model_dump(exclude=None, by_alias=True)
+                        info_Censys_to_Shodan_format.append(
+                            info_scanned.model_dump(exclude=None, by_alias=True)
                         )
-                        infoScanned = {}  # clean the dict
+                        info_scanned = {}  # clean the dict
 
             # create new filename and ignoring extension .json.bz2
-            filenameOutput = (
+            filename_output = (
                 file.name.split(".")[0] + ".formated." + file.name.split(".")[1]
             )
 
-            logging.info(f"Creating new folder: {outputDirectoryLoadCensys}")
-            os.makedirs(outputDirectoryLoadCensys, exist_ok=True)
+            logging.info(f"Creating new folder: {output_directory_load_Censys}")
+            os.makedirs(output_directory_load_Censys, exist_ok=True)
 
-            with open(f"{outputDirectoryLoadCensys}{filenameOutput}.json", "w") as file:
-                json.dump(infoCensysToShodanFormat, file, indent=6)
+            with open(f"{output_directory_load_Censys}{filename_output}.json", "w") as file:
+                json.dump(info_Censys_to_Shodan_format, file, indent=6)
 
     """
         probe_data_shodan_and_censys: analyzes data from shodan and censys (in shodan format) gathering information such as amount of IPS, scanning modules...
@@ -278,24 +338,20 @@ class AnalysisShodanCensysData:
     """
 
     def probe_data_shodan_and_censys(
-        self, inputDirectoryProbeData, outputDirectoryProbeData
+        self, input_directory_probe_data, output_directory_probe_data
     ):
         # Ufmg ips directory
 
         if not (
-            os.path.exists(inputDirectoryProbeData)
-            and os.path.isdir(inputDirectoryProbeData)
+            os.path.exists(input_directory_probe_data)
+            and os.path.isdir(input_directory_probe_data)
         ):
-            logging.warning(f"Invalid directory: {inputDirectoryProbeData}.")
+            logging.warning(f"Invalid directory: {input_directory_probe_data}.")
             raise Exception("Directory not valid or not exists")
 
-        # Modules found across all scans, unique ips and services
-        scanModules: dict[str, set[str]] = {}
-        cpeByIp: dict[str, set] = {}
-        attributesCollected: list[str] = []
-        filenames: list[str] = []
+        file_summary = FileSummary()
 
-        for file in os.scandir(inputDirectoryProbeData):
+        for file in os.scandir(input_directory_probe_data):
             # Skip dirs and non-json files
             if not file.is_file() or not file.path.endswith(".json"):
                 logging.warning(f"Invalid file: {file.path}. Skipping ...")
@@ -303,91 +359,28 @@ class AnalysisShodanCensysData:
 
             logging.info(f"Opening file: {file}")
 
-            # saving names of analyzed files
-            filenames.append(file.path.split("/")[-1])
-
-            data = json.load(open(file.path, "r"))
-##
-            index = 0
             with open(file.path, 'r') as file:
                 objects = ijson.items(file, 'item')
                 
                 # Print the value of the 'name' key directly for each dictionary
                 for scan in objects:
+
                     ip = scan['ip_str']
 
-
-                    file_summary.add_info_probe_data(ip, cpe, module, port, index)
-
-            index += 1
-            file_summary.update_info_temporal_scan()
-##
-
-
-            # Get number of modules and port range
-            for scan in data:
-
-                scanAttributes = scan.keys()
-                if not (scanAttributes) in attributesCollected:
-                    attributesCollected.append(scanAttributes)
-
-                ip = scan["ip_str"]
-
-                if (ip) in cpeByIp:
+                    scan_attributes = scan.keys()
+                    
+                    cpe = None
                     if "cpe23" in scan:
                         cpe = scan["cpe23"]
-                        for j in cpe:
-                            cpeByIp[ip].add(j)
-                else:
-                    cpeByIp[ip] = set()
-                    if "cpe23" in scan:
-                        cpe = scan["cpe23"]
-                        for j in cpe:
-                            cpeByIp[ip].add(j)
 
-                module = scan["_shodan"]["module"]
+                    port = scan['port']
 
-                if (module) in scanModules:
-                    scanModules[module].add(scan["port"])
-                else:
-                    scanModules[module] = set()
-                    scanModules[module].add(scan["port"])
+                    module = scan["_shodan"]["module"]
 
-        # different info collected
-        attributesCollected = [(keysDict) for keysDict in attributesCollected]
+                    file_summary.add_info_probe_data(ip, port, scan_attributes, module, cpe)
 
-        formatedAttributesCollected = []
-        for i in attributesCollected:
-            formatedAttributesCollected.extend(i)
-
-        formatedAttributesCollected = list(set(formatedAttributesCollected))
-
-        # format data to build json
-        modules_shodan_serializable = {
-            module: {"ports": list(ports), "count": len(ports)}
-            for module, ports in scanModules.items()
-        }
-
-        ips_scanned_serializable = {
-            ip: {"cpe": list(cpe)} for ip, cpe in cpeByIp.items()
-        }
-
-        data_to_be_dumped = {
-            "filesScanned": filenames,
-            "scanModules": modules_shodan_serializable,
-            "uniqueModulesCount": len(scanModules),
-            "attributesCollected": formatedAttributesCollected,
-            "uniqueIpsCount": len(cpeByIp),
-            "cpeByIp": ips_scanned_serializable,
-        }
-
-        # write info collected in a file
-        outputPath = f"{outputDirectoryProbeData}/modules_and_ports.json"
-        if outputDirectoryProbeData.endswith("/"):
-            outputPath = f"{outputDirectoryProbeData}modules_and_ports.json"
-
-        with open(outputPath, "w") as file:
-            json.dump(data_to_be_dumped, file, indent=4)
+            file_summary.dump_info_probe_data(output_directory_probe_data)
+            
 
     """
         temporal_scan_ip_shodan_censys: temporal analysis in shodan and censys (in shodan format) data
@@ -430,6 +423,7 @@ class AnalysisShodanCensysData:
                 
                 # Print the value of the 'name' key directly for each dictionary
                 for scan in objects:
+
                     ip = scan['ip_str']
 
                     timestamp = datetime.strptime(
@@ -452,25 +446,25 @@ class AnalysisShodanCensysData:
     """
 
     def filter_ufmg_shodan(
-        self, inputIpUFMG, inputDirectoryFilterUFMG, outputDirectoryFilterUFMG
+        self, input_ip_UFMG, input_directory_filter_UFMG, output_directory_filter_UFMG
     ):
 
         # UFMG ips
-        jsonUFMG = []
+        json_UFMG = []
 
         # UFMG subnet
-        ipUFMG = ip_network(inputIpUFMG)  # using ip_network to use function subnet_of
+        ipUFMG = ip_network(input_ip_UFMG)  # using ip_network to use function subnet_of
 
         if not (
-            os.path.exists(inputDirectoryFilterUFMG)
-            and os.path.isdir(inputDirectoryFilterUFMG)
+            os.path.exists(input_directory_filter_UFMG)
+            and os.path.isdir(input_directory_filter_UFMG)
         ):
-            logging.error(f"Invalid directory: {inputDirectoryFilterUFMG}.")
+            logging.error(f"Invalid directory: {input_directory_filter_UFMG}.")
             raise Exception("Directory not valid or not exists")
 
         files = [
             file.name
-            for file in os.scandir(inputDirectoryFilterUFMG)
+            for file in os.scandir(input_directory_filter_UFMG)
             if file.is_file()
             and file.name.endswith(".json.bz2")
             and file.name.split(".")[1]
@@ -487,7 +481,7 @@ class AnalysisShodanCensysData:
 
 
             #filename = f"{inputDirectoryFilterUFMG}{file}"
-            filename = os.path.join(inputDirectoryFilterUFMG, file)
+            filename = os.path.join(input_directory_filter_UFMG, file)
 
             qty = 0
 
@@ -504,22 +498,22 @@ class AnalysisShodanCensysData:
                 ip = singleJson.get(IP_FIELD_IN_SHODAN)
 
                 if ip != None and ip_address(ip) in (ipUFMG):
-                    jsonUFMG.append(singleJson)
+                    json_UFMG.append(singleJson)
                     qty += 1
 
             logging.info(f"Found {qty} UFMG IPs in file: {file}")
 
             # Save stuff and format output path
-            filenameOutput = (
+            filename_output = (
                 file.split(".")[0] + ".UFMG." + file.split(".")[1]
             )  # ignoring file name extension .json.bz2
-            outputPath = os.path.join(outputDirectoryFilterUFMG, filenameOutput)
+            output_path = os.path.join(output_directory_filter_UFMG, filename_output)
 
-            logging.info(f"Creating new folder: {outputDirectoryFilterUFMG}")
-            os.makedirs(outputDirectoryFilterUFMG, exist_ok=True)
+            logging.info(f"Creating new folder: {output_directory_filter_UFMG}")
+            os.makedirs(output_directory_filter_UFMG, exist_ok=True)
 
-            with open(f"{outputPath}.json", "w") as f:
-                json.dump(jsonUFMG, f, indent=6)
+            with open(f"{output_path}.json", "w") as f:
+                json.dump(json_UFMG, f, indent=6)
 
             f.close()
 
@@ -633,13 +627,13 @@ def censys_analysis(args, analysis):
         args.directoryCensys, args.directoryStoreCensysShodanFormat
     )
 
-    """ logging.info("Starting function: load_censys_in_shodan_format in path")
+    logging.info("Starting function: load_censys_in_shodan_format in path")
     analysis.load_censys_in_shodan_format(
         args.directoryCensys, newFolderCensysInShodanFormat
     )
 
     logging.info("Starting function: probe_data_shodan_and_censys")
-    analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory) """
+    analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
 
     logging.info("Starting function: temporal_scan_ip_shodan_censys")
     analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
@@ -658,17 +652,16 @@ def shodan_analysis(args, analysis):
         args.directoryShodan, args.directoryStoreUFMGShodanData
     )
 
-    """ logging.info("Starting function: filter_ufmg_shodan")
+    logging.info("Starting function: filter_ufmg_shodan")
     analysis.filter_ufmg_shodan(
         args.ipUFMG, args.directoryShodan, newFolderFilteredShodanUFMG
     )
 
     logging.info("Starting function: probe_data_shodan_and_censys")
-    analysis.probe_data_shodan_and_censys(newFolderFilteredShodanUFMG, args.outputDirectory) """
+    analysis.probe_data_shodan_and_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
 
     logging.info("Starting function: temporal_scan_ip_shodan_censys")
     analysis.temporal_scan_ip_shodan_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
-
 
 
 if __name__ == "__main__":
