@@ -7,9 +7,9 @@ from argparse import RawTextHelpFormatter
 from datetime import datetime
 from ipaddress import ip_address, ip_network
 from typing import Optional
-from pydantic import BaseModel, Field
-import ijson
 
+import ijson
+from pydantic import BaseModel, Field
 
 CPE_FIELD_IN_SHODAN = "cpe23"
 IP_FIELD_IN_SHODAN = "ip_str"
