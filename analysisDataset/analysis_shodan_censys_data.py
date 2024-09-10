@@ -18,6 +18,14 @@ MODULE_FIELD_IN_SHODAN = "module"
 PREFIX_MODULE_FIELD_IN_SHODAN = "_shodan"
 
 
+"""
+    Class to handle functions to analyze Shodan and Censys data, reading 
+    information, organizing the data and then storing the .json file with the 
+    results. The defined functions are used in the AnalysisShodanCensysData class 
+    in the 'temporal_scan' and 'probe_data' functions.
+"""
+
+
 class FileSummary:
 
     def __init__(self):
@@ -54,7 +62,12 @@ class FileSummary:
             self.unique_ips[index] += 1
 
     def add_info_probe_data(
-        self, ip: str, port: str, scan_attributes: str, module: str, cpe_list: list | None
+        self,
+        ip: str,
+        port: str,
+        scan_attributes: str,
+        module: str,
+        cpe_list: list | None,
     ):
 
         if not (scan_attributes) in self.attributes_collected:
@@ -62,7 +75,7 @@ class FileSummary:
 
         if (ip) not in self.cpe_by_ip:
             self.cpe_by_ip[ip] = set()
-            
+
         if cpe_list:
             for cpe in cpe_list:
                 self.cpe_by_ip[ip].add(cpe)
@@ -150,6 +163,11 @@ class FileSummary:
             json.dump(data, file, indent=4)
 
 
+"""
+    classes to handle and store Shodan and Censys (parsed to Shodan format) data
+"""
+
+
 class Location(BaseModel):
     city: str
     longitude: float
@@ -216,24 +234,24 @@ class Shodan(BaseModel):
         )
 
         # handling the different date formats in Censys
-        timestampField = scan.get("last_updated_at", "")
-        if "." in timestampField:
+        timestamp_field = scan.get("last_updated_at", "")
+        if "." in timestamp_field:
             # Timestamp with fractional seconds
             timestamp = (
-                datetime.strptime(timestampField, "%Y-%m-%dT%H:%M:%S.%fZ")
+                datetime.strptime(timestamp_field, "%Y-%m-%dT%H:%M:%S.%fZ")
                 .replace(tzinfo=None)
                 .isoformat()
             )
-        elif "+" in timestampField:
+        elif "+" in timestamp_field:
             timestamp = (
-                datetime.strptime(timestampField, "%Y-%m-%dT%H:%M:%S.%f%z")
+                datetime.strptime(timestamp_field, "%Y-%m-%dT%H:%M:%S.%f%z")
                 .replace(tzinfo=None)
                 .isoformat()
             )
         else:
             # Timestamp without fractional seconds
             timestamp = (
-                datetime.strptime(timestampField, "%Y-%m-%dT%H:%M:%SZ")
+                datetime.strptime(timestamp_field, "%Y-%m-%dT%H:%M:%SZ")
                 .replace(tzinfo=None)
                 .replace(microsecond=1)
                 .isoformat()
@@ -471,7 +489,9 @@ class AnalysisShodanCensysData:
         json_UFMG = []
 
         # UFMG subnet
-        ipUFMG = ip_network(input_ip_UFMG)  # using ip_network to use function subnet_of
+        ip_UFMG = ip_network(
+            input_ip_UFMG
+        )  # using ip_network to use function subnet_of
 
         if not (
             os.path.exists(input_directory_filter_UFMG)
@@ -510,12 +530,12 @@ class AnalysisShodanCensysData:
                 continue
 
             for line in f:
-                singleJson = json.loads(line)
+                scan = json.loads(line)
 
-                ip = singleJson.get(IP_FIELD_IN_SHODAN)
+                ip = scan.get(IP_FIELD_IN_SHODAN)
 
-                if ip != None and ip_address(ip) in (ipUFMG):
-                    json_UFMG.append(singleJson)
+                if ip != None and ip_address(ip) in (ip_UFMG):
+                    json_UFMG.append(scan)
                     qty += 1
 
             logging.info(f"Found {qty} UFMG IPs in file: {file}")
