@@ -6,8 +6,8 @@ import os
 from argparse import RawTextHelpFormatter
 from datetime import datetime
 from ipaddress import ip_address, ip_network
-from typing import Optional 
-from pydantic import BaseModel, Field 
+from typing import Optional
+from pydantic import BaseModel, Field
 import ijson
 
 
@@ -17,8 +17,9 @@ PORT_FIELD_IN_SHODAN = "port"
 MODULE_FIELD_IN_SHODAN = "module"
 PREFIX_MODULE_FIELD_IN_SHODAN = "_shodan"
 
+
 class FileSummary:
-    
+
     def __init__(self):
         self.days_scan: dict[str, dict] = {}
         self.unique_ips: list[int] = [0]
@@ -26,15 +27,15 @@ class FileSummary:
         self.repeated_ip_scan: list[int] = [0]
         self.ip_scaned_again_same_day: list[int] = [0]
         self.ips_scanned: list[int] = [0]
-        self.attributes_collected: list[str] = ['']
+        self.attributes_collected: list[str] = [""]
         self.scan_modules: dict[str, set[str]] = {}
         self.cpe_by_ip: dict[str, set] = {}
 
     def add_info_temporal_scan(self, ip: str, timestamp: datetime, index: int):
-        date = f'{timestamp.year}:{timestamp.month}:{timestamp.day}'
+        date = f"{timestamp.year}:{timestamp.month}:{timestamp.day}"
 
         self.ips_scanned[index] += 1
-        
+
         if ip in self.days_scan:
 
             if date in self.days_scan[ip]["timestamp"]:
@@ -51,22 +52,20 @@ class FileSummary:
         if ip not in self.all_ips:
             self.all_ips.append(ip)
             self.unique_ips[index] += 1
-    
-    def add_info_probe_data(self, ip: str, port:str, scan_attributes: str, module: str, cpe: list | None):
+
+    def add_info_probe_data(
+        self, ip: str, port: str, scan_attributes: str, module: str, cpe_list: list | None
+    ):
 
         if not (scan_attributes) in self.attributes_collected:
             self.attributes_collected.append(scan_attributes)
 
-        if (ip) in self.cpe_by_ip:
-            if cpe:
-                for j in cpe:
-                    self.cpe_by_ip[ip].add(j)
-        else:
+        if (ip) not in self.cpe_by_ip:
             self.cpe_by_ip[ip] = set()
-            if cpe:
-                for j in cpe:
-                    self.cpe_by_ip[ip].add(j)
-
+            
+        if cpe_list:
+            for cpe in cpe_list:
+                self.cpe_by_ip[ip].add(cpe)
 
         if (module) in self.scan_modules:
             self.scan_modules[module].add(port)
@@ -81,12 +80,14 @@ class FileSummary:
         self.ip_scaned_again_same_day.append(0)
 
     def dump_info_temporal_scan(self, output_directory: str, initial_date, final_date):
-        
-        # Sort ips by the number of scans        
+
+        # Sort ips by the number of scans
         for ip, data in self.days_scan.items():
             self.days_scan[ip]["timestamp"] = sorted(data["timestamp"])
 
-        sorted_daysScan = sorted(self.days_scan.items(), key=lambda x: x[1]["scans"], reverse=True)
+        sorted_daysScan = sorted(
+            self.days_scan.items(), key=lambda x: x[1]["scans"], reverse=True
+        )
 
         # Group data for JSON output
         data = {
@@ -104,15 +105,19 @@ class FileSummary:
         }
 
         # Format output file name
-        output_path = os.path.join(output_directory, f"TemporalScan_from_{initial_date}_to_{final_date}.json")
+        output_path = os.path.join(
+            output_directory, f"TemporalScan_from_{initial_date}_to_{final_date}.json"
+        )
 
         with open(output_path, "w") as file:
             json.dump(data, file, indent=6)
-    
+
     def dump_info_probe_data(self, output_directory: str):
 
         # store info collected with parentheses
-        self.attributes_collected = [(keysDict) for keysDict in self.attributes_collected]
+        self.attributes_collected = [
+            (keysDict) for keysDict in self.attributes_collected
+        ]
 
         formated_services_provided = []
         for i in self.attributes_collected:
@@ -262,6 +267,7 @@ class Shodan(BaseModel):
 class to load, filter and make analysis in shodan and censys data
 """
 
+
 class AnalysisShodanCensysData:
     """
     load_censys_in_shodan_format: parse censys file (.json.bz2) to shodan format (.json)
@@ -284,7 +290,6 @@ class AnalysisShodanCensysData:
 
         for file in os.scandir(directory):
 
-            
             # Skip dirs and non-json files
             if (
                 not file.is_file()
@@ -326,7 +331,9 @@ class AnalysisShodanCensysData:
             logging.info(f"Creating new folder: {output_directory_load_Censys}")
             os.makedirs(output_directory_load_Censys, exist_ok=True)
 
-            with open(f"{output_directory_load_Censys}{filename_output}.json", "w") as file:
+            with open(
+                f"{output_directory_load_Censys}{filename_output}.json", "w"
+            ) as file:
                 json.dump(info_Censys_to_Shodan_format, file, indent=6)
 
     """
@@ -359,28 +366,29 @@ class AnalysisShodanCensysData:
 
             logging.info(f"Opening file: {file}")
 
-            with open(file.path, 'r') as file:
-                objects = ijson.items(file, 'item')
-                
+            with open(file.path, "r") as file:
+                objects = ijson.items(file, "item")
+
                 # Print the value of the 'name' key directly for each dictionary
                 for scan in objects:
 
-                    ip = scan['ip_str']
+                    ip = scan["ip_str"]
 
                     scan_attributes = scan.keys()
-                    
+
                     cpe = None
                     if "cpe23" in scan:
                         cpe = scan["cpe23"]
 
-                    port = scan['port']
+                    port = scan["port"]
 
                     module = scan["_shodan"]["module"]
 
-                    file_summary.add_info_probe_data(ip, port, scan_attributes, module, cpe)
+                    file_summary.add_info_probe_data(
+                        ip, port, scan_attributes, module, cpe
+                    )
 
             file_summary.dump_info_probe_data(output_directory_probe_data)
-            
 
     """
         temporal_scan_ip_shodan_censys: temporal analysis in shodan and censys (in shodan format) data
@@ -390,7 +398,9 @@ class AnalysisShodanCensysData:
         return: none. Will be stored info about the IPs analyzed throughout the days in the path: .../outputDirectory/TemporalScan_from_{starting date analyzed}_to_{final date analyzed}.json"
     """
 
-    def temporal_scan_ip_shodan_censys(self, input_directory: str, output_directory: str):
+    def temporal_scan_ip_shodan_censys(
+        self, input_directory: str, output_directory: str
+    ):
 
         # UFMG ips directory
         if not (os.path.exists(input_directory) and os.path.isdir(input_directory)):
@@ -400,15 +410,23 @@ class AnalysisShodanCensysData:
         file_summary = FileSummary()
 
         # Read file names first to order and open files in temporal order
-        files = [file.name for file in os.scandir(input_directory) if file.is_file() and file.name.endswith(".json")]
+        files = [
+            file.name
+            for file in os.scandir(input_directory)
+            if file.is_file() and file.name.endswith(".json")
+        ]
         sorted_files = sorted(files)
 
         if not sorted_files:
-            logging.error(f"No valid .json files to do temporal analysis in the directory: {input_directory}")
+            logging.error(
+                f"No valid .json files to do temporal analysis in the directory: {input_directory}"
+            )
             raise Exception("No valid files in the input directory")
 
         # Reading date by the filename
-        initial_date = datetime.strptime(sorted_files[0].split(".")[-2], "%Y%m%d").date()
+        initial_date = datetime.strptime(
+            sorted_files[0].split(".")[-2], "%Y%m%d"
+        ).date()
         final_date = datetime.strptime(sorted_files[-1].split(".")[-2], "%Y%m%d").date()
 
         for file_name in sorted_files:
@@ -418,13 +436,13 @@ class AnalysisShodanCensysData:
             input_path = os.path.join(input_directory, file_name)
 
             index = 0
-            with open(input_path, 'r') as file:
-                objects = ijson.items(file, 'item')
-                
+            with open(input_path, "r") as file:
+                objects = ijson.items(file, "item")
+
                 # Print the value of the 'name' key directly for each dictionary
                 for scan in objects:
 
-                    ip = scan['ip_str']
+                    ip = scan["ip_str"]
 
                     timestamp = datetime.strptime(
                         scan["timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
@@ -476,11 +494,10 @@ class AnalysisShodanCensysData:
             if not file.endswith(".json.bz2") or not file.startswith("BR."):
                 logging.warning(f"Invalid file: {file}. Skipping ...")
                 continue
-            
+
             logging.info(f"Opening file: {file}")
 
-
-            #filename = f"{inputDirectoryFilterUFMG}{file}"
+            # filename = f"{inputDirectoryFilterUFMG}{file}"
             filename = os.path.join(input_directory_filter_UFMG, file)
 
             qty = 0
@@ -527,14 +544,16 @@ def return_input_parameters():
     * Important: Is considered that Censys data are from UFMG.
 
     Required parameters:
+        outputDirectory = existing directory to store results and intermediate data
+    
+    Optional parameters:
+        --ipUFMG = UFMG ip to filter input data. Used if will be informed Shodan data from Brasil
         --directoryShodan = used if will be informed Shodan data
         --directoryCensys = used if will be informed Censys data
         --directoryStoreCensysShodanFormat = used if will be parsed Censys data do Shodan format
         --directoryStoreUFMGShodanData = used if will be filtered the UFMG data in Shodan files
-        ipUFMG = UFMG ip to filter input data
-        outputDirectory = existing directory to store results and intermediate data
-
-    --> Funcitions that will be executed:
+        
+    --> Functions that will be executed:
                                                         
     Filter ufmg shodan: 
         Filter UFMG data in shodan file.
@@ -543,7 +562,7 @@ def return_input_parameters():
         Used if the input file is from Censys -> will be parsed to shodan format
     
     Probe data shodan and censys: 
-        Find information about modules, ports and ips from shodan and censys (in shodan format) data.
+        Find information about services, modules, ports and ips in scan from shodan and censys (in shodan format) data.
     
     Temporal scan ip shodan: 
         Make a temporal analysis from shodan and censys (in shodan format) data.
@@ -619,7 +638,9 @@ def return_input_parameters():
 
 def censys_analysis(args, analysis):
     if not args.directoryStoreCensysShodanFormat:
-        logging.info("It is necessary to inform the directory to store Censys data in Shodan format")
+        logging.info(
+            "It is necessary to inform the directory to store Censys data in Shodan format"
+        )
         raise Exception("Missing directoryStoreCensysShodanFormat parameter")
 
     # will be created a new directory to store censys data formatted --> the following funcionts will read censys data formatted from this directory
@@ -633,10 +654,15 @@ def censys_analysis(args, analysis):
     )
 
     logging.info("Starting function: probe_data_shodan_and_censys")
-    analysis.probe_data_shodan_and_censys(newFolderCensysInShodanFormat, args.outputDirectory)
+    analysis.probe_data_shodan_and_censys(
+        newFolderCensysInShodanFormat, args.outputDirectory
+    )
 
     logging.info("Starting function: temporal_scan_ip_shodan_censys")
-    analysis.temporal_scan_ip_shodan_censys(newFolderCensysInShodanFormat, args.outputDirectory)
+    analysis.temporal_scan_ip_shodan_censys(
+        newFolderCensysInShodanFormat, args.outputDirectory
+    )
+
 
 def shodan_analysis(args, analysis):
     if not args.ipUFMG:
@@ -644,7 +670,9 @@ def shodan_analysis(args, analysis):
         raise Exception("Missing ipUFMG parameter")
 
     if not args.directoryStoreUFMGShodanData:
-        logging.info("It is necessary to inform the directory to store UFMG data from Shodan")
+        logging.info(
+            "It is necessary to inform the directory to store UFMG data from Shodan"
+        )
         raise Exception("Missing directoryStoreCensysShodanFormat parameter")
 
     # will be created a new directory to store filtered shodan data --> the following functions will read ufmg shodan data formatted from this directory
@@ -658,10 +686,14 @@ def shodan_analysis(args, analysis):
     )
 
     logging.info("Starting function: probe_data_shodan_and_censys")
-    analysis.probe_data_shodan_and_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
+    analysis.probe_data_shodan_and_censys(
+        newFolderFilteredShodanUFMG, args.outputDirectory
+    )
 
     logging.info("Starting function: temporal_scan_ip_shodan_censys")
-    analysis.temporal_scan_ip_shodan_censys(newFolderFilteredShodanUFMG, args.outputDirectory)
+    analysis.temporal_scan_ip_shodan_censys(
+        newFolderFilteredShodanUFMG, args.outputDirectory
+    )
 
 
 if __name__ == "__main__":
