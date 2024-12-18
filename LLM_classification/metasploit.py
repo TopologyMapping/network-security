@@ -44,15 +44,12 @@ def extract_rank_from_metasploit(metasploit_file):
 
 
 def extract_module_metasploit(metasploit_file):
-    """Extract module type (Auxiliary, Post, Exploit) from a Metasploit file."""
-    # content = read_file_with_fallback(metasploit_file)
     module_type_pattern = re.compile(r"class\s+MetasploitModule\s+<\s*Msf::(\w+)")
     match = module_type_pattern.search(metasploit_file)
     return match.group(1) if match else None
 
 
 def execute_exploit_metasploit(metasploit_file):
-    # Regular expression to find 'Msf::Exploit'
     pattern = r"Msf::Exploit"
 
     if re.search(pattern, metasploit_file):
@@ -142,29 +139,6 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range):
         executes_exploit = execute_exploit_metasploit(content)
 
         start_time = time.time()
-
-        # based on the module information, we classify the module with the correct prompt
-        # if privileged == 'true' and (module == 'Exploit' or executes_exploit is True ):
-        #    classification = classification_text_generation(content, PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED)
-        #
-        #    # in this case, the category and subcategory are already defined
-        #    category_privileged_exploit = """
-        #
-        #    How the script works?
-        #    Category: {Simulated Attack}
-        #    Subcategory: {Privileged Attack}
-        #
-        #    """
-        #    classification += category_privileged_exploit
-        #
-        # elif module == 'Post':
-        #    classification = classification_text_generation(content,  PROMPT_METASPLOIT_POST)
-        # elif privileged == 'true':
-        #    classification = classification_text_generation(content,  PROMPT_METASPLOIT_PRIVILEGED)
-        # elif module == 'Exploit' or executes_exploit is True :
-        #    classification = classification_text_generation(content,  PROMPT_METASPLOIT_EXPLOIT)
-        # else:
-        #    classification = classification_text_generation(content,  PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED)
 
         classification = classification_metasploit(
             module, privileged, executes_exploit, content
