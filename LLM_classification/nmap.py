@@ -9,7 +9,14 @@ from constants import (
 import time
 import os
 
+"""
+    This file contains the functions to classify Nmap scripts.
+    The classification is done by analyzing the content of the script, extracting metadada using regex and then sending the information to the LLM with the appropriate prompt.
+    The classification is done in batches, as there are many files to be classified.
+    Below, the functions are described in more detail.
+"""
 
+# REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_from_nmap(nmap_file):
     cve_regex = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'([^']+)'.*\}")
     content = read_file_with_fallback(nmap_file)
@@ -38,6 +45,9 @@ def extract_categorie_nmap(content):
 
 
 def classification_nmap(categorie, content):
+    """
+    This function filters the content of the Nmap script and classifies it according to the categorie collected.
+    """
 
     if "brute" in categorie:
         classification = classification_text_generation(content, PROMPT_NMAP_BRUTE_DOS)
@@ -93,6 +103,16 @@ def classification_nmap(categorie, content):
 
 
 def analysis_nmap_scripts(nuclei_folder, initial_range, final_range):
+    """
+    How the function works:
+        This file handles the classification of Nmap scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
+
+        Since there are many files to be classified, the function operates in batches, classifying files in a given range of values.
+
+    Input: Folder with Nmap scripts and range for classification.
+
+    Output: classified files and information about files without CVE.
+    """
 
     scripts_with_no_CVE = []
 

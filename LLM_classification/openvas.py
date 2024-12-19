@@ -19,7 +19,15 @@ from constants import (
 SCORE_SIMILAR_FILE = 31
 SCORE_MAYBE_SIMILAR_FILE = 16
 
+"""
+    This file contains the functions to classify Openvas scripts.
+    The classification is done by analyzing the content of the script, extracting metadada using regex and then sending the information to the LLM with the appropriate prompt.
+    The classification is done in batches, as there are many files to be classified.
+    In particular, Openvas contains almost 100 thousand files, so an initial filtering is done to avoid classifying all files, grouping them in similar categories.
+    Below, the functions are described in more detail.
+"""
 
+# REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_from_openvas(content):
     """ "
     TODO: Double check this regex
@@ -278,6 +286,11 @@ def get_file_info(content):
 
 
 def return_similarity_score(new_file_name, new_file_info, old_file_name, old_file_info):
+    """
+    This function returns a score based on the similarity of the files, involving metadada information.
+    This is important to group similar files and avoid unnecessary classification, read the 'compare_similarity_openvas' function for more information.
+    """
+
     score = 0
     if new_file_info["qod"] == old_file_info["qod"]:
         score += 11
@@ -326,12 +339,15 @@ def check_active_script(qod_value, key, openvas_qod_cve, openvas_file):
 
         openvas_qod_cve[new_key_active_check].append(openvas_file)
 
-        return True, openvas_qod_cve
+        return True
 
-    return False, openvas_qod_cve
+    return False
 
 
 def verifies_similarity(score, key, similars, maybe_similars, openvas_file):
+    """
+    This functions verifies if the analyzed file is similar to another file. Based on the score received, it classifies the file as similar or maybe similar to the initial file.
+    """
 
     similar = False
 
@@ -435,7 +451,7 @@ def compare_similarity_openvas(openvas_folder) -> dict[str, dict]:
             openvas_qod_cve[key].append(openvas_file)
             continue
 
-        is_active_code, openvas_qod_cve = check_active_script(
+        is_active_code = check_active_script(
             qod_value, key, openvas_qod_cve, openvas_file
         )
 

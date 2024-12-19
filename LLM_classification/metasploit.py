@@ -10,7 +10,14 @@ import os
 import re
 import time
 
+"""
+    This file contains the functions to classify Metasploit scripts.
+    The classification is done by analyzing the content of the script, extracting metadada using regex and then sending the information to the LLM with the appropriate prompt.
+    The classification is done in batches, as there are many files to be classified.
+    Below, the functions are described in more detail.
+"""
 
+# REGEX FUNCTIONS TO EXTRACT INFO
 def extract_privileged_metasploit(content):
     match = re.search(r"'Privileged'\s*=>\s*(true|false)\s*,", content, re.IGNORECASE)
 
@@ -44,12 +51,15 @@ def extract_rank_from_metasploit(metasploit_file):
 
 
 def extract_module_metasploit(metasploit_file):
+    """Extract module type (Auxiliary, Post, Exploit) from a Metasploit file."""
+    # content = read_file_with_fallback(metasploit_file)
     module_type_pattern = re.compile(r"class\s+MetasploitModule\s+<\s*Msf::(\w+)")
     match = module_type_pattern.search(metasploit_file)
     return match.group(1) if match else None
 
 
 def execute_exploit_metasploit(metasploit_file):
+    # Regular expression to find 'Msf::Exploit'
     pattern = r"Msf::Exploit"
 
     if re.search(pattern, metasploit_file):
@@ -65,6 +75,9 @@ def extract_name_metasploit(content):
 
 
 def classification_metasploit(module, privileged, executes_exploit, content):
+    """
+    This function filters the content of the Metasploit script and classifies it according to the module name, and execution details like if the code requires privileged information or if it is an exploit.
+    """
 
     classification = ""
 
@@ -103,6 +116,16 @@ def classification_metasploit(module, privileged, executes_exploit, content):
 
 
 def analysis_metasploit_modules(metasploit_folder, initial_range, final_range):
+    """
+    How the function works:
+        This file handles the classification of Metasploit scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
+
+        Since there are many files to be classified, the function operates in batches, classifying files in a given range of values.
+
+    Input: Folder with Metasploit templates and range for classification.
+
+    Output: classified files and information about files without CVE.
+    """
 
     modules_with_no_CVE = []
 
