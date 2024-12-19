@@ -8,7 +8,14 @@ from constants import (
     PROMPT_NUCLEI_AUTH_BYPASS,
 )
 
+"""
+    This file contains the functions to classify Nuclei scripts.
+    The classification is done by analyzing the content of the script, extracting metadada using regex and then sending the information to the LLM with the appropriate prompt.
+    The classification is done in batches, as there are many files to be classified.
+    Below, the functions are described in more detail.
+"""
 
+# REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_nuclei(content):
 
     cve_regex = re.compile(r"cve-id:\s*(CVE-[\d-]+)")
@@ -30,6 +37,9 @@ def extract_nuclei_tags(content):
 
 
 def classification_nuclei(tags, content):
+    """
+    This function filters the content of the Nuclei script and classifies it according to the tags collected.
+    """
 
     if "rce" in tags or "sqli" in tags or "xss" in tags or "injection" in tags:
 
@@ -69,6 +79,16 @@ def classification_nuclei(tags, content):
 
 
 def analysis_nuclei_templates(nuclei_folder, initial_range, final_range):
+    """
+    How the function works:
+        This file handles the classification of Nuclei scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
+
+        Since there are many files to be classified, the function operates in batches, classifying files in a given range of values.
+
+    Input: Folder with Nuclei templates and range for classification.
+
+    Output: classified files and information about files without CVE.
+    """
 
     templates_with_no_CVE = []
 
