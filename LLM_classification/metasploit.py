@@ -1,4 +1,4 @@
-from utils import read_file_with_fallback, classification_text_generation
+from utils import read_file_with_fallback
 from constants import (
     PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
     PROMPT_METASPLOIT_POST,
@@ -9,6 +9,7 @@ from constants import (
 import os
 import re
 import time
+from LLM import LLMHandler
 
 """
     This file contains the functions to classify Metasploit scripts.
@@ -17,73 +18,49 @@ import time
     Below, the functions are described in more detail.
 """
 
+
+PRIVILEGED_REGEX = re.compile(r"'Privileged'\s*=>\s*(?P<privileged>true|false)\s*,", re.IGNORECASE)
+METASPLOIT_CVE_REGEX = re.compile(r"\[\s*'CVE'\s*,\s*'(?P<cve>\d{4}-\d+)'\s*\]")
+METASPLOIT_RANK_REGEX = re.compile(r"Rank\s*=\s*(?P<rank>\w*)")
+METASPLOIT_MODULE_REGEX = re.compile(r"class\s+MetasploitModule\s+<\s*Msf::(?P<module>\w+)")
+METASPLOIT_EXPLOIT_REGEX = re.compile(r"Msf::Exploit")
+METASPLOIT_NAME_REGEX = re.compile(r"'Name'\s*=>\s*'(?P<name>[^']+)'")
+
 # REGEX FUNCTIONS TO EXTRACT INFO
-def extract_privileged_metasploit(content):
-    match = re.search(r"'Privileged'\s*=>\s*(true|false)\s*,", content, re.IGNORECASE)
+def extract_privileged_metasploit(content) -> bool:
+    match = PRIVILEGED_REGEX.search(content)
+    return bool(match.group("privileged")) if match else False
 
-    if match:
-        return match.group(1)
-    else:
-        return None
-
-
-def extract_cve_from_metasploit(metasploit_file):
-    """Extract CVE identifiers from a Metasploit file."""
-    # content = read_file_with_fallback(metasploit_file)
-    cve_pattern = re.compile(r"\[\s*'CVE'\s*,\s*'(\d{4}-\d+)'\s*\]")
-    cves = cve_pattern.findall(metasploit_file)
-
-    for i in range(
-        len(cves)
-    ):  # adding word cve in cve list because the regex dont match it
-        cves[i] = "CVE-" + cves[i]
+def extract_cve_from_metasploit(metasploit_file) -> list:
+    cves = [f"CVE-{match.group('cve')}" for match in METASPLOIT_CVE_REGEX.finditer(metasploit_file)]
     return cves
 
+def extract_rank_from_metasploit(metasploit_file) -> str:
+    match = METASPLOIT_RANK_REGEX.search(metasploit_file)
+    return match.group("rank") if match else ""
 
-def extract_rank_from_metasploit(metasploit_file):
-    """Extract rank values from a Metasploit file."""
-    # content = read_file_with_fallback(metasploit_file)
-    rank_pattern = re.compile(r"Rank\s*=\s*(\w*)")
+def extract_module_metasploit(metasploit_file) -> str:
+    match = METASPLOIT_MODULE_REGEX.search(metasploit_file)
+    return match.group("module") if match else ""
 
-    rank = rank_pattern.search(metasploit_file)
+def execute_exploit_metasploit(metasploit_file) -> bool:
+    return bool(METASPLOIT_EXPLOIT_REGEX.search(metasploit_file))
 
-    return rank.group(1) if rank else None
-
-
-def extract_module_metasploit(metasploit_file):
-    """Extract module type (Auxiliary, Post, Exploit) from a Metasploit file."""
-    # content = read_file_with_fallback(metasploit_file)
-    module_type_pattern = re.compile(r"class\s+MetasploitModule\s+<\s*Msf::(\w+)")
-    match = module_type_pattern.search(metasploit_file)
-    return match.group(1) if match else None
+def extract_name_metasploit(content) -> str:
+    match = METASPLOIT_NAME_REGEX.search(content)
+    return match.group("name") if match else ""
 
 
-def execute_exploit_metasploit(metasploit_file):
-    # Regular expression to find 'Msf::Exploit'
-    pattern = r"Msf::Exploit"
-
-    if re.search(pattern, metasploit_file):
-        return True
-    else:
-        return False
-
-
-def extract_name_metasploit(content):
-    name_regex = re.compile(r"'Name'\s*=>\s*'([^']+)'")
-    match = name_regex.search(content)
-    return match.group(1) if match else ""
-
-
-def classification_metasploit(module, privileged, executes_exploit, content):
+def classification_metasploit(module: str, privileged: bool, executes_exploit: bool, content, llm) -> str:
     """
     This function filters the content of the Metasploit script and classifies it according to the module name, and execution details like if the code requires privileged information or if it is an exploit.
     """
 
-    classification = ""
+    classification : str = ""
 
     # based on the module information, we classify the module with the correct prompt
-    if privileged == "true" and (module == "Exploit" or executes_exploit is True):
-        classification = classification_text_generation(
+    if privileged is True and (module == "Exploit" or executes_exploit is True):
+        classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED
         )
 
@@ -98,24 +75,24 @@ def classification_metasploit(module, privileged, executes_exploit, content):
         classification += category_privileged_exploit
 
     elif module == "Post":
-        classification = classification_text_generation(content, PROMPT_METASPLOIT_POST)
-    elif privileged == "true":
-        classification = classification_text_generation(
+        classification = llm.classification_text_generation(content, PROMPT_METASPLOIT_POST)
+    elif privileged is True:
+        classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_PRIVILEGED
         )
     elif module == "Exploit" or executes_exploit is True:
-        classification = classification_text_generation(
+        classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_EXPLOIT
         )
     else:
-        classification = classification_text_generation(
+        classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED
         )
 
     return classification
 
 
-def analysis_metasploit_modules(metasploit_folder, initial_range, final_range):
+def analysis_metasploit_modules(metasploit_folder, initial_range, final_range, ip_port) -> tuple:
     """
     How the function works:
         This file handles the classification of Metasploit scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -127,9 +104,11 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range):
     Output: classified files and information about files without CVE.
     """
 
-    modules_with_no_CVE = []
+    llm = LLMHandler(ip_port)
 
-    metasploit_info = []
+    modules_with_no_CVE : list = []
+
+    metasploit_info : list = []
 
     metasploit_files = [
         os.path.join(root, file)
@@ -137,6 +116,12 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range):
         for file in files
         if file.endswith(".rb")
     ]
+    
+    # sorting files by name to ensure the order of classification
+    metasploit_files = sorted(
+        metasploit_files,
+        key=lambda file: os.path.basename(file)
+    )
 
     print("Len metasploit files ", len(metasploit_files))
 
@@ -149,7 +134,6 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range):
         if not (cves):
 
             modules_with_no_CVE.append(metasploit_file)
-            # continue
 
         module = extract_module_metasploit(content)
 
@@ -164,8 +148,9 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range):
         start_time = time.time()
 
         classification = classification_metasploit(
-            module, privileged, executes_exploit, content
+            module, privileged, executes_exploit, content, llm
         )
+
 
         end_time = time.time()
         elapsed_time = end_time - start_time

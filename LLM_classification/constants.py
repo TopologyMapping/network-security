@@ -748,3 +748,36 @@ An OpenVAS script can work in many different ways. We want to classify how a scr
     + CATEGORIES_PRIVILEGED
     + PROMPT_CATEGORIES
 )
+
+# one of the tasks executed in this module is to group similar files. The prompt below is used to answer this task using the LLM.
+
+PROMPT_COMPARE_SIMILARITY = """
+    You are an expert on cybersecurity tools. Below are two OpenVAS vulnerability detection scripts, implemented in OpenVAS's NASL language, separated by “=====”. The scripts perform actions to check the existence of a vulnerability on the target host. 
+
+    Based on analyzing the script's metadata and code, please provide answers to the two questions below. 
+
+    Question 1: Are the scripts similar? yes or no?
+    Question 2: Please explain your answer to question 1 in one phrase.
+
+    Output only two lines, with the answer to the first question on the first line and the answer to the second question on the second line. Return the answer inside the following structure. Do not add any more information outside the following structure and pattern -> Answer1: [ answer about similarity (yes or no) ] Answer2: [ explanation about similarity answer ]. Mantain the words 'Answer1' and 'Answer2' on the answer. Below are two example outputs separated by '-----':
+
+    Answer1: yes
+    Answer2: The scripts are similar because they perform the same actions to detect the same vulnerability
+
+    '-----'
+
+    Answer1: no
+    Answer2: The scripts are not similar because one verifies a banner response and the other realizes an exploit crafting packages
+
+    Consider that two scripts are similar if they perform the same overall actions, but allow for slight differences. Examples:
+
+    A script that looks at the set of installed packages on Debian to identify a vulnerable version of Apache IS similar to a script that looks at the set of installed packages on Suse, or any other distribution, to identify the same vulnerable version of Apache.
+
+    A script that tests a vulnerability through application A, and another that tests the same vulnerability in the same way but in application B are NOT similar.
+
+    A script that looks at the set of installed packages on Debian to identify a vulnerable version of Apache is NOT similar to a script that inspects the Windows registry (or installed programs) for the same vulnerable version of Apache.
+
+    A script that looks at the set of installed packages on Debian to identify a vulnerable version of Apache is NOT similar to a script that issues an HTTP request to check if the server is running the same vulnerable version of Apache.
+
+    More generally, if the scripts employ different vulnerability detection methods (e.g., checking installed packages, issuing HTTP requests, performing an exploit, attempting an unauthorized login), then they are NOT similar. The metadata in a script may also be useful to identify its mode of operation and whether two scripts are similar.
+    """
