@@ -21,14 +21,17 @@ CVE_NUCLEI_REGEX = re.compile(r"cve-id:\s*(?P<cve>CVE-[\d-]+)")
 NUCLEI_ID_REGEX = re.compile(r"id:\s*(?P<id>[\w\-]+)")
 NUCLEI_TAGS_REGEX = re.compile(r"tags:\s*(?P<tags>[\w,\-]+)")
 
+
 # REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_nuclei(content) -> list:
     cves = [match.group("cve") for match in CVE_NUCLEI_REGEX.finditer(content)]
     return cves if cves else []
 
+
 def extract_nuclei_id(content) -> str:
     match = NUCLEI_ID_REGEX.search(content)
     return match.group("id") if match else ""
+
 
 def extract_nuclei_tags(content) -> list:
     match = NUCLEI_TAGS_REGEX.search(content)
@@ -39,7 +42,7 @@ def classification_nuclei(tags, content, llm) -> str:
     """
     This function filters the content of the Nuclei script and classifies it according to the tags collected.
     """
-    classification : str = ""
+    classification: str = ""
 
     if "rce" in tags or "sqli" in tags or "xss" in tags or "injection" in tags:
 
@@ -78,7 +81,9 @@ def classification_nuclei(tags, content, llm) -> str:
     return classification
 
 
-def analysis_nuclei_templates(nuclei_folder, initial_range, final_range, ip_port) -> tuple:
+def analysis_nuclei_templates(
+    nuclei_folder, initial_range, final_range, ip_port
+) -> tuple:
     """
     How the function works:
         This file handles the classification of Nuclei scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -92,9 +97,9 @@ def analysis_nuclei_templates(nuclei_folder, initial_range, final_range, ip_port
 
     llm = LLMHandler(ip_port)
 
-    templates_with_no_CVE : list = []
+    templates_with_no_CVE: list = []
 
-    nuclei_info : list = []
+    nuclei_info: list = []
 
     nuclei_files = [
         os.path.join(root, file)
@@ -104,10 +109,7 @@ def analysis_nuclei_templates(nuclei_folder, initial_range, final_range, ip_port
     ]
 
     # sorting files by name to ensure the order of classification
-    nuclei_files = sorted(
-        nuclei_files,
-        key=lambda file: os.path.basename(file)
-    )
+    nuclei_files = sorted(nuclei_files, key=lambda file: os.path.basename(file))
 
     print("Len nuclei files ", len(nuclei_files))
 

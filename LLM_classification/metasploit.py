@@ -19,44 +19,59 @@ from LLM import LLMHandler
 """
 
 
-PRIVILEGED_REGEX = re.compile(r"'Privileged'\s*=>\s*(?P<privileged>true|false)\s*,", re.IGNORECASE)
+PRIVILEGED_REGEX = re.compile(
+    r"'Privileged'\s*=>\s*(?P<privileged>true|false)\s*,", re.IGNORECASE
+)
 METASPLOIT_CVE_REGEX = re.compile(r"\[\s*'CVE'\s*,\s*'(?P<cve>\d{4}-\d+)'\s*\]")
 METASPLOIT_RANK_REGEX = re.compile(r"Rank\s*=\s*(?P<rank>\w*)")
-METASPLOIT_MODULE_REGEX = re.compile(r"class\s+MetasploitModule\s+<\s*Msf::(?P<module>\w+)")
+METASPLOIT_MODULE_REGEX = re.compile(
+    r"class\s+MetasploitModule\s+<\s*Msf::(?P<module>\w+)"
+)
 METASPLOIT_EXPLOIT_REGEX = re.compile(r"Msf::Exploit")
 METASPLOIT_NAME_REGEX = re.compile(r"'Name'\s*=>\s*'(?P<name>[^']+)'")
+
 
 # REGEX FUNCTIONS TO EXTRACT INFO
 def extract_privileged_metasploit(content) -> bool:
     match = PRIVILEGED_REGEX.search(content)
     return bool(match.group("privileged")) if match else False
 
+
 def extract_cve_from_metasploit(metasploit_file) -> list:
-    cves = [f"CVE-{match.group('cve')}" for match in METASPLOIT_CVE_REGEX.finditer(metasploit_file)]
+    cves = [
+        f"CVE-{match.group('cve')}"
+        for match in METASPLOIT_CVE_REGEX.finditer(metasploit_file)
+    ]
     return cves
+
 
 def extract_rank_from_metasploit(metasploit_file) -> str:
     match = METASPLOIT_RANK_REGEX.search(metasploit_file)
     return match.group("rank") if match else ""
 
+
 def extract_module_metasploit(metasploit_file) -> str:
     match = METASPLOIT_MODULE_REGEX.search(metasploit_file)
     return match.group("module") if match else ""
 
+
 def execute_exploit_metasploit(metasploit_file) -> bool:
     return bool(METASPLOIT_EXPLOIT_REGEX.search(metasploit_file))
+
 
 def extract_name_metasploit(content) -> str:
     match = METASPLOIT_NAME_REGEX.search(content)
     return match.group("name") if match else ""
 
 
-def classification_metasploit(module: str, privileged: bool, executes_exploit: bool, content, llm) -> str:
+def classification_metasploit(
+    module: str, privileged: bool, executes_exploit: bool, content, llm
+) -> str:
     """
     This function filters the content of the Metasploit script and classifies it according to the module name, and execution details like if the code requires privileged information or if it is an exploit.
     """
 
-    classification : str = ""
+    classification: str = ""
 
     # based on the module information, we classify the module with the correct prompt
     if privileged is True and (module == "Exploit" or executes_exploit is True):
@@ -75,7 +90,9 @@ def classification_metasploit(module: str, privileged: bool, executes_exploit: b
         classification += category_privileged_exploit
 
     elif module == "Post":
-        classification = llm.classification_text_generation(content, PROMPT_METASPLOIT_POST)
+        classification = llm.classification_text_generation(
+            content, PROMPT_METASPLOIT_POST
+        )
     elif privileged is True:
         classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_PRIVILEGED
@@ -92,7 +109,9 @@ def classification_metasploit(module: str, privileged: bool, executes_exploit: b
     return classification
 
 
-def analysis_metasploit_modules(metasploit_folder, initial_range, final_range, ip_port) -> tuple:
+def analysis_metasploit_modules(
+    metasploit_folder, initial_range, final_range, ip_port
+) -> tuple:
     """
     How the function works:
         This file handles the classification of Metasploit scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -106,9 +125,9 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range, i
 
     llm = LLMHandler(ip_port)
 
-    modules_with_no_CVE : list = []
+    modules_with_no_CVE: list = []
 
-    metasploit_info : list = []
+    metasploit_info: list = []
 
     metasploit_files = [
         os.path.join(root, file)
@@ -116,12 +135,9 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range, i
         for file in files
         if file.endswith(".rb")
     ]
-    
+
     # sorting files by name to ensure the order of classification
-    metasploit_files = sorted(
-        metasploit_files,
-        key=lambda file: os.path.basename(file)
-    )
+    metasploit_files = sorted(metasploit_files, key=lambda file: os.path.basename(file))
 
     print("Len metasploit files ", len(metasploit_files))
 
@@ -150,7 +166,6 @@ def analysis_metasploit_modules(metasploit_folder, initial_range, final_range, i
         classification = classification_metasploit(
             module, privileged, executes_exploit, content, llm
         )
-
 
         end_time = time.time()
         elapsed_time = end_time - start_time

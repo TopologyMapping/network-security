@@ -1,10 +1,11 @@
 import openai
 from constants import SYSTEM_PROMPT, PROMPT_COMPARE_SIMILARITY
 
+
 class LLMHandler:
     def __init__(self, ip_port: str):
         """
-        Initializes the LLMHandler instance. If an IP and port are provided, 
+        Initializes the LLMHandler instance. If an IP and port are provided,
         initializes the LLM client with the given base URL.
         """
         self.LLM = None
@@ -20,7 +21,6 @@ class LLMHandler:
             api_key="sk-no-key-required",
         )
 
-    
     def classification_text_generation(self, content, prompt: str) -> str:
 
         user_prompt = f"""
@@ -57,4 +57,6 @@ class LLMHandler:
         {script2}
         """
 
-        return self.classification_text_generation(PROMPT_COMPARE_SIMILARITY, user_prompt)
+        return self.classification_text_generation(
+            PROMPT_COMPARE_SIMILARITY, user_prompt
+        )

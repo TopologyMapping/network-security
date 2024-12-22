@@ -20,10 +20,12 @@ from LLM import LLMHandler
 NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
 NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
 
+
 # REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_nmap(content) -> list:
     cves = [match.group("cve") for match in NMAP_CVE_REGEX.finditer(content)]
     return cves if cves else []
+
 
 def extract_categorie_nmap(content) -> str:
     match = NMAP_CATEGORIES_REGEX.search(content)
@@ -33,15 +35,18 @@ def extract_categorie_nmap(content) -> str:
         return " ".join(words)
     return ""
 
-def classification_nmap(categorie: list, content, llm) -> str:
+
+def classification_nmap(categorie: str, content, llm) -> str:
     """
     This function filters the content of the Nmap script and classifies it according to the categorie collected.
     """
 
-    classification : str = ""
+    classification: str = ""
 
     if "brute" in categorie:
-        classification = llm.classification_text_generation(content, PROMPT_NMAP_BRUTE_DOS)
+        classification = llm.classification_text_generation(
+            content, PROMPT_NMAP_BRUTE_DOS
+        )
 
         category_privileged_exploit = """ 
 
@@ -54,7 +59,9 @@ def classification_nmap(categorie: list, content, llm) -> str:
         classification += category_privileged_exploit
 
     elif "dos" in categorie:
-        classification = llm.classification_text_generation(content, PROMPT_NMAP_BRUTE_DOS)
+        classification = llm.classification_text_generation(
+            content, PROMPT_NMAP_BRUTE_DOS
+        )
 
         category_privileged_exploit = """ 
 
@@ -66,11 +73,11 @@ def classification_nmap(categorie: list, content, llm) -> str:
 
         classification += category_privileged_exploit
 
-    elif (
-        "discovery" in categorie and "safe" in categorie
-    ):  
+    elif "discovery" in categorie and "safe" in categorie:
         # 'safe' included because there is 'intrusive' codes that receives 'discovery' categorie, even when performs attacks
-        classification = llm.classification_text_generation(content, PROMPT_NMAP_DISCOVERY)
+        classification = llm.classification_text_generation(
+            content, PROMPT_NMAP_DISCOVERY
+        )
 
         category_privileged_exploit = """ 
 
@@ -108,9 +115,9 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> t
 
     llm = LLMHandler(ip_port)
 
-    scripts_with_no_CVE :list = []
+    scripts_with_no_CVE: list = []
 
-    nmap_info : list = []
+    nmap_info: list = []
 
     nmap_files = [
         os.path.join(root, file)
@@ -118,12 +125,9 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> t
         for file in files
         if file.endswith(".nse")
     ]
-    
+
     # sorting files by name to ensure the order of classification
-    nmap_files = sorted(
-        nmap_files,
-        key=lambda file: os.path.basename(file)
-    )
+    nmap_files = sorted(nmap_files, key=lambda file: os.path.basename(file))
 
     for nmap_file in nmap_files[initial_range:final_range]:
 
