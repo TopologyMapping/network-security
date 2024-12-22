@@ -25,6 +25,7 @@ from openvas import analysis_openvas_NVTS
 from nuclei import analysis_nuclei_templates
 from nmap import analysis_nmap_scripts
 
+
 def receive_arguments():
     parser = argparse.ArgumentParser(
         description="Match CVEs between Nmap, OpenVAS, and Nuclei templates."

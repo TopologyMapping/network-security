@@ -28,16 +28,35 @@ SCORE_MAYBE_SIMILAR_FILE = 16
 """
 
 CVE_REGEX = re.compile(r'script_cve_id\("(?P<cve1>[^"]+)"(?:,\s*"(?P<cve2>[^"]+)")*\);')
-DEPRECATED_REGEX = re.compile(r'script_tag\(name:"(?P<name>deprecated)",\s*value:(?P<value>TRUE)\);')
-QOD_REGEX = re.compile(r'script_tag\(name:"(?P<qod_type>qod|qod_type)",\s*value:"(?P<qod_value>[^"]+)"\);')
+DEPRECATED_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>deprecated)",\s*value:(?P<value>TRUE)\);'
+)
+QOD_REGEX = re.compile(
+    r'script_tag\(name:"(?P<qod_type>qod|qod_type)",\s*value:"(?P<qod_value>[^"]+)"\);'
+)
 OID_REGEX = re.compile(r'script_oid\("(?P<oid>[\d.]+)"\)')
-SOLUTION_TYPE_REGEX = re.compile(r'script_tag\(name:"(?P<name>solution_type)",\s*value:"(?P<value>[^"]+)"\);')
-INSIGHT_REGEX = re.compile(r'script_tag\(name:"(?P<name>insight)",\s*value:"(?P<value>[^"]+)"\);')
-IMPACT_REGEX = re.compile(r'script_tag\(name:"(?P<name>impact)",\s*value:"(?P<value>[^"]+)"\);')
-SOLUTION_REGEX = re.compile(r'script_tag\(name:"(?P<name>solution)",\s*value:"(?P<value>[^"]+)"\);')
-SUMMARY_REGEX = re.compile(r'script_tag\(name:"(?P<name>summary)",\s*value:"(?P<value>[^"]+)"\);')
-VULDETECT_REGEX = re.compile(r'script_tag\(name:"(?P<name>vuldetect)",\s*value:"(?P<value>[^"]+)"\);')
-AFFECTED_REGEX = re.compile(r'script_tag\(name:"(?P<name>affected)",\s*value:"(?P<value>[^"]+)"\);')
+SOLUTION_TYPE_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>solution_type)",\s*value:"(?P<value>[^"]+)"\);'
+)
+INSIGHT_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>insight)",\s*value:"(?P<value>[^"]+)"\);'
+)
+IMPACT_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>impact)",\s*value:"(?P<value>[^"]+)"\);'
+)
+SOLUTION_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>solution)",\s*value:"(?P<value>[^"]+)"\);'
+)
+SUMMARY_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>summary)",\s*value:"(?P<value>[^"]+)"\);'
+)
+VULDETECT_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>vuldetect)",\s*value:"(?P<value>[^"]+)"\);'
+)
+AFFECTED_REGEX = re.compile(
+    r'script_tag\(name:"(?P<name>affected)",\s*value:"(?P<value>[^"]+)"\);'
+)
+
 
 # Functions to extract information
 def extract_cve_from_openvas(content) -> list:
@@ -45,9 +64,11 @@ def extract_cve_from_openvas(content) -> list:
     cves_to_list = [cve for match in cves for cve in match if cve]
     return cves_to_list
 
+
 def is_openvas_file_deprecated(file_content) -> bool:
     match = DEPRECATED_REGEX.search(file_content)
     return bool(match) if match else False
+
 
 def extract_qod_openvas(content) -> tuple:
     qod_match = QOD_REGEX.search(content)
@@ -70,50 +91,61 @@ def extract_qod_openvas(content) -> tuple:
 
     return qod_type if qod_type else "", qod_value if qod_value else 0
 
+
 def extract_oid_openvas(content) -> str:
     match = OID_REGEX.search(content)
     return match.group("oid") if match else ""
+
 
 def extract_solution_type_openvas(content) -> str:
     solution_type = SOLUTION_TYPE_REGEX.search(content)
     return solution_type.group("value").replace("\n", "") if solution_type else ""
 
+
 def extract_insight_openvas(content) -> str:
     insight = INSIGHT_REGEX.search(content)
     return insight.group("value").replace("\n", "") if insight else ""
+
 
 def extract_impact_openvas(content) -> str:
     impact = IMPACT_REGEX.search(content)
     return impact.group("value").replace("\n", "") if impact else ""
 
+
 def extract_solution_openvas(content) -> str:
     solution = SOLUTION_REGEX.search(content)
     return solution.group("value").replace("\n", "") if solution else ""
+
 
 def extract_summary_openvas(content) -> str:
     description = SUMMARY_REGEX.search(content)
     return description.group("value").replace("\n", "") if description else ""
 
-def extract_vuldetect_openvas(content)  -> str:
+
+def extract_vuldetect_openvas(content) -> str:
     vuldetect = VULDETECT_REGEX.search(content)
     return vuldetect.group("value").replace("\n", "") if vuldetect else ""
+
 
 def extract_affected_openvas(content) -> str:
     affected = AFFECTED_REGEX.search(content)
     return affected.group("value").replace("\n", "") if affected else ""
 
+
 def classification_openvas(content, qod_value, qod_type, llm) -> str:
     """
     This function filters the content of the Openvas script and classifies it according to the QOD value and type.
     """
-    classification : str = ""
+    classification: str = ""
 
     qod_authenticated_scan = QOD_VALUE[
         "package"
     ]  # QOD_VALUE['registry'] is also a authenticated scan
 
     if qod_value >= QOD_VALUE["remote_app"] or qod_value == QOD_VALUE["remote_active"]:
-        classification = llm.classification_text_generation(content, PROMPT_OPENVAS_EXPLOIT)
+        classification = llm.classification_text_generation(
+            content, PROMPT_OPENVAS_EXPLOIT
+        )
     elif qod_value == qod_authenticated_scan or qod_type == "executable_version":
         classification = llm.classification_text_generation(
             content, PROMPT_OPENVAS_AUTHENTICATED
@@ -142,9 +174,9 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
 
     llm = LLMHandler(ip_port)
 
-    NVTS_with_no_CVE : list = []
+    NVTS_with_no_CVE: list = []
 
-    openvas_info : list = []
+    openvas_info: list = []
 
     openvas_files = get_list_unique_files(openvas_folder)
 
@@ -223,7 +255,9 @@ def get_file_info(content) -> dict:
     return result
 
 
-def return_similarity_score(new_file_name: str, new_file_info: dict, old_file_name: str, old_file_info: dict) -> int:
+def return_similarity_score(
+    new_file_name: str, new_file_info: dict, old_file_name: str, old_file_info: dict
+) -> int:
     """
     This function returns a score based on the similarity of the files, involving metadada information.
     This is important to group similar files and avoid unnecessary classification, read the 'compare_similarity_openvas' function for more information.
@@ -255,13 +289,15 @@ def get_list_unique_files(openvas_folder) -> list:
     openvas_checked_files = compare_similarity_openvas(openvas_folder)
 
     list_unique_files = []
-    for value in openvas_checked_files['unique_files'].values():
+    for value in openvas_checked_files["unique_files"].values():
         list_unique_files += value
 
     return list_unique_files
 
 
-def check_active_script(qod_value: int, key: str, openvas_qod_cve: dict, openvas_file: str) -> bool:
+def check_active_script(
+    qod_value: int, key: str, openvas_qod_cve: dict, openvas_file: str
+) -> bool:
     """
     Function to check if a script performs actives checks or not.
     If so, it is important to separate it from the others.
@@ -282,7 +318,9 @@ def check_active_script(qod_value: int, key: str, openvas_qod_cve: dict, openvas
     return False
 
 
-def verifies_similarity(score: int, key: str, similars: dict, maybe_similars: dict, openvas_file: str) -> bool:
+def verifies_similarity(
+    score: int, key: str, similars: dict, maybe_similars: dict, openvas_file: str
+) -> bool:
     """
     This functions verifies if the analyzed file is similar to another file. Based on the score received, it classifies the file as similar or maybe similar to the initial file.
     """
@@ -439,6 +477,5 @@ def compare_similarity_openvas(openvas_folder) -> dict[str, dict]:
     file_path = os.path.join(directory_path, "info_similarity_NVTS_openvas.json")
     with open(file_path, "w") as json_file:
         json.dump(results, json_file, indent=4)
-    
 
     return results

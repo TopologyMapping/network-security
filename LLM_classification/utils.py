@@ -1,8 +1,10 @@
 import os
 
+
 def find_key_by_value(input_dict, value):
     keys = [key for key, val in input_dict.items() if val == value]
     return keys
+
 
 # Try to read file with different encodings
 def read_file_with_fallback(file_path):
