@@ -16,17 +16,21 @@ To run the code, you need to follow:
 
 ``` pip install -r requirements.txt ```
 
-``` python3 distributed_classification.py --SCANNER  <path_to_scanner_files>  --output <output_name> --initialRange INITIAL_RANGE --finalRange FINAL_RANGE --ip_port <LLM_ip_port> ```
+``` python3 distributed_classification.py --<SCANNER_NAME> <PATH_TO_SCANNER_FILES>  --output <OUTPUT_NAME> --initialRange INITIAL_RANGE --finalRange FINAL_RANGE --ip_port <LLM_IP_PORT> ```
 
 Where:
 
-- ```SCANNER``` is one of the following options: nmap, openvas, nuclei, metasploit.
-- ```<path_to_scanner_files>``` is the path to the files of the scanner tool to be classified.
-- ```<output_name>``` is the name of the output file to store the classification.
+- ```<SCANNER_NAME>``` is the application to be classified. Is one (or more than one) of the following options: 'nmap', 'openvas', 'nuclei', 'metasploit'.
+- ```<PATH_TO_SCANNER_FILES>``` is the path to the files of the scanner tool to be classified.
+- ```<OUTPUT_NAME>``` is the name of the output file to store the classification.
 - ```INITIAL_RANGE``` is the initial range of the files to be classified (the classification will be performed in 'batch', so a range is necessary).
 - ```FINAL_RANGE``` is the final range of the files to be classified.
-- ```<LLM_ip_port>``` is the ip and port of the LLM model. It must be in the format: 'ip:port' like '1.2.3.4:5678'.
+- ```<LLM_IP_PORT>``` is the ip and port of the LLM model. It must be in the format: 'ip:port' like '1.2.3.4:5678'.
 
-An example of how to run the code is:
+An example of how to run the code is (using SCANNER_NAME as 'nmap' and 'openvas'. So both of the applications will be classified):
 
 ``` python3 distributed_classification.py --nmap ../nmapFolder --openvas ../../openvasFolder --output openvas_nmap_classification_range_0_to_100.json --initialRange 0 --finalRange 100 --ip_port 1.2.3.4:5678 ```
+
+Another example (just classifying metasploit):
+
+``` python3 distributed_classification.py --metasploit ../metasploitFolder --output metasploit_classification_range_5400_to_5500.json --initialRange 5400 --finalRange 5500 --ip_port 1.2.3.4:5678 ```

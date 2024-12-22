@@ -1,5 +1,5 @@
 import re
-from utils import read_file_with_fallback, classification_text_generation
+from utils import read_file_with_fallback
 from constants import (
     PROMPT_NMAP,
     PROMPT_NMAP_BRUTE_DOS,
@@ -8,6 +8,7 @@ from constants import (
 )
 import time
 import os
+from LLM import LLMHandler
 
 """
     This file contains the functions to classify Nmap scripts.
@@ -16,41 +17,31 @@ import os
     Below, the functions are described in more detail.
 """
 
+NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
+NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
+
 # REGEX FUNCTIONS TO EXTRACT INFO
-def extract_cve_from_nmap(nmap_file):
-    cve_regex = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'([^']+)'.*\}")
-    content = read_file_with_fallback(nmap_file)
-    cves = cve_regex.findall(content)
-    return cves
+def extract_cve_nmap(content) -> list:
+    cves = [match.group("cve") for match in NMAP_CVE_REGEX.finditer(content)]
+    return cves if cves else []
 
+def extract_categorie_nmap(content) -> str:
+    match = NMAP_CATEGORIES_REGEX.search(content)
+    if match:
+        categories = match.group("categories")
+        words = [word.strip('"') for word in categories.split(",")]
+        return " ".join(words)
+    return ""
 
-def extract_cve_nmap(content):
-
-    cve_regex = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'([^']+)'.*\}")
-    cves = cve_regex.findall(content)
-    return cves if cves else ""
-
-
-def extract_categorie_nmap(content):
-
-    categorie_regex = re.compile(r"categories\s*=\s*\{([^\}]+)\}")
-    categories = categorie_regex.findall(content)
-
-    result = ""
-    if categories:
-        words = [word.strip('"') for word in categories[0].split(",")]
-        result = " ".join(words)
-
-    return result
-
-
-def classification_nmap(categorie, content):
+def classification_nmap(categorie: list, content, llm) -> str:
     """
     This function filters the content of the Nmap script and classifies it according to the categorie collected.
     """
 
+    classification : str = ""
+
     if "brute" in categorie:
-        classification = classification_text_generation(content, PROMPT_NMAP_BRUTE_DOS)
+        classification = llm.classification_text_generation(content, PROMPT_NMAP_BRUTE_DOS)
 
         category_privileged_exploit = """ 
 
@@ -63,7 +54,7 @@ def classification_nmap(categorie, content):
         classification += category_privileged_exploit
 
     elif "dos" in categorie:
-        classification = classification_text_generation(content, PROMPT_NMAP_BRUTE_DOS)
+        classification = llm.classification_text_generation(content, PROMPT_NMAP_BRUTE_DOS)
 
         category_privileged_exploit = """ 
 
@@ -77,8 +68,9 @@ def classification_nmap(categorie, content):
 
     elif (
         "discovery" in categorie and "safe" in categorie
-    ):  # 'safe' included because there is 'intrusive' codes that receives 'discovery' categorie, even when performs attacks
-        classification = classification_text_generation(content, PROMPT_NMAP_DISCOVERY)
+    ):  
+        # 'safe' included because there is 'intrusive' codes that receives 'discovery' categorie, even when performs attacks
+        classification = llm.classification_text_generation(content, PROMPT_NMAP_DISCOVERY)
 
         category_privileged_exploit = """ 
 
@@ -94,15 +86,15 @@ def classification_nmap(categorie, content):
         "exploit" in categorie or "malware" in categorie or "vuln" in categorie
     ) and "safe" not in categorie:
 
-        classification = classification_text_generation(content, PROMPT_NMAP_ATTACK)
+        classification = llm.classification_text_generation(content, PROMPT_NMAP_ATTACK)
 
     else:
-        classification = classification_text_generation(content, PROMPT_NMAP)
+        classification = llm.classification_text_generation(content, PROMPT_NMAP)
 
     return classification
 
 
-def analysis_nmap_scripts(nuclei_folder, initial_range, final_range):
+def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> tuple:
     """
     How the function works:
         This file handles the classification of Nmap scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -114,16 +106,24 @@ def analysis_nmap_scripts(nuclei_folder, initial_range, final_range):
     Output: classified files and information about files without CVE.
     """
 
-    scripts_with_no_CVE = []
+    llm = LLMHandler(ip_port)
 
-    nmap_info = []
+    scripts_with_no_CVE :list = []
+
+    nmap_info : list = []
 
     nmap_files = [
         os.path.join(root, file)
-        for root, _, files in os.walk(nuclei_folder)
+        for root, _, files in os.walk(nmap_folder)
         for file in files
         if file.endswith(".nse")
     ]
+    
+    # sorting files by name to ensure the order of classification
+    nmap_files = sorted(
+        nmap_files,
+        key=lambda file: os.path.basename(file)
+    )
 
     for nmap_file in nmap_files[initial_range:final_range]:
 
@@ -137,11 +137,11 @@ def analysis_nmap_scripts(nuclei_folder, initial_range, final_range):
 
         categorie = extract_categorie_nmap(content)
 
-        file_name = nmap_file.split("/")[-1]
+        file_name = os.path.basename(nmap_file)
 
         start_time = time.time()
 
-        classification = classification_nmap(categorie, content)
+        classification = classification_nmap(categorie, content, llm)
 
         end_time = time.time()
         elapsed_time = end_time - start_time
