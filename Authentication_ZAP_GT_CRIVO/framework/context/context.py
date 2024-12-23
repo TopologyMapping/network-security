@@ -1,5 +1,8 @@
+import logging
+
 from ruamel.yaml.comments import CommentedMap
 from keywords import keywords
+
 
 
 def replace_words(
@@ -9,6 +12,12 @@ def replace_words(
     credential_login="{%username%}",
     credential_password="{%password%}",
 ):
+    """
+    
+    This function is responsible for replacing the login and password keywords with the default credentials accepted by ZAP.
+    The replace_words function has a case where it treats %40 as @, which was highlighted in some tests where the request with @ was returned by replacing it with the characters %40.
+    
+    """
     if login == password:
         new_request = text.replace(login, credential_login, 1).replace(
             password, credential_password, 1
@@ -32,11 +41,15 @@ def build_yaml(
     base_url,
     base_url_login,
 ):
-
+    """
+    
+    This function receives the context information as a parameter and constructs the YAML file responsible for the application's automation plan.
+    
+    """
     if alert_count > 0:
         # marcar contexto como auto detect.
         context["env"]["contexts"][0]["sessionManagement"]["method"] = "autodetect"
-        print("Gerenciamento de sessão definido como auto detecção")
+        logging.info("Session management set to auto-detection")
 
     request_text = replace_words(request_body, credential_login, credential_password)
 
@@ -44,12 +57,12 @@ def build_yaml(
         "loginRequestBody"
     ] = request_text
 
-    # Validação de autenticação
+    # Authentication validation
     context["env"]["contexts"][0]["authentication"]["verification"][
         "method"
     ] = "autodetect"
 
-    # Usuario
+    # User crendetials
     context["env"]["contexts"][0]["users"][0]["name"] = credential_login
     context["env"]["contexts"][0]["users"][0]["credentials"][
         "password"
@@ -61,7 +74,7 @@ def build_yaml(
     context["env"]["contexts"][0]["name"] = context_name
     context["env"]["contexts"][0]["urls"] = base_url
     context["env"]["contexts"][0]["includePaths"] = []
-    # autenticação
+    # Authentication 
     context["env"]["contexts"][0]["authentication"]["parameters"][
         "loginPageUrl"
     ] = base_url_login
@@ -69,7 +82,6 @@ def build_yaml(
         "loginRequestUrl"
     ] = base_url_login
 
-    # Criar novas entradas para a verificação logo abaixo de 'method'
     verification_context = context["env"]["contexts"][0]["authentication"][
         "verification"
     ]
@@ -89,7 +101,13 @@ def build_yaml(
     ] = new_verification_entries
 
 
+
 def update_jobs(jobs, new_context, new_user, new_url):
+    """
+    
+    Instantiates jobs defined by default in the application's automation plan file.
+    
+    """
     for job in jobs:
         if "parameters" in job:
             if "context" in job["parameters"]:
