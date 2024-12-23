@@ -1,5 +1,6 @@
 import openai
-from constants import SYSTEM_PROMPT, PROMPT_COMPARE_SIMILARITY
+
+from .constants import PROMPT_COMPARE_SIMILARITY, SYSTEM_PROMPT
 
 
 class LLMHandler:

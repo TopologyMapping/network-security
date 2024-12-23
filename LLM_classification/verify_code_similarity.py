@@ -4,14 +4,14 @@ The main objective is to verify if the files that were clasified as 'similars' a
 This module is not useful to be used alone, but is important to use it after calling the function 'compare_similarity_openvas' in the file 'openvas.py' to evaluate the results.
 """
 
+import argparse
 import json
 import random
 import re
 import time
-import argparse
 
-from utils import read_file_with_fallback
-from LLM import LLMHandler
+from aux.LLM import LLMHandler
+from aux.utils import read_file_with_fallback
 
 COMPARE_FILES_MAYBE_SIMILARS = "maybe_similars"
 COMPARE_FILES_SIMILARS = "similars"
@@ -25,7 +25,9 @@ def receive_arguments():
         description="This code verifies the similarity between Openvas files using LLM."
     )
     parser.add_argument(
-        "--input", required=False, help="Input JSON file with NVTs categories."
+        "--input",
+        required=False,
+        help="Input JSON file with similars and maybe_similars groups.",
     )
     parser.add_argument("--ip_port", required=True, help="LLM ip and port.")
     parser.add_argument(

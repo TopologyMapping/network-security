@@ -1,15 +1,13 @@
-from utils import read_file_with_fallback
-from constants import (
-    PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
-    PROMPT_METASPLOIT_POST,
-    PROMPT_METASPLOIT_PRIVILEGED,
-    PROMPT_METASPLOIT_EXPLOIT,
-    PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
-)
 import os
 import re
 import time
-from LLM import LLMHandler
+
+from .constants import (PROMPT_METASPLOIT_EXPLOIT,
+                        PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
+                        PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
+                        PROMPT_METASPLOIT_POST, PROMPT_METASPLOIT_PRIVILEGED)
+from .LLM import LLMHandler
+from .utils import read_file_with_fallback
 
 """
     This file contains the functions to classify Metasploit scripts.

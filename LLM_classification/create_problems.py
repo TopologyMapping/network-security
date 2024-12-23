@@ -5,17 +5,18 @@ The results of this script are stored in a JSON file, containing the 'problems' 
 """
 
 import argparse
-import os
 import json
+import os
 import re
+from collections import defaultdict
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from collections import defaultdict
 
-from openvas import extract_oid_openvas
-from nuclei import extract_nuclei_id
-from utils import read_file_with_fallback
+from aux.nuclei import extract_nuclei_id
+from aux.openvas import extract_oid_openvas
+from aux.utils import read_file_with_fallback
 
 nltk.download("punkt_tab")
 nltk.download("stopwords")
@@ -25,7 +26,7 @@ VALUES_WHAT_IS_DETECTED = [
     "Vulnerability",
     "Old Software",
     "Properties of a System",
-    "Unmaintained Software",  # these values are not the correct categories, but they are present on the results 
+    "Unmaintained Software",  # these values are not the correct categories, but they are present on the results
     "Property of a System",
 ]
 
@@ -35,7 +36,7 @@ VALUES_SUBCATEGORY = [
     "ExternalCodeExecution",
     "UnauthorizedLogin",
     "ProtectedInformation",
-    "DenialofServiceDoS", 
+    "DenialofServiceDoS",
     "PrivilegedAttack",
     "PackageList",
     "Serviceinformation",

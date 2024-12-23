@@ -1,21 +1,36 @@
-import re
-from utils import (
-    read_file_with_fallback,
-    find_key_by_value,
-)
-import os
-import time
 import json
+import os
+import re
+import time
 from difflib import SequenceMatcher
-from constants import (
-    QOD_VALUE,
-    PROMPT_OPENVAS_EXPLOIT,
-    PROMPT_OPENVAS_AUTHENTICATED,
-    PROMPT_OPENVAS_NOT_EXPLOIT_NOT_AUTHENTICATED,
-    FILE_EXTENSION_OPENVAS,
-)
-from LLM import LLMHandler
 
+from .constants import (PROMPT_OPENVAS_AUTHENTICATED, PROMPT_OPENVAS_EXPLOIT,
+                        PROMPT_OPENVAS_NOT_EXPLOIT_NOT_AUTHENTICATED)
+from .LLM import LLMHandler
+from .utils import find_key_by_value, read_file_with_fallback
+
+# qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
+QOD_VALUE = {
+    "exploit": 100,
+    "remote_vul": 99,
+    "remote_app": 98,
+    "package": 97,
+    "registry": 97,
+    "remote_active": 95,
+    "remote_banner": 80,
+    "executable_version": 80,
+    "default": 75,
+    "remote_analysis": 70,
+    "remote_probe": 50,
+    "remote_banner_unreliable": 30,
+    "executable_version_unreliable": 30,
+    "general_note": 1,
+    "timeout": 0,
+}
+
+FILE_EXTENSION_OPENVAS = ".nasl"
+
+# these values are arbitrary and can be changed if necessary
 SCORE_SIMILAR_FILE = 31
 SCORE_MAYBE_SIMILAR_FILE = 16
 

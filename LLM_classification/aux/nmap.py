@@ -1,14 +1,11 @@
-import re
-from utils import read_file_with_fallback
-from constants import (
-    PROMPT_NMAP,
-    PROMPT_NMAP_BRUTE_DOS,
-    PROMPT_NMAP_DISCOVERY,
-    PROMPT_NMAP_ATTACK,
-)
-import time
 import os
-from LLM import LLMHandler
+import re
+import time
+
+from .constants import (PROMPT_NMAP, PROMPT_NMAP_ATTACK, PROMPT_NMAP_BRUTE_DOS,
+                        PROMPT_NMAP_DISCOVERY)
+from .LLM import LLMHandler
+from .utils import read_file_with_fallback
 
 """
     This file contains the functions to classify Nmap scripts.
@@ -16,6 +13,7 @@ from LLM import LLMHandler
     The classification is done in batches, as there are many files to be classified.
     Below, the functions are described in more detail.
 """
+FILE_EXTENSION_NMAP = ".nse"
 
 NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
 NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
@@ -123,7 +121,7 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> t
         os.path.join(root, file)
         for root, _, files in os.walk(nmap_folder)
         for file in files
-        if file.endswith(".nse")
+        if file.endswith(FILE_EXTENSION_NMAP)
     ]
 
     # sorting files by name to ensure the order of classification
