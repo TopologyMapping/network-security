@@ -1,16 +1,22 @@
 """
-This file contains all the constants to use in the classification task.
+This module defines all constants used for the classification task.
 
-The idea is to classify each file in two dimensions:
-    1: what is detected
-    vulnerability, unmaintained software, property of a system
-    2: how is detected
-    simulated attack, privileged scan, basic active requests (and their subcategories)
+The classification task categorizes files along two dimensions:
+1. **What is detected**:
+   - Vulnerability
+   - Unmaintained software
+   - System property
+2. **How it is detected**:
+   - Simulated attack
+   - Privileged scan
+   - Basic active requests
+   - (and the subcategories)
 
-For each possible action performed by a scanner, is defined a specific prompt, directing the AI to the correct classification, and excluding the other possibilities.
+For each scanner action, a specific prompt is provided to guide the AI towards the appropriate classification while excluding irrelevant options. These prompts were crafted through script analysis and extensive experimentation.
 
-All the prompts used were defined through the analysis of the scripts and experimentation. The information in .txt files can be located on the folder 'prompts'
+All prompts used for this task are stored in `.txt` files located in the 'prompts' folder.
 """
+
 
 
 with open("../prompts/prompt_system.txt", "r") as f:
