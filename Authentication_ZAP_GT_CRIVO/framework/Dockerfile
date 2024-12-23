@@ -1,4 +1,3 @@
-# Base image - colocar versão mais recente
 FROM python:3.12.5-slim
 
 # Install necessary dependencies
@@ -28,11 +27,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
 WORKDIR /app
 
-
-# Set environment variable for ZAP API key - tirar daqui
+# Set environment variables
 ENV FIREFOX="/usr/local/bin/geckodriver"
 ENV ZAP_PROXY_ADDRESS="zaproxy"
 
-# Command to start the application
+# Command to start the application after zap started
 CMD sleep 30 && python3 main.py
-# CMD sleep 10000
