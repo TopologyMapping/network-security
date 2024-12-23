@@ -1,21 +1,9 @@
 """
 Focus: Classificate scanners tests by categories:
-    - What is detected: for example, which CVEs are checked
+    - What is detected: for example, which CVEs are checked, what is the purpose of the script ...
     - How is detected: for example, with an exploit, with version check, with an authenticated scan ...
 
-Steps:
-Run over all vulns tests
-->
-Check if there is CVE
--> 
-    If CVE exists: tries to classificate in categories HOW is detected
-    
-    otherwise: tries to check if is the same problem comparing textual information
-        if similar texts: classificate in categories
-
-Use dicts for each tool to store the CVEs checked -> will store info about classification
-Store all codes without CVE and tries to match them : Brute Force ? Compare by title similarites ?
-
+The results are stored in a JSON file called OUTPUT_NAME_classification.json
 """
 
 import json
@@ -25,10 +13,9 @@ from openvas import analysis_openvas_NVTS
 from nuclei import analysis_nuclei_templates
 from nmap import analysis_nmap_scripts
 
-
 def receive_arguments():
     parser = argparse.ArgumentParser(
-        description="Match CVEs between Nmap, OpenVAS, and Nuclei templates."
+        description="Match CVEs between Nmap, OpenVAS, and Nuclei templates. Store the results in a JSON file."
     )
     parser.add_argument("--nmap", required=False, help="Path to the Nmap directory.")
     parser.add_argument(
@@ -48,7 +35,7 @@ def receive_arguments():
     parser.add_argument(
         "--finalRange", type=int, required=True, help="Final classification range."
     )
-    parser.add_argument("--output", required=True, help="Output JSON file.")
+    parser.add_argument("--output", required=True, help="Output JSON file name. Inform just the name, without the extension.")
     parser.add_argument("--ip_port", required=True, help="LLM ip and port.")
 
     return parser.parse_args()
@@ -105,5 +92,5 @@ if __name__ == "__main__":
 
     results = classification(args)
 
-    with open(args.output, "w") as f:
+    with open(f'./results/{args.output}_classification.json', "w") as f:
         json.dump(results, f, indent=4)
