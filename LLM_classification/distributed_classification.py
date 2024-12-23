@@ -6,12 +6,14 @@ Focus: Classificate scanners tests by categories:
 The results are stored in a JSON file called OUTPUT_NAME_classification.json
 """
 
-import json
 import argparse
-from metasploit import analysis_metasploit_modules
-from openvas import analysis_openvas_NVTS
-from nuclei import analysis_nuclei_templates
-from nmap import analysis_nmap_scripts
+import json
+
+from aux.metasploit import analysis_metasploit_modules
+from aux.nmap import analysis_nmap_scripts
+from aux.nuclei import analysis_nuclei_templates
+from aux.openvas import analysis_openvas_NVTS
+
 
 def receive_arguments():
     parser = argparse.ArgumentParser(
@@ -35,7 +37,11 @@ def receive_arguments():
     parser.add_argument(
         "--finalRange", type=int, required=True, help="Final classification range."
     )
-    parser.add_argument("--output", required=True, help="Output JSON file name. Inform just the name, without the extension.")
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="Output JSON file name. Inform just the name, without the extension.",
+    )
     parser.add_argument("--ip_port", required=True, help="LLM ip and port.")
 
     return parser.parse_args()
@@ -92,5 +98,5 @@ if __name__ == "__main__":
 
     results = classification(args)
 
-    with open(f'./results/{args.output}_classification.json', "w") as f:
+    with open(f"./results/{args.output}_classification.json", "w") as f:
         json.dump(results, f, indent=4)

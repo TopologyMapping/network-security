@@ -1,14 +1,11 @@
+import os
 import re
 import time
-import os
-from utils import read_file_with_fallback
-from constants import (
-    PROMPT_NUCLEI,
-    PROMPT_NUCLEI_REMOTE_CODE_EXECUTION,
-    PROMPT_NUCLEI_AUTH_BYPASS,
-)
-from LLM import LLMHandler
 
+from .constants import (PROMPT_NUCLEI, PROMPT_NUCLEI_AUTH_BYPASS,
+                        PROMPT_NUCLEI_REMOTE_CODE_EXECUTION)
+from .LLM import LLMHandler
+from .utils import read_file_with_fallback
 
 """
     This file contains the functions to classify Nuclei scripts.
@@ -16,6 +13,8 @@ from LLM import LLMHandler
     The classification is done in batches, as there are many files to be classified.
     Below, the functions are described in more detail.
 """
+
+FILE_EXTENSION_NUCLEI = ".yaml"
 
 CVE_NUCLEI_REGEX = re.compile(r"cve-id:\s*(?P<cve>CVE-[\d-]+)")
 NUCLEI_ID_REGEX = re.compile(r"id:\s*(?P<id>[\w\-]+)")
@@ -105,7 +104,7 @@ def analysis_nuclei_templates(
         os.path.join(root, file)
         for root, _, files in os.walk(nuclei_folder)
         for file in files
-        if file.endswith(".yaml")
+        if file.endswith(FILE_EXTENSION_NUCLEI)
     ]
 
     # sorting files by name to ensure the order of classification
