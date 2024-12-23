@@ -1,15 +1,18 @@
-def find_urls_login(lista_strings, lista_palavras):
-    # Lista para armazenar as strings que contêm alguma das palavras
-    urls_encontradas = []
+def find_urls_login(list_of_strings, lista_of_words):
+    """
+    
+    List to store the strings that contain any of the words
+    Iterate over each string in the list of strings
+    Iterate over each word in the list of words
+    Check if the word is present in the string
+    Add the string to the list of results and exit the inner loop
+    
+    """    
+    found_urls = []
 
-    # Itera sobre cada string na lista de strings
-    for string in lista_strings:
-        # Itera sobre cada palavra na lista de palavras
-        for palavra in lista_palavras:
-            # Verifica se a palavra está presente na string
-            if palavra in string:
-                # Adiciona a string à lista de resultados e sai do loop interno
-                urls_encontradas.append(string)
+    for string in list_of_strings: 
+        for word in lista_of_words:
+            if word in string:
+                found_urls.append(string)
                 break
-
-    return urls_encontradas
+    return found_urls
