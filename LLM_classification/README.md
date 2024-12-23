@@ -34,3 +34,9 @@ An example of how to run the code is (using SCANNER_NAME as 'nmap' and 'openvas'
 Another example (just classifying metasploit):
 
 ``` python3 distributed_classification.py --metasploit ../metasploitFolder --output metasploit_classification_range_5400_to_5500.json --initialRange 5400 --finalRange 5500 --ip_port 1.2.3.4:5678 ```
+
+Now, to analyze the results of the classification, the file ```create_problems.py``` can be used. This script will create a file with the 'problems', that is, the files that were classified similarly by the LLM. The results are stored in a file in the path: ```./results/problems.json``` which is used to realize the grouping of the files in the Defect Dojo application. Also, one intermediare file is created in the path: ```./results/grouped_scripts.json```. This file contains a grouping more easier to understand, but not used.
+
+To run the code, just type:
+
+```python3 create_problems.py --input <INPUT_FOLDER_WITH_CLASSIFICATION_FILES>```
