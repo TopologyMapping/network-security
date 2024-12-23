@@ -18,3 +18,4 @@ run: generate_key update_env
 	@echo "Starting services with new API key..."
 	docker compose --env-file file.env up --build --force-recreate -d
 	./copy.sh $(DIR)
+	rm file.env

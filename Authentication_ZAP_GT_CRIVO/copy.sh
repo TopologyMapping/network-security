@@ -1,35 +1,35 @@
 #!/bin/bash
+set -eu
 
-# Verifica se foi passado somente 1 argumento
+# Check if only 1 argument was passed
 if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <diretorio_origem>"
+    echo "Usage: $0 <source_directory>"
     exit 1
 fi
 
-# Argumento do diretório que será copiado
-ORIGEM=$1
+# Argument for the directory to be copied
+SOURCE=$1
 
-DIR_DESTINO="input_config" 
-# volume no compose 
-DESTINO="/shared_data/$DIR_DESTINO"
+DEST_DIR="input_config" 
+# volume in compose 
+DESTINATION="/shared_data/$DEST_DIR"
 
-
-# Verifica se o diretório de origem existe
-if [ ! -d "$ORIGEM" ]; then
+# Check if the source directory exists
+if [ ! -d "$SOURCE" ]; then
+    echo "Error: Source directory '$SOURCE' does not exist."
     exit 1
 fi
 
-# Verifica se o diretório de destino existe se não existir, criar
-docker compose exec framework bash -c "mkdir -p $DESTINO && rm -rf $DESTINO/*"
+# Check if the destination directory exists, if not, create it
+docker compose exec framework bash -c "mkdir -p $DESTINATION && rm -rf $DESTINATION/*"
 
-# comando que apaga todos os arquivos de configuração se houver antes de copiar os novos.
+# command that deletes all configuration files if any before copying the new ones.
 
-# Copia apenas o conteúdo .json do diretório de origem para o volume
-for file in "$ORIGEM"/*.json; do
+# Copy only the .json content from the source directory to the volume
+for file in "$SOURCE"/*.json; do
     if [ -f "$file" ]; then
-        docker compose cp "$file" framework:"$DESTINO/$(basename "$file")"
+        docker compose cp "$file" framework:"$DESTINATION/$(basename "$file")"
     fi
 done
 
-
-echo "Conteúdo copiado de $ORIGEM para $DESTINO com sucesso."
+echo "Content copied from $SOURCE to $DESTINATION successfully."
