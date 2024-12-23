@@ -1,29 +1,45 @@
-from selenium import webdriver
-import time
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchAttributeException
-from selenium.webdriver.common.keys import Keys
+import logging
 import re
-from keywords import keywords
+import time
 
-DEFAULT_TIME = 3
-password_regex = r'\b[\w.-]*password[\w.-]*\b'
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchAttributeException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+from keywords.keywords import RegexSets
+
+
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+DEFAULT_TIME = 1
+regex_sets = RegexSets()
+password_regex = regex_sets.valid_values_elements[0]
+valid_values_elements = regex_sets.valid_values_elements
 
 def find_password(element):
     return any(re.search(password_regex, str(value), re.IGNORECASE) for _, value in element.items())
 
 
 def filtered_dict(driver, evidence, struct_login):
-    # driver = webdriver.Firefox(service=s, options=firefox_options)
+    """
+    
+    The function will receive an instance of a page and an empty structure that will be filled.
+    For each "evidence" (page with a potential authentication form), the function will extract all elements from the page and use regex to verify if the elements are indeed authentication fields.
+    The function will filter the elements from the page and return a dictionary with the filtered elements.
+    This function runs in a loop, meaning there can be multiple pages that are not candidates in the queue. Therefore, the page does not use the ZAP proxy. Because of this, the driver is closed as soon as the elements are extracted.
+    
+    """
+
     driver.get(evidence)
-    # pegar os elementos
     time.sleep(DEFAULT_TIME)
     elements = driver.find_elements(By.XPATH, "//*")
 
-    # leve macro para burlar aplicações com uma janela de pop-up
     if not elements:
+        elements_popup = driver.find_elements(By.XPATH, "//*")
         webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
         elements = driver.find_elements(By.XPATH, "//*")
+        elements.extend(elements_popup)
 
     array_elements = []
 
@@ -42,26 +58,20 @@ def filtered_dict(driver, evidence, struct_login):
 
         if element_info:
             array_elements.append(element_info)
-
-    print(array_elements)
-    print("\n")
-    # regex match
-    # Filtrando os dicionários
+    logging.info(array_elements)
+    
     filtered_dictionaries = []
-    for d in array_elements:
-        for _, value in d.items():
-            # Verifica se o valor corresponde à regex
-            for regex in keywords.valid_values_elements:
+    for einfo in array_elements:
+        for _, value in einfo.items():
+            for regex in valid_values_elements:
                 if re.search(regex, value):
-                    # se a correspondencia do elemento não estiver no dicionário, adicionar
-                    if d not in filtered_dictionaries:
-                        filtered_dictionaries.append(d)
+                    if einfo not in filtered_dictionaries:
+                        filtered_dictionaries.append(einfo)
                     break
 
-    print(filtered_dictionaries)
-
-    # Se após a filtragem o dicionario possuir elementos, criar as tuplas para usar na autenticação.
-    if filtered_dictionaries != []:
+    logging.info(filtered_dictionaries)
+    
+    if filtered_dictionaries:
         
         if len(filtered_dictionaries) > 2:
             login = []
@@ -78,7 +88,6 @@ def filtered_dict(driver, evidence, struct_login):
             filtered_dictionaries = login
 
         authentication_data = {
-            # palavras reservadas em italico
             "name": tuple(element.get("name", "") for element in filtered_dictionaries),
             "type": tuple(element.get("type", "") for element in filtered_dictionaries),
             "placeholder": tuple(
@@ -88,5 +97,6 @@ def filtered_dict(driver, evidence, struct_login):
 
         dicionario_autenticado = {evidence: authentication_data}
         struct_login.append(dicionario_autenticado)
-
+        
+    
     driver.quit()
