@@ -1,10 +1,14 @@
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+import logging
 
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 def find_element_by_attribute(driver, attribute, value):
     """
-    Encontra um elemento no site com base no atributo especificado.
+    
+    Find an element on the website based on the specified attribute.
+    
     """
     try:
         if attribute == "name":
@@ -17,15 +21,19 @@ def find_element_by_attribute(driver, attribute, value):
             )
         else:
             raise ValueError(f"Atributo inválido: {attribute}")
-        print(f"Elemento encontrado com sucesso.")
+        logging.info(f"Element found successfully.")
         return element
     except NoSuchElementException:
-        print(f"Elemento não encontrado com base no atributo '{attribute}'.")
+        logging.info(f"Element not found based on attribute '{attribute}'.")
         return None
 
 
-# Função para validar se o elemento está visível
 def validate_by_attribute(driver, attribute, value):
+    """
+    
+    Validate if an element with the given attribute and value is displayed on the page.
+    
+    """
     try:
         if attribute == "name":
             if driver.find_element(By.NAME, value).is_displayed():
@@ -40,19 +48,22 @@ def validate_by_attribute(driver, attribute, value):
                 By.CSS_SELECTOR, f"input[placeholder='{value}']"
             ).is_displayed():
                 pass
-        print("failed to log in !")
+        logging.info("Failed to log in!")
         driver.refresh()
         return
     except:
-        print("login done !")
+        logging.info("Login successful!")
 
 
 def check_credentials(request, credencial_login, credencial_passsword):
+    """
+    
+    This function receives a string and two credentials and checks if both credentials are present in the request body string.
+    The function can check if the credentials are the same by verifying the number of occurrences in the string.
+    And it checks if both credentials are present in the string.
 
-    # Verifica os casos em que o login e senha são iguais (admin, admin)
+    """
     if credencial_login == credencial_passsword:
-        # Conta o número de ocorrências da palavra no texto
         return request.count(credencial_login) >= 2
     else:
-        # Verifica se ambas as palavras estão presentes no texto
         return credencial_login in request and credencial_passsword in request
