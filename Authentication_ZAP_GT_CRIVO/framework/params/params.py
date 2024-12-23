@@ -2,9 +2,15 @@ import re
 from keywords import keywords
 
 
-def Define_type_authentication(
+
+def Define_authentication_type(
     zap, parameter_types_found, BASE_URL_LOGIN, request_body
 ):
+    """
+    
+    Function to define the authentication type based on the request body of the application: json, form, etc.
+
+    """
     session_parameters = zap.params.params(BASE_URL_LOGIN)
     session_parameters = session_parameters[0]["Parameter"]
 
@@ -25,6 +31,3 @@ def Define_type_authentication(
         r = r"{\s*[^{}]*\s*}"
         if re.search(r, request_body):
             parameter_types_found["json"] = 1
-
-    else:
-        pass
