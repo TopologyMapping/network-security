@@ -9,6 +9,7 @@ class Configuration(BaseModel):
     Class used to parse the JSON that the user must provide with the application data to perform the automation.
 
     """
+
     context: str
     url: List[str]
     url_login: Optional[str] = None

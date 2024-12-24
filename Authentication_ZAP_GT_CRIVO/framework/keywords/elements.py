@@ -10,25 +10,29 @@ from selenium.webdriver.common.keys import Keys
 from keywords.keywords import RegexSets
 
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 DEFAULT_TIME = 1
 regex_sets = RegexSets()
 password_regex = regex_sets.valid_values_elements[0]
 valid_values_elements = regex_sets.valid_values_elements
 
+
 def find_password(element):
-    return any(re.search(password_regex, str(value), re.IGNORECASE) for _, value in element.items())
+    return any(
+        re.search(password_regex, str(value), re.IGNORECASE)
+        for _, value in element.items()
+    )
 
 
 def filtered_dict(driver, evidence, struct_login):
     """
-    
+
     The function will receive an instance of a page and an empty structure that will be filled.
     For each "evidence" (page with a potential authentication form), the function will extract all elements from the page and use regex to verify if the elements are indeed authentication fields.
     The function will filter the elements from the page and return a dictionary with the filtered elements.
     This function runs in a loop, meaning there can be multiple pages that are not candidates in the queue. Therefore, the page does not use the ZAP proxy. Because of this, the driver is closed as soon as the elements are extracted.
-    
+
     """
 
     driver.get(evidence)
@@ -59,7 +63,7 @@ def filtered_dict(driver, evidence, struct_login):
         if element_info:
             array_elements.append(element_info)
     logging.info(array_elements)
-    
+
     filtered_dictionaries = []
     for einfo in array_elements:
         for _, value in einfo.items():
@@ -70,18 +74,18 @@ def filtered_dict(driver, evidence, struct_login):
                     break
 
     logging.info(filtered_dictionaries)
-    
+
     if filtered_dictionaries:
-        
+
         if len(filtered_dictionaries) > 2:
             login = []
             for index, element in enumerate(filtered_dictionaries):
                 if find_password(element):
-                    if (filtered_dictionaries[index-1] in login):
+                    if filtered_dictionaries[index - 1] in login:
                         pass
                     else:
-                        login.append(filtered_dictionaries[index-1])
-                    if (element in login):
+                        login.append(filtered_dictionaries[index - 1])
+                    if element in login:
                         pass
                     else:
                         login.append(element)
@@ -97,6 +101,5 @@ def filtered_dict(driver, evidence, struct_login):
 
         dicionario_autenticado = {evidence: authentication_data}
         struct_login.append(dicionario_autenticado)
-        
-    
+
     driver.quit()

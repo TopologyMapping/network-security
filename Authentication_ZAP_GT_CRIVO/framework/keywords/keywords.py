@@ -1,13 +1,17 @@
 import os
 
+
 class RegexSets:
     """
-    
+
     The class is responsible for loading the regex files that will be used to identify elements on the page.
-    
+
     """
+
     def __init__(self):
-        self.folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "regex_words/")
+        self.folder_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "regex_words/"
+        )
         self.keywords = {}
         self.load_files()
 

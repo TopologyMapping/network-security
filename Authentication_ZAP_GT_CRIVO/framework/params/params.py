@@ -2,12 +2,11 @@ import re
 from keywords import keywords
 
 
-
 def Define_authentication_type(
     zap, parameter_types_found, BASE_URL_LOGIN, request_body
 ):
     """
-    
+
     Function to define the authentication type based on the request body of the application: json, form, etc.
 
     """

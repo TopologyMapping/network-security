@@ -2,13 +2,14 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+
 
 def find_element_by_attribute(driver, attribute, value):
     """
-    
+
     Find an element on the website based on the specified attribute.
-    
+
     """
     try:
         if attribute == "name":
@@ -30,9 +31,9 @@ def find_element_by_attribute(driver, attribute, value):
 
 def validate_by_attribute(driver, attribute, value):
     """
-    
+
     Validate if an element with the given attribute and value is displayed on the page.
-    
+
     """
     try:
         if attribute == "name":
@@ -57,7 +58,7 @@ def validate_by_attribute(driver, attribute, value):
 
 def check_credentials(request, credencial_login, credencial_passsword):
     """
-    
+
     This function receives a string and two credentials and checks if both credentials are present in the request body string.
     The function can check if the credentials are the same by verifying the number of occurrences in the string.
     And it checks if both credentials are present in the string.

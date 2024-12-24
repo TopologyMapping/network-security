@@ -4,7 +4,6 @@ from ruamel.yaml.comments import CommentedMap
 from keywords import keywords
 
 
-
 def replace_words(
     text,
     login,
@@ -13,10 +12,10 @@ def replace_words(
     credential_password="{%password%}",
 ):
     """
-    
+
     This function is responsible for replacing the login and password keywords with the default credentials accepted by ZAP.
     The replace_words function has a case where it treats %40 as @, which was highlighted in some tests where the request with @ was returned by replacing it with the characters %40.
-    
+
     """
     if login == password:
         new_request = text.replace(login, credential_login, 1).replace(
@@ -42,9 +41,9 @@ def build_yaml(
     base_url_login,
 ):
     """
-    
+
     This function receives the context information as a parameter and constructs the YAML file responsible for the application's automation plan.
-    
+
     """
     if alert_count > 0:
         # marcar contexto como auto detect.
@@ -74,7 +73,7 @@ def build_yaml(
     context["env"]["contexts"][0]["name"] = context_name
     context["env"]["contexts"][0]["urls"] = base_url
     context["env"]["contexts"][0]["includePaths"] = []
-    # Authentication 
+    # Authentication
     context["env"]["contexts"][0]["authentication"]["parameters"][
         "loginPageUrl"
     ] = base_url_login
@@ -101,12 +100,11 @@ def build_yaml(
     ] = new_verification_entries
 
 
-
 def update_jobs(jobs, new_context, new_user, new_url):
     """
-    
+
     Instantiates jobs defined by default in the application's automation plan file.
-    
+
     """
     for job in jobs:
         if "parameters" in job:
