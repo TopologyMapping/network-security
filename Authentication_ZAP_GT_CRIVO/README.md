@@ -102,17 +102,16 @@ This class structures the necessary information for conducting tests through ZAP
 
 ## configuration file
 
-The configuration file must be in JSON format. Below is an example of how it should be organized:
+The configuration file must be in JSON format. Below is an real example:
 
-```python
-class Configuration(BaseModel):
-    context: str
-    url: List[str]
-    url_login: Optional[str] = None
-    exclude_urls: List[str] = []
-    report_title: Optional[str] = "Report"
-    login: str
-    password: str
+```json
+    context: "context_bWAPP"
+    url: "192.168.15.3/bWAPP/"
+    url_login: "192.168.15.3/bWAPP/login"
+    exclude_urls: []
+    report_title: "Report_bWAPP"
+    login: "admin"
+    password: "admin"
 ```
 
 Pydantic will parse the file and extract the necessary attributes for creating the context. An example will be provided in the root of the repository, named `example.json`.
