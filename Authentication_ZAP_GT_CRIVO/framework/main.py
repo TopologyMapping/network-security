@@ -174,7 +174,7 @@ def main(file_path):
 
     BASE_CONTEXT = "base_context/context_base.yaml"
 
-    params.Define_authentication_type(
+    params.define_authentication_type(
         zap, parameter_types_found, url_authentication, request_body
     )
 
