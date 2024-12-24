@@ -6,12 +6,128 @@ import zipfile
 from typing import Any
 
 import torch
-from transformers import *
+from transformers import Pipeline, pipeline
 
 # Candidate labels
-VULN_LABELS: list[str] = ["remote code execution", "denial of service", "cross site scripting", "information disclosure", "sql injection", "privilege escalation", "buffer overflow", "cross site request forgery"]
+VULN_LABELS: list[str] = [
+    "remote code execution",
+    "denial of service",
+    "cross site scripting",
+    "information disclosure",
+    "sql injection",
+    "privilege escalation",
+    "buffer overflow",
+    "cross site request forgery",
+]
 
-def processCvesFromMitre(filepath: str, classifier: Pipeline) -> dict[str, tuple[str, dict[str, float]]]:
+CONFIG_LABELS: list[str] = [
+    "active in default configuration.",
+    "active only in specific configurations.",
+    "active in an unknown configuration, i.e. no mention of which configuration is affected.",
+]
+
+
+def initParser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Classifies CVEs from Mitre using a zero-shot classifier. \
+        The result is a vector of probabilities for each category and can be used as a feature for the XGBoost model."
+    )
+
+    parser.add_argument(
+        "cveFile",
+        metavar="cve-file",
+        type=str,
+        help="path to a file with CVEs to be classified, this file is a .zip downloaded directly from Mitre (e.g. cvelistV5-main.zip)",
+    )
+
+    parser.add_argument(
+        "outFile",
+        metavar="output-file",
+        type=str,
+        default="cve-output",
+        help="path to the output file. The default format is .pickle, use a -j flag to get a .json file instead",
+    )
+
+    parser.add_argument(
+        "-j",
+        "--out-json",
+        dest="jsonOutput",
+        action="store_true",
+        default=False,
+        help="If enabled, the output file will be a .json file instead of .pickle. (default: %(default)s)",
+    )
+
+    parser.add_argument(
+        "-f",
+        "--logfile",
+        type=str,
+        dest="logfile",
+        action="store",
+        default=None,
+        help="file to store log outputs. If not specified, logs will be printed on screen",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--loglevel",
+        type=str,
+        dest="loglevel",
+        metavar="LOGLEVEL",
+        action="store",
+        choices=["DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
+        default="INFO",
+        help="log level. Available options: DEBUG, INFO, WARN, ERROR, FATAL (default: %(default)s)",
+    )
+
+    return parser
+
+
+def simplifyConfigLabels(labels: list[str]) -> list[str]:
+    """
+    Simplifies the configuration labels to make them more readable.
+
+    Parameters
+    ----------
+    `labels`: list of configuration labels.
+
+    Returns
+    -------
+    `simplified`: list of simplified configuration labels.
+    """
+
+    simplified: list[str] = []
+
+    for label in labels:
+        if "active in default configuration" in label:
+            simplified.append("default")
+
+        if "active only in specific configurations" in label:
+            simplified.append("specific")
+
+        if "active in an unknown configuration" in label:
+            simplified.append("unknown")
+
+    return simplified
+
+
+def processCvesFromMitre(
+    filepath: str, classifier: Pipeline
+) -> dict[str, tuple[str, dict[str, float]]]:
+    """
+    Process all CVEs from a Mitre zip file and classify them using a zero-shot classifier.
+
+    The CVEs are classified into vulnerability categories and further classified into configuration categories.
+
+    Parameters
+    ----------
+    `filepath`: path to the zip file containing the CVEs.
+    `classifier`: zero-shot classifier model.
+
+    Returns
+    -------
+    `result`: dictionary with the classification result for each CVE.
+    """
+
     seenCves: dict[str, tuple[str, dict[str, float]]] = dict()
 
     with zipfile.ZipFile(filepath, "r") as file:
@@ -19,8 +135,10 @@ def processCvesFromMitre(filepath: str, classifier: Pipeline) -> dict[str, tuple
         cveFilename: list[str] = file.namelist()
 
         for idx, cveFile in enumerate(cveFilename):
-            print(f"{idx + 1}/{len(cveFilename)}\r", end="")
+            if idx % 1000 == 0:
+                logging.info(f"Progress {idx + 1} / {len(cveFilename)}")
 
+            # There are some files that are not JSON, they do not contain CVEs
             if not cveFile.endswith(".json"):
                 continue
 
@@ -32,40 +150,173 @@ def processCvesFromMitre(filepath: str, classifier: Pipeline) -> dict[str, tuple
                 except:
                     continue
 
+                # CVE was rejected by Mitre
                 if state == "REJECTED":
                     continue
 
                 summary: str = data["containers"]["cna"]["descriptions"][0]["value"]
                 id: str = data["cveMetadata"]["cveId"]
 
-                if id in seenCves:
-                    continue
+                resultVuln: dict[str, Any] = classifyCveVulnerability(
+                    classifier, summary
+                )
+                resultConfig: dict[str, Any] = classifyCveConfiguration(
+                    classifier, summary
+                )
 
-                result: dict[str, Any] = classifyZeroShotCVE(classifier, summary)
+                # NOTE: we are overwriting the result if the CVE is already in the dictionary
+                # This is intended behavior, since the main CVE list also contains updates and
+                # is ordered from oldest to newest. This way, reading sequentially like we are doing
+                # will always keep the latest information.
+                # In other words, the oldest CVE is processed first and the newest is processed last.
 
-                # Save to seen
-                seenCves[id] = (summary, {l: s for l, s in zip(result["labels"], result["scores"])})
+                seenCves[id] = (
+                    {l: s for l, s in zip(resultVuln["labels"], resultVuln["scores"])},
+                    {
+                        l: s
+                        for l, s in zip(
+                            simplifyConfigLabels(resultConfig["labels"]),
+                            resultConfig["scores"],
+                        )
+                    },
+                )
+
+                # Immediate result with debug
+                logging.debug(f"{id}: {summary} -> {seenCves[id]}")
+                logging.debug("")  # Readability
 
     return seenCves
 
-def classifyZeroShotCVE(classifier: Pipeline, vulnSummary: str) -> dict[str, Any]:
+
+def classifyCveVulnerability(classifier: Pipeline, vulnSummary: str) -> dict[str, Any]:
+    """
+    Classifies a CVE into a vulnerability category.
+
+    The classification is not binary and produces a vector of probabilities.
+
+    Parameters
+    ----------
+    `classifier`: zero-shot classifier model.
+    `vulnSummary`: CVE summary to be classified, in English.
+
+    Returns
+    -------
+    `result`: dictionary with the classification result.
+    """
+
     # Summary is already in EN, we don't need to translate
 
     # Get sequence to classify and add some context
     sequence: str = f"{vulnSummary}"
     hypothesis: str = "This summary is from a {} vulnerability."
 
-    result: dict = classifier(sequences=sequence, candidate_labels=VULN_LABELS, hypothesis_template=hypothesis, multi_label=False)
+    result: dict = classifier(
+        sequences=sequence,
+        candidate_labels=VULN_LABELS,
+        hypothesis_template=hypothesis,
+        multi_label=False,
+    )
 
     return result
 
+
+def classifyCveConfiguration(classifier: Pipeline, vulnSummary: str) -> dict[str, Any]:
+    """
+    Classifies a CVE into a configuration category.
+
+    That is, if the vulnerability is active in the default configuration of a software, or not.
+
+    The classification is not binary and produces a vector of probabilities.
+
+    Parameters
+    ----------
+    `classifier`: zero-shot classifier model.
+    `vulnSummary`: CVE summary to be classified, in English.
+
+    Returns
+    -------
+    `result`: dictionary with the classification result.
+    """
+
+    # Summary is already in EN, we don't need to translate
+
+    # Get sequence to classify and add some context
+    sequence: str = f"{vulnSummary}"
+    hypothesis: str = "This vulnerability is {}."
+
+    result: dict = classifier(
+        sequences=sequence,
+        candidate_labels=CONFIG_LABELS,
+        hypothesis_template=hypothesis,
+        multi_label=False,
+    )
+
+    return result
+
+
+def genOutputFile(
+    filepath: str, cvesResult: dict[str, tuple[str, dict[str, float]]], jsonOutput: bool
+) -> None:
+    """
+    Generates an output file of the desired format.
+
+    Parameters
+    ----------
+    `filepath`: output file path.
+    `cvesResult`: dictionary with the results of the classification.
+    `jsonOutput`: if True, the output file will be a .json file, otherwise it will be a .pickle file.
+    """
+
+    if jsonOutput:
+        with open(filepath + ".json", "w") as f:
+            json.dump(cvesResult, f, indent=4)
+    else:
+        pickle.dump(cvesResult, open(filepath + ".pickle", "wb"))
+
+    logging.info(f"Output file saved to {filepath}")
+
+
 if __name__ == "__main__":
-   
+    # Get args
+    parser = initParser()
+    args = parser.parse_args()
+
+    # Auto enable log file if log level is DEBUG
+    if args.loglevel == "DEBUG" and args.logfile == None:
+        args.logfile = f"classify_cves_debug.log"
+        print(
+            f"A log file is required for log level DEBUG. Logs will be written to '{args.logfile}'"
+        )
+
+    # Set up log
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s: %(message)s",
+        datefmt="%m/%d/%Y %I:%M:%S %p",
+        level=getattr(logging, args.loglevel),
+        filename=args.logfile,
+        encoding="utf-8",
+    )
 
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
 
-    classifier: Pipeline = pipeline("zero-shot-classification", model="MoritzLaurer/deberta-v3-large-zeroshot-v2.0", batch_size=16, device=device, fp16=True)
+    # Run summary
+    logging.info(f"Using device: {device}")
+    logging.info(f"Log level: {args.loglevel}")
+    logging.info(
+        f"Output file: {args.outFile + ('.json' if args.jsonOutput else '.pickle')}"
+    )
 
-    cvesResult = processCvesFromMitre("C:\\Users\\Gab\\Downloads\\cvelistV5-main.zip", classifier)
-    
-    pickle.dump(cvesResult, open("cvesResult.pkl", "wb"))
+    # Run
+    logging.info("Loading model... this may take a while on the first run")
+
+    classifier: Pipeline = pipeline(
+        "zero-shot-classification",
+        model="MoritzLaurer/deberta-v3-large-zeroshot-v2.0",
+        batch_size=16,
+        device=device,
+        fp16=True,
+    )
+
+    cvesResult: dict = processCvesFromMitre(args.cveFile, classifier)
+
+    genOutputFile(args.outFile, cvesResult, args.jsonOutput)
