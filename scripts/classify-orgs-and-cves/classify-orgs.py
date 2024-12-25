@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import bz2
 import json
@@ -391,10 +393,10 @@ def genOutputFile(
     """
 
     if jsonOutput:
-        with open(filepath + ".json", "w") as f:
+        with open(filepath, "w") as f:
             json.dump(cvesResult, f, indent=4)
     else:
-        pickle.dump(cvesResult, open(filepath + ".pickle", "wb"))
+        pickle.dump(cvesResult, open(filepath, "wb"))
 
     logging.info(f"Output file saved to {filepath}")
 
@@ -421,13 +423,12 @@ if __name__ == "__main__":
     )
 
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    args.outFile += ".json" if args.jsonOutput else ".pickle"
 
     # Run summary
     logging.info(f"Using device: {device}")
     logging.info(f"Log level: {args.loglevel}")
-    logging.info(
-        f"Output file: {args.outFile + ('.json' if args.jsonOutput else '.pickle')}"
-    )
+    logging.info(f"Output file: {args.outFile}")
 
     # Run
     logging.info("Loading model... this may take a while on the first run")
