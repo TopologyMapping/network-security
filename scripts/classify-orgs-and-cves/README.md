@@ -26,7 +26,7 @@ This will install all basic dependencies, except for the AI modules. Both transf
 
 The installation of PyTorch varies among operating systems and hardware (e.g. if you have CUDA support or not). It is highly recommended to install the CUDA version, as it provides a significant performance uplift.
 
-Follow the recommended installations instructions for your configuration: [Installing PyTorch locally](https://pytorch.org/get-started/locally/).
+Follow the recommended installation instructions for your configuration: [Installing PyTorch locally](https://pytorch.org/get-started/locally/).
 
 *After installing a compatible version of PyTorch for your system*, install the last dependencies by running:
 
