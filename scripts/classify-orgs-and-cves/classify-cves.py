@@ -29,8 +29,8 @@ CONFIG_LABELS: list[str] = [
 
 def initParser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Classifies CVEs from Mitre using a zero-shot classifier. \
-        The result is a vector of probabilities for each category and can be used as a feature for the XGBoost model."
+        description="Classifies CVEs from Mitre into vulnerability categories using a zero-shot classifier. \
+        The result is a vector of probabilities for each category that can be used as a feature for the XGBoost model."
     )
 
     parser.add_argument(
@@ -110,6 +110,72 @@ def simplifyConfigLabels(labels: list[str]) -> list[str]:
     return simplified
 
 
+def classifyCveVulnerability(classifier: Pipeline, vulnSummary: str) -> dict[str, Any]:
+    """
+    Classifies a CVE into a vulnerability category.
+
+    The classification is not binary and produces a vector of probabilities.
+
+    Parameters
+    ----------
+    `classifier`: zero-shot classifier model.
+    `vulnSummary`: CVE summary to be classified, in English.
+
+    Returns
+    -------
+    `result`: dictionary with the classification result.
+    """
+
+    # Summary is already in EN, we don't need to translate
+
+    # Get sequence to classify and add some context
+    sequence: str = f"{vulnSummary}"
+    hypothesis: str = "This summary is from a {} vulnerability."
+
+    result: dict = classifier(
+        sequences=sequence,
+        candidate_labels=VULN_LABELS,
+        hypothesis_template=hypothesis,
+        multi_label=False,
+    )
+
+    return result
+
+
+def classifyCveConfiguration(classifier: Pipeline, vulnSummary: str) -> dict[str, Any]:
+    """
+    Classifies a CVE into a configuration category.
+
+    That is, if the vulnerability is active in the default configuration of a software, or not.
+
+    The classification is not binary and produces a vector of probabilities.
+
+    Parameters
+    ----------
+    `classifier`: zero-shot classifier model.
+    `vulnSummary`: CVE summary to be classified, in English.
+
+    Returns
+    -------
+    `result`: dictionary with the classification result.
+    """
+
+    # Summary is already in EN, we don't need to translate
+
+    # Get sequence to classify and add some context
+    sequence: str = f"{vulnSummary}"
+    hypothesis: str = "This vulnerability is {}."
+
+    result: dict = classifier(
+        sequences=sequence,
+        candidate_labels=CONFIG_LABELS,
+        hypothesis_template=hypothesis,
+        multi_label=False,
+    )
+
+    return result
+
+
 def processCvesFromMitre(
     filepath: str, classifier: Pipeline
 ) -> dict[str, tuple[str, dict[str, float]]]:
@@ -186,72 +252,6 @@ def processCvesFromMitre(
                 logging.debug("")  # Readability
 
     return seenCves
-
-
-def classifyCveVulnerability(classifier: Pipeline, vulnSummary: str) -> dict[str, Any]:
-    """
-    Classifies a CVE into a vulnerability category.
-
-    The classification is not binary and produces a vector of probabilities.
-
-    Parameters
-    ----------
-    `classifier`: zero-shot classifier model.
-    `vulnSummary`: CVE summary to be classified, in English.
-
-    Returns
-    -------
-    `result`: dictionary with the classification result.
-    """
-
-    # Summary is already in EN, we don't need to translate
-
-    # Get sequence to classify and add some context
-    sequence: str = f"{vulnSummary}"
-    hypothesis: str = "This summary is from a {} vulnerability."
-
-    result: dict = classifier(
-        sequences=sequence,
-        candidate_labels=VULN_LABELS,
-        hypothesis_template=hypothesis,
-        multi_label=False,
-    )
-
-    return result
-
-
-def classifyCveConfiguration(classifier: Pipeline, vulnSummary: str) -> dict[str, Any]:
-    """
-    Classifies a CVE into a configuration category.
-
-    That is, if the vulnerability is active in the default configuration of a software, or not.
-
-    The classification is not binary and produces a vector of probabilities.
-
-    Parameters
-    ----------
-    `classifier`: zero-shot classifier model.
-    `vulnSummary`: CVE summary to be classified, in English.
-
-    Returns
-    -------
-    `result`: dictionary with the classification result.
-    """
-
-    # Summary is already in EN, we don't need to translate
-
-    # Get sequence to classify and add some context
-    sequence: str = f"{vulnSummary}"
-    hypothesis: str = "This vulnerability is {}."
-
-    result: dict = classifier(
-        sequences=sequence,
-        candidate_labels=CONFIG_LABELS,
-        hypothesis_template=hypothesis,
-        multi_label=False,
-    )
-
-    return result
 
 
 def genOutputFile(
