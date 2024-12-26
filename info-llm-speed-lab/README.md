@@ -10,7 +10,7 @@ Currently, gorgonas1-7 and 10 are available. gorgona8 is not officially part of 
 
 ## Setup overview
 
-We use [llama-cpp](https://github.com/ggerganov/llama.cpp) as a framework to run the models. Once set up, the framework can viewed as such:
+We use [llama-cpp](https://github.com/ggerganov/llama.cpp) as a framework to run the models. Once set up, the framework consists of:
 
 - One **host machine**. Has the model downloaded and exposes a port for interaction using the OpenAI API.
 - Zero or more **RPC machines**. Exposes a port for interaction with the **host machine**, thus allowing for distributed inference. Does not need the model file.
