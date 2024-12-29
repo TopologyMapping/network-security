@@ -1,6 +1,7 @@
 import dataclasses
 import os
 
+# class to organize results from classification
 @dataclasses.dataclass
 class ScriptClassificationResult:
     scripts_with_cves: list[str]
