@@ -140,7 +140,7 @@ def isElementVisible(element) -> bool:
     return True
 
 
-def extractTextFromHtml(body: str) -> str:
+def extractTextFromHtml(body: str) -> list[str]:
     """
     Extracts visible text from an HTML body.
 
@@ -150,7 +150,7 @@ def extractTextFromHtml(body: str) -> str:
 
     Returns
     -------
-    `text`: visible text from the HTML body, every text is separated by a newline.
+    `text`: visible text from the HTML body, as a list of sentences.
     """
 
     soup = BeautifulSoup(body, "html.parser")
@@ -159,7 +159,7 @@ def extractTextFromHtml(body: str) -> str:
 
     visibleTexts = filter(isElementVisible, texts)
 
-    return "\n".join(t.strip() for t in visibleTexts)
+    return [t.strip() for t in visibleTexts]
 
 
 def buildBagOfWords(html: str) -> list[str]:
@@ -177,22 +177,16 @@ def buildBagOfWords(html: str) -> list[str]:
     `sortedWords`: list of words sorted by frequency, from most to least frequent.
     """
 
-    allText: str = extractTextFromHtml(html)
+    allText: list[str] = extractTextFromHtml(html)
 
-    bow: dict[str, Any] = defaultdict(int)
+    bow: dict[str, int] = defaultdict(int)
 
-    tokens: list[str] = allText.split("\n")
-
-    for word in tokens:
-        word = word.strip()
-
-        if len(word) < 5:
-            continue
-
+    for word in allText:
         if word.isspace():
             continue
-
-        if not word.replace(" ", "").isalpha():
+        
+        # Don't include prepositions, articles, etc
+        if len(word) < 5:
             continue
 
         bow[word] += 1
@@ -230,25 +224,25 @@ def classifyOrganization(
     """
 
     # Threshold to consider the classification valid
-    THRESHOLD = 0.3
+    THRESHOLD: float = 0.3
 
     # Translate to PT, EN text is left untouched
-    sortedWordsEn = translator.translate(
+    sortedWordsEn: list[str] = translator.translate(
         sortedWords[:15], source_lang="pt", target_lang="en"
     )
 
     # Get sequence to classify, will join using ; because sentences are not necessarily connected
-    sequence = f"{'; '.join(w for w in sortedWordsEn)}"
-    hypothesis = "This list of sequences is from a {} webpage."
+    sequence: str = '; '.join(w for w in sortedWordsEn)
+    hypothesis: str = "This list of sequences is from a {} webpage."
 
-    result = classifier(
+    result: dict = classifier(
         sequences=sequence,
         candidate_labels=LABELS,
         hypothesis_template=hypothesis,
         multi_label=False,
     )
 
-    # If top category has a score smaller than 0.2, we can use other data from the scan to try to get a better result
+    # If top category has a score smaller than threshold, we can use other data from the scan to try to get a better result
     if result["scores"][0] > THRESHOLD:
         return result
 
