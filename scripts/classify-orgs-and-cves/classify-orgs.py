@@ -184,7 +184,7 @@ def buildBagOfWords(html: str) -> list[str]:
     for word in allText:
         if word.isspace():
             continue
-        
+
         # Don't include prepositions, articles, etc
         if len(word) < 5:
             continue
@@ -232,7 +232,7 @@ def classifyOrganization(
     )
 
     # Get sequence to classify, will join using ; because sentences are not necessarily connected
-    sequence: str = '; '.join(w for w in sortedWordsEn)
+    sequence: str = "; ".join(w for w in sortedWordsEn)
     hypothesis: str = "This list of sequences is from a {} webpage."
 
     result: dict = classifier(
@@ -262,8 +262,23 @@ def classifyOrganization(
 
     # Try with title and organization
     if webpageTitle or org:
-        sequence = f"{webpageTitle}; {org}"
-        hypothesis = "This webpage title is from a {} webpage."
+        # Dinamically adjust prompt based on available data
+        hypothesis: str = "This "
+        sequence: str = ""
+
+        if webpageTitle:
+            sequence += f"Title = {webpageTitle}"
+            hypothesis += "webpage title"
+
+        if org:
+            if webpageTitle:
+                hypothesis += " and "
+
+            sequence += f"; Organization = {org}"
+            hypothesis += "organization"
+
+        hypothesis += " are " if webpageTitle and org else " is "
+        hypothesis += "from a {} webpage."
 
         result = classifier(
             sequences=sequence,
@@ -277,7 +292,7 @@ def classifyOrganization(
 
     # Last try with hostnames
     if hostnames:
-        sequence = f"; ".join(h for h in hostnames)
+        sequence = "; ".join(h for h in hostnames)
         hypothesis = "These hostnames are from a {} webpage."
 
         result = classifier(
