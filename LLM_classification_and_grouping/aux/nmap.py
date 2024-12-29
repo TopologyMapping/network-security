@@ -159,7 +159,6 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> S
 
         nmap_info.append(info)
 
-    #return nmap_info, scripts_with_no_CVE
     return ScriptClassificationResult(scripts_with_cves=nmap_info, scripts_without_cves=scripts_with_no_CVE)
 
 

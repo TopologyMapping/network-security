@@ -143,6 +143,5 @@ def analysis_nuclei_templates(
 
         nuclei_info.append(info)
 
-    #return nuclei_info, templates_with_no_CVE
     return ScriptClassificationResult(scripts_with_cves=nuclei_info, scripts_without_cves=templates_with_no_CVE)
 

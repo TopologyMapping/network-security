@@ -39,27 +39,15 @@ def receive_arguments():
 
 
 def select_cve_to_analyze(
-    all_cves_selected: list, cves_unique_files, info_op_nvts: dict, key: str
+    number_of_files_compared: int, cves_unique_files, info_op_nvts: dict, key: str
 ):
     """
     This functions selects a random CVE to be analyzed. The selected CVE must be in the list of unique files and in the list of files to be analyzed, so its possible to compare the files.
     """
 
-    while True:
-        cve_selected = random.choice(cves_unique_files)
-
-        if cve_selected in all_cves_selected:
-            continue
-
-        # If there is no CVE -> skip
-        if not cve_selected.startswith("CVE"):
-            continue
-
-        if cve_selected in info_op_nvts[key]:
-            all_cves_selected.append(cve_selected)
-            break
-
-    return cve_selected
+    cves = set(cves_unique_files) & set(info_op_nvts[key])
+    filtered_cves = [cve for cve in cves if cve.startswith("CVE")] # avoiding elements with no CVE
+    return random.sample(filtered_cves, number_of_files_compared)
 
 
 def get_similarity_classification_info(result: str):
@@ -119,18 +107,16 @@ def compare_files_and_store_results(
 
     cves_main_files = list(info_op_nvts["main_files"].keys())
 
-    all_cves_selected = []
-
     classified = 0
 
-    while classified < number_of_files_compared:
+    cves_selected = select_cve_to_analyze(
+        number_of_files_compared, cves_main_files, info_op_nvts, category_to_compare
+    )
 
-        cve_selected = select_cve_to_analyze(
-            all_cves_selected, cves_main_files, info_op_nvts, category_to_compare
-        )
+    for cve in cves_selected:
 
         unique_file_selected, file_to_compare = select_random_files_to_analyze(
-            cve_selected, info_op_nvts, category_to_compare
+            cve, info_op_nvts, category_to_compare
         )
 
         file1 = read_file_with_fallback(unique_file_selected)
