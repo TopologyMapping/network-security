@@ -49,11 +49,11 @@ Where:
 
 - `<INPUT_FILE>` is the JSON file with the 'similars' and 'maybe_similars' groups. If this file does not exists, check the file 'openvas.py' and the function 'compare_similarity_openvas' to see how to create this file.
 - `<LLM_IP_PORT>` is the ip and port of the LLM model. It must be in the format: 'ip:port' like '1.2.3.4:5678'.
-- `<NUMBER_OF_FILES>` is the number of files to be compared. If the value is X, then X unique files will be compared with the 'similars' categorie, and X unique files will be compared with the 'maybe_similars' categorie. Choose a number that is big enough to have a good insight about the classification.
+- `<NUMBER_OF_FILES>` is the number of files to be compared. If the value is X, then X unique files will be compared with the 'similars' categorie, and X unique files will be compared with the 'maybe_similars' categorie. Choose a number that is "big enough" to have a good insight about the classification. If only 5 files are classified, we do not have a good inference about the overall results for example. The default number of files to be sorted is 500, but this is an arbitrary value that can be changed.
 
 An example of how to run the code is:
 
-`python3 verify_code_similarity.py --input ./results/info_similarity_NVTS_openvas.json --ip_port 1.2.3.4:5678 --number_of_files_compared 500`
+`python3 verify_code_similarity.py --input ./results/info_similarity_NVTS_openvas.json --ip_port 1.2.3.4:5678 --number_of_files_compared 800`
 
 ## create_problems.py
 
