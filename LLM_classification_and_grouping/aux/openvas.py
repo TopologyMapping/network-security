@@ -7,7 +7,7 @@ from difflib import SequenceMatcher
 from .constants import (PROMPT_OPENVAS_AUTHENTICATED, PROMPT_OPENVAS_EXPLOIT,
                         PROMPT_OPENVAS_NOT_EXPLOIT_NOT_AUTHENTICATED)
 from .LLM import LLMHandler
-from .utils import find_key_by_value, read_file_with_fallback
+from .utils import ScriptClassificationResult, find_key_by_value, read_file_with_fallback
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
 QOD_VALUE = {
@@ -173,7 +173,7 @@ def classification_openvas(content, qod_value, qod_type, llm) -> str:
     return classification
 
 
-def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -> tuple:
+def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -> ScriptClassificationResult:
     """
     How the function works:
         This file handles the classification of Openvas scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -239,7 +239,8 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
 
         print(classification)
 
-    return openvas_info, NVTS_with_no_CVE
+    #return openvas_info, NVTS_with_no_CVE
+    return ScriptClassificationResult(scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE)
 
 
 def similarity_text(a, b):

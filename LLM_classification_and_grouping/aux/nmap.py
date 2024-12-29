@@ -5,7 +5,7 @@ import time
 from .constants import (PROMPT_NMAP, PROMPT_NMAP_ATTACK, PROMPT_NMAP_BRUTE_DOS,
                         PROMPT_NMAP_DISCOVERY)
 from .LLM import LLMHandler
-from .utils import read_file_with_fallback
+from .utils import ScriptClassificationResult, read_file_with_fallback
 
 """
     This file contains the functions to classify Nmap scripts.
@@ -99,7 +99,7 @@ def classification_nmap(categorie: str, content, llm) -> str:
     return classification
 
 
-def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> tuple:
+def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> ScriptClassificationResult:
     """
     How the function works:
         This file handles the classification of Nmap scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -159,4 +159,7 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> t
 
         nmap_info.append(info)
 
-    return nmap_info, scripts_with_no_CVE
+    #return nmap_info, scripts_with_no_CVE
+    return ScriptClassificationResult(scripts_with_cves=nmap_info, scripts_without_cves=scripts_with_no_CVE)
+
+

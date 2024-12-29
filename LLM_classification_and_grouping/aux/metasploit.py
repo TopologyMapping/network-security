@@ -7,7 +7,7 @@ from .constants import (PROMPT_METASPLOIT_EXPLOIT,
                         PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
                         PROMPT_METASPLOIT_POST, PROMPT_METASPLOIT_PRIVILEGED)
 from .LLM import LLMHandler
-from .utils import read_file_with_fallback
+from .utils import ScriptClassificationResult, read_file_with_fallback
 
 """
     This file contains the functions to classify Metasploit scripts.
@@ -109,7 +109,7 @@ def classification_metasploit(
 
 def analysis_metasploit_modules(
     metasploit_folder, initial_range, final_range, ip_port
-) -> tuple:
+) -> ScriptClassificationResult:
     """
     How the function works:
         This file handles the classification of Metasploit scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -179,4 +179,5 @@ def analysis_metasploit_modules(
 
         metasploit_info.append(info)
 
-    return metasploit_info, modules_with_no_CVE
+    return ScriptClassificationResult(scripts_with_cves=metasploit_info, scripts_without_cves=modules_with_no_CVE)
+
