@@ -23,9 +23,9 @@ VULN_LABELS: list[str] = [
 ]
 
 CONFIG_LABELS: list[str] = [
-    "active in default configuration.",
+    "active in the default configuration.",
     "active only in specific configurations.",
-    "active in an unknown configuration, i.e. no mention of which configuration is affected.",
+    "active in an unknown configuration, there is no mention of which configuration is affected.",
 ]
 
 
