@@ -100,7 +100,7 @@ def simplifyConfigLabels(labels: list[str]) -> list[str]:
     simplified: list[str] = []
 
     for label in labels:
-        if "active in default configuration" in label:
+        if "active in the default configuration" in label:
             simplified.append("default")
 
         if "active only in specific configurations" in label:
@@ -212,18 +212,16 @@ def processCvesFromMitre(
 
             with file.open(cveFile) as f:
                 data: dict[str, Any] = json.loads(f.read())
-
+                
                 try:
                     state: str = data["cveMetadata"]["state"]
-                except:
+                    summary: str = data["containers"]["cna"]["descriptions"][0]["value"]
+                    id: str = data["cveMetadata"]["cveId"]
+                except KeyError:
                     continue
 
-                # CVE was rejected by Mitre
                 if state == "REJECTED":
                     continue
-
-                summary: str = data["containers"]["cna"]["descriptions"][0]["value"]
-                id: str = data["cveMetadata"]["cveId"]
 
                 resultVuln: dict[str, Any] = classifyCveVulnerability(
                     classifier, summary
