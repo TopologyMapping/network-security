@@ -3,6 +3,8 @@ import os
 import re
 import time
 
+from sympy import intersection
+
 from .constants import (PROMPT_NUCLEI, PROMPT_NUCLEI_AUTH_BYPASS,
                         PROMPT_NUCLEI_REMOTE_CODE_EXECUTION)
 from .LLM import LLMHandler
@@ -16,6 +18,9 @@ from .utils import ScriptClassificationResult, read_file_with_fallback
 """
 
 FILE_EXTENSION_NUCLEI = ".yaml"
+
+REMOTE_CODE_EXECUTION_TAGS : set = {"rce", "sqli", "xss", "injection"}
+AUTH_BYPASS_TAGS : set = {"auth-bypass", "unauth", "default-login"}
 
 CVE_NUCLEI_REGEX = re.compile(r"cve-id:\s*(?P<cve>CVE-[\d-]+)")
 NUCLEI_ID_REGEX = re.compile(r"id:\s*(?P<id>[\w\-]+)")
@@ -45,13 +50,13 @@ def extract_nuclei_tags(content) -> list:
     return match.group("tags").split(",") if match else []
 
 
-def classification_nuclei(tags, content, llm) -> str:
+def classification_nuclei(tags: list, content, llm) -> str:
     """
     This function filters the content of the Nuclei script and classifies it according to the tags collected.
     """
     classification: str = ""
 
-    if "rce" in tags or "sqli" in tags or "xss" in tags or "injection" in tags:
+    if REMOTE_CODE_EXECUTION_TAGS.intersection(tags):
 
         classification = llm.classification_text_generation(
             content, PROMPT_NUCLEI_REMOTE_CODE_EXECUTION
@@ -67,7 +72,7 @@ def classification_nuclei(tags, content, llm) -> str:
 
         classification += category_remote_code_exec
 
-    elif "auth-bypass" in tags or "unauth" in tags or "default-login" in tags:
+    elif AUTH_BYPASS_TAGS.intersection(tags):
 
         classification = llm.classification_text_generation(
             content, PROMPT_NUCLEI_AUTH_BYPASS
