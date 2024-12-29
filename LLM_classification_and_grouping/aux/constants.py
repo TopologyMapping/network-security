@@ -19,7 +19,7 @@ All prompts used for this task are stored in `.txt` files located in the 'prompt
 
 
 
-with open("../prompts/prompt_system.txt", "r") as f:
+with open("../prompts/prompt_LLM_system.txt", "r") as f:
     SYSTEM_PROMPT = f.read()
 
 with open("../prompts/_what_is_detected_attack.txt", "r") as f:
@@ -34,14 +34,14 @@ with open("../prompts/_what_is_detected_old_software.txt", "r") as f:
 with open("../prompts/prompt_what_is_detected.txt", "r") as f:
     PROMPT_WHAT_IS_DETECTED = f.read()
 
-with open("../prompts/categorie_attack.txt", "r") as f:
-    CATEGORIE_ATTACK = f.read()
+with open("../prompts/category_attack.txt", "r") as f:
+    CATEGORY_ATTACK = f.read()
 
-with open("../prompts/categorie_privileged.txt", "r") as f:
-    CATEGORIE_PRIVILEGED = f.read()
+with open("../prompts/category_privileged.txt", "r") as f:
+    CATEGORY_PRIVILEGED = f.read()
 
-with open("../prompts/categorie_basic_request.txt", "r") as f:
-    CATEGORIE_BASIC_REQUEST = f.read()
+with open("../prompts/category_basic_request.txt", "r") as f:
+    CATEGORY_BASIC_REQUEST = f.read()
 
 with open("../prompts/prompt_categories.txt", "r") as f:
     PROMPT_CATEGORIES = f.read()
@@ -49,13 +49,13 @@ with open("../prompts/prompt_categories.txt", "r") as f:
 with open("../prompts/prompt_compare_similarity.txt", "r") as f:
     PROMPT_COMPARE_SIMILARITY = f.read()
 
-with open("../prompts/qod_info.txt", "r") as f:
+with open("../prompts/openvas_qod_info.txt", "r") as f:
     QOD_INFO = f.read()
 
-with open("../prompts/ranking_info.txt", "r") as f:
+with open("../prompts/metasploit_modules_ranking_info.txt", "r") as f:
     RANKING_INFO = f.read()
 
-with open("../prompts/modules_info.txt", "r") as f:
+with open("../prompts/metasploit_modules_info.txt", "r") as f:
     MODULES_INFO = f.read()
 
 ######### METASPLOIT ##################
@@ -94,7 +94,7 @@ Task 2: Identify **how** an Metasploit script works
 An Metasploit script can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_PRIVILEGED
+    + CATEGORY_PRIVILEGED
     + PROMPT_CATEGORIES
 )
 
@@ -129,7 +129,7 @@ Task 2: Identify **how** an Metasploit script works
 An Metasploit script can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_BASIC_REQUEST
+    + CATEGORY_BASIC_REQUEST
     + PROMPT_CATEGORIES
 )
 
@@ -174,7 +174,7 @@ Task 2: Identify **how** an Metasploit script works
 An Metasploit script can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_ATTACK
+    + CATEGORY_ATTACK
     + PROMPT_CATEGORIES
 )
 
@@ -256,7 +256,7 @@ Task 2: Identify **how** an Metasploit script works
 An Metasploit script can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_ATTACK
+    + CATEGORY_ATTACK
     + PROMPT_CATEGORIES
 )
 
@@ -286,9 +286,9 @@ Task 2: Identify **how** an Nuclei template works
 An Nuclei template can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_ATTACK
-    + CATEGORIE_PRIVILEGED
-    + CATEGORIE_BASIC_REQUEST
+    + CATEGORY_ATTACK
+    + CATEGORY_PRIVILEGED
+    + CATEGORY_BASIC_REQUEST
     + PROMPT_CATEGORIES
 )
 
@@ -344,9 +344,9 @@ Task 2: Identify **how** an Nmap script works
 An Nmap script can work in many different ways. Pay attention in required arguments that , if exists, could indicate privileged information needed by the scan. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_ATTACK
-    + CATEGORIE_PRIVILEGED
-    + CATEGORIE_BASIC_REQUEST
+    + CATEGORY_ATTACK
+    + CATEGORY_PRIVILEGED
+    + CATEGORY_BASIC_REQUEST
     + PROMPT_CATEGORIES
 )
 
@@ -404,7 +404,7 @@ Task 2: Identify **how** an Nmap script works
 An Nmap script can work in many different ways. Pay attention in required arguments that , if exists, could indicate privileged information needed by the scan. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_ATTACK
+    + CATEGORY_ATTACK
     + PROMPT_CATEGORIES
 )
 
@@ -443,7 +443,7 @@ Task 2: Identify **how** an OpenVAS script works
 An OpenVAS script can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_BASIC_REQUEST
+    + CATEGORY_BASIC_REQUEST
     + PROMPT_CATEGORIES
 )
 
@@ -481,7 +481,7 @@ Task 2: Identify **how** an OpenVAS script works
 An OpenVAS script can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_ATTACK
+    + CATEGORY_ATTACK
     + PROMPT_CATEGORIES
 )
 
@@ -527,7 +527,7 @@ Task 2: Identify **how** an OpenVAS script works
 An OpenVAS script can work in many different ways. We want to classify how a script works following the following categories and subcategories:
 
 """
-    + CATEGORIE_PRIVILEGED
+    + CATEGORY_PRIVILEGED
     + PROMPT_CATEGORIES
 )
 
