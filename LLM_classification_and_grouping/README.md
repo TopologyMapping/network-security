@@ -24,7 +24,7 @@ Where:
 
 - `<SCANNER_NAME>` is the application to be classified. Is one (or more than one) of the following options: 'nmap', 'openvas', 'nuclei', 'metasploit'.
 - `<PATH_TO_SCANNER_FILES>` is the path to the files of the scanner tool to be classified.
-- `<OUTPUT_NAME>` is the name of the output file to store the classification.
+- `<OUTPUT_NAME>` is the name of the output file to store the classification. The results will be stored in the path './classification'
 - `INITIAL_RANGE` is the initial range of the files to be classified (the classification will be performed in 'batch', so a range is necessary).
 - `FINAL_RANGE` is the final range of the files to be classified.
 - `<LLM_IP_PORT>` is the ip and port of the LLM model. It must be in the format: 'ip:port' like '1.2.3.4:5678'.

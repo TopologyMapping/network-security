@@ -8,11 +8,14 @@ The results are stored in a JSON file called OUTPUT_NAME_classification.json
 
 import argparse
 import json
+import os
 
 from aux.metasploit import analysis_metasploit_modules
 from aux.nmap import analysis_nmap_scripts
 from aux.nuclei import analysis_nuclei_templates
 from aux.openvas import analysis_openvas_NVTS
+
+CLASSIFICATION_RESULTS_FOLDER = './classification'
 
 
 def receive_arguments():
@@ -93,5 +96,7 @@ if __name__ == "__main__":
 
     results = classification(args)
 
-    with open(f"./results/{args.output}_classification.json", "w") as f:
+    os.makedirs(CLASSIFICATION_RESULTS_FOLDER, exist_ok=True)
+
+    with open(f"{CLASSIFICATION_RESULTS_FOLDER}{args.output}", "w") as f:
         json.dump(results, f, indent=4)
