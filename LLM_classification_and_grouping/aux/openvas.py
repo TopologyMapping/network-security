@@ -448,9 +448,7 @@ def compare_similarity_openvas(openvas_folder) -> OpenvasSimilarityResults:
 
             NVTS_with_no_CVE.append(openvas_file)
 
-        cves_str: str = ""
-        for i in cves:
-            cves_str += i + " "
+        cves_str = " ".join(cves)
 
         qod_type, qod_value = new_file_info["qod"]
 
