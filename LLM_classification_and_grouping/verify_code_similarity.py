@@ -156,8 +156,7 @@ def compare_files_and_store_results(
     ) as json_file:
         json.dump(results, json_file, indent=4)
 
-
-if __name__ == "__main__":
+def main():
 
     args = receive_arguments()
 
@@ -179,3 +178,8 @@ if __name__ == "__main__":
     compare_files_and_store_results(
         info_op_nvts, COMPARE_FILES_SIMILARS, number_of_files_compared, llm
     )
+
+
+if __name__ == "__main__":
+
+    main()
