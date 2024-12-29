@@ -4,7 +4,7 @@ import random
 import re
 import time
 
-from aux.LLM import LLMHandler
+from aux.llm import LLMHandler
 from aux.utils import read_file_with_fallback
 
 COMPARE_FILES_MAYBE_SIMILARS = "maybe_similars"

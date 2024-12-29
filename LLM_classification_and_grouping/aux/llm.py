@@ -2,14 +2,13 @@ import openai
 
 from .constants import PROMPT_COMPARE_SIMILARITY, SYSTEM_PROMPT
 
-
 class LLMHandler:
     def __init__(self, ip_port: str):
         """
         Initializes the LLMHandler instance. If an IP and port are provided,
         initializes the LLM client with the given base URL.
         """
-        self.LLM = None
+        self.llm = None
         if ip_port:
             self.init_LLM(ip_port)
 
@@ -17,7 +16,7 @@ class LLMHandler:
         """
         Initializes the LLM client with a specified IP and port.
         """
-        self.LLM = openai.OpenAI(
+        self.llm = openai.OpenAI(
             base_url=f"http://{ip_port}/v1",
             api_key="sk-no-key-required",
         )
@@ -29,10 +28,10 @@ class LLMHandler:
         {prompt}
         """
 
-        if not self.LLM:
+        if not self.llm:
             raise Exception("LLM is not initialized. Please call `init_LLM` first.")
 
-        out = self.LLM.chat.completions.create(
+        out = self.llm.chat.completions.create(
             model="llama-3-70b-q6",
             messages=[
                 {"role": "system", "content": f"{SYSTEM_PROMPT}"},

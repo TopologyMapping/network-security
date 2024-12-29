@@ -7,7 +7,7 @@ from sympy import intersection
 
 from .constants import (PROMPT_NUCLEI, PROMPT_NUCLEI_AUTH_BYPASS,
                         PROMPT_NUCLEI_REMOTE_CODE_EXECUTION)
-from .LLM import LLMHandler
+from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
 """
