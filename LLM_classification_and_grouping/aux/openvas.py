@@ -239,7 +239,6 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
 
         print(classification)
 
-    #return openvas_info, NVTS_with_no_CVE
     return ScriptClassificationResult(scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE)
 
 

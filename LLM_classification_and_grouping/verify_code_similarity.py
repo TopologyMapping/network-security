@@ -107,8 +107,6 @@ def compare_files_and_store_results(
 
     cves_main_files = list(info_op_nvts["main_files"].keys())
 
-    classified = 0
-
     cves_selected = select_cve_to_analyze(
         number_of_files_compared, cves_main_files, info_op_nvts, category_to_compare
     )
@@ -138,7 +136,6 @@ def compare_files_and_store_results(
         results[classification_key] = (answer, explanation)
 
         results[answer] += 1
-        classified += 1
 
     with open(
         f"./results/verify_simil_openvas__similars_{category_to_compare}.json", "w"
