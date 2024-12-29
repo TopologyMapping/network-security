@@ -188,23 +188,23 @@ The output of the org classification is a dict where:
 
 ```python
 {
-    "CVE-2001-1197": [
-        {
-            "privilege escalation": 0.7093707919120789,
-            "information disclosure": 0.0727938711643219,
-            "cross site scripting": 0.07153169810771942,
-            "cross site request forgery": 0.04407632723450661,
-            "remote code execution": 0.04290682077407837,
-            "denial of service": 0.02388906665146351,
-            "buffer overflow": 0.019866343587636948,
-            "sql injection": 0.015565147623419762
+    "CVE-2024-9999": {
+        "vulnerability_label2score": {
+            "remote code execution": 0.4048096835613251,
+            "cross site request forgery": 0.37249937653541565,
+            "privilege escalation": 0.07831587642431259,
+            "cross site scripting": 0.053536590188741684,
+            "information disclosure": 0.034364815801382065,
+            "buffer overflow": 0.02017531730234623,
+            "sql injection": 0.018226372078061104,
+            "denial of service": 0.01807202585041523
         },
-        {
-            "unknown": 0.8613781929016113,
-            "default": 0.07355594635009766,
-            "specific": 0.06506592035293579
+        "configuration_label2score": {
+            "unknown": 0.813221275806427,
+            "specific": 0.14339271187782288,
+            "default": 0.04338601976633072
         }
-    ],
+    },
     ...
 }
 ```
