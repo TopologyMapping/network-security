@@ -5,10 +5,21 @@ import json
 import logging
 import pickle
 import zipfile
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 from typing import Any
 
 import torch
 from transformers import Pipeline, pipeline
+
+
+# Return type of classifications
+@dataclass_json
+@dataclass
+class CVEClassification:
+    vulnerability_label2score: dict[str, float]
+    configuration_label2score: dict[str, float]
+
 
 # Candidate labels
 VULN_LABELS: list[str] = [
@@ -180,7 +191,7 @@ def classifyCveConfiguration(classifier: Pipeline, vulnSummary: str) -> dict[str
 
 def processCvesFromMitre(
     filepath: str, classifier: Pipeline
-) -> dict[str, tuple[str, dict[str, float]]]:
+) -> dict[str, CVEClassification]:
     """
     Process all CVEs from a Mitre zip file and classify them using a zero-shot classifier.
 
@@ -203,7 +214,8 @@ def processCvesFromMitre(
         # This way we process only the updated versions of the CVEs.
 
         # The zip file contains a folder with all the CVEs as JSON files
-        cveFilename: list[str] = file.namelist().reverse()
+        cveFilename: list[str] = file.namelist()
+        cveFilename.reverse()
 
         for idx, cveFile in enumerate(cveFilename):
             if idx % 1000 == 0:
@@ -215,18 +227,19 @@ def processCvesFromMitre(
 
             with file.open(cveFile) as f:
                 data: dict[str, Any] = json.loads(f.read())
-                
+
                 try:
                     state: str = data["cveMetadata"]["state"]
+
+                    if state == "REJECTED":
+                        continue
+
                     summary: str = data["containers"]["cna"]["descriptions"][0]["value"]
                     id: str = data["cveMetadata"]["cveId"]
-                except KeyError:
-                    continue
-                
-                if id in seenCves:
+                except:
                     continue
 
-                if state == "REJECTED":
+                if id in seenCves:
                     continue
 
                 resultVuln: dict[str, Any] = classifyCveVulnerability(
@@ -236,9 +249,12 @@ def processCvesFromMitre(
                     classifier, summary
                 )
 
-                seenCves[id] = (
-                    {l: s for l, s in zip(resultVuln["labels"], resultVuln["scores"])},
-                    {
+                # Store dataclass
+                seenCves[id] = CVEClassification(
+                    vulnerability_label2score={
+                        l: s for l, s in zip(resultVuln["labels"], resultVuln["scores"])
+                    },
+                    configuration_label2score={
                         l: s
                         for l, s in zip(
                             simplifyConfigLabels(resultConfig["labels"]),
@@ -255,7 +271,7 @@ def processCvesFromMitre(
 
 
 def genOutputFile(
-    filepath: str, cvesResult: dict[str, tuple[str, dict[str, float]]], jsonOutput: bool
+    filepath: str, cvesResult: dict[str, CVEClassification], jsonOutput: bool
 ) -> None:
     """
     Generates an output file of the desired format.
@@ -269,7 +285,11 @@ def genOutputFile(
 
     if jsonOutput:
         with open(filepath, "w") as f:
-            json.dump(cvesResult, f, indent=4)
+            cvesResultDict: dict[str, Any] = {
+                k: v.to_dict() for k, v in cvesResult.items()
+            }
+
+            json.dump(cvesResultDict, f, indent=4)
     else:
         pickle.dump(cvesResult, open(filepath, "wb"))
 

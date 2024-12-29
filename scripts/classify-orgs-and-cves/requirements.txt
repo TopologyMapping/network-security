@@ -8,3 +8,5 @@ pickle
 typing
 zipfile
 bs4
+dataclasses
+dataclasses-json
