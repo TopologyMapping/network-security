@@ -19,23 +19,18 @@ def receive_arguments():
     parser = argparse.ArgumentParser(
         description="Match CVEs between Nmap, OpenVAS, and Nuclei templates. Store the results in a JSON file."
     )
-    parser.add_argument("--nmap", required=False, help="Path to the Nmap directory.")
+
+    required_group = parser.add_argument_group("Required arguments", "At least one of these must be provided.")
+    required_group.add_argument("--nmap", required=False, help="Path to the Nmap directory.")
+    required_group.add_argument("--openvas", required=False, help="Path to the OpenVAS directory.")
+    required_group.add_argument("--nuclei", required=False, help="Path to the Nuclei templates directory.")
+    required_group.add_argument("--metasploit", required=False, help="Path to the metasploit templates directory.")
+
     parser.add_argument(
-        "--openvas", required=False, help="Path to the OpenVAS directory."
+        "--initial_range", type=int, required=True, help="Initial classification range."
     )
     parser.add_argument(
-        "--nuclei", required=False, help="Path to the Nuclei templates directory."
-    )
-    parser.add_argument(
-        "--metasploit",
-        required=False,
-        help="Path to the metasploit templates directory.",
-    )
-    parser.add_argument(
-        "--initialRange", type=int, required=True, help="Initial classification range."
-    )
-    parser.add_argument(
-        "--finalRange", type=int, required=True, help="Final classification range."
+        "--final_range", type=int, required=True, help="Final classification range."
     )
     parser.add_argument(
         "--output",
