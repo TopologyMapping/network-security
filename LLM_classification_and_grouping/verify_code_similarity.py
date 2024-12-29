@@ -23,7 +23,7 @@ def receive_arguments():
     )
     parser.add_argument(
         "--input",
-        required=False,
+        required=True,
         help="Input JSON file with similars and maybe_similars groups.",
     )
     parser.add_argument("--ip_port", required=True, help="LLM ip and port.")
@@ -32,7 +32,7 @@ def receive_arguments():
         type=int,
         help="Number of files to compare [%(default)s]",
         default=DEFAULT_NUMBER_OF_FILES_COMPARED,
-        required=False,
+        required=True,
     )
 
     return parser.parse_args()
