@@ -106,7 +106,10 @@ def compare_files_and_store_results(
     """
     This functions realizes all the steps to compare the files and store the results. The files to be compared are selected, then classified, the answer analyzed and the results stored in a json file.
 
-    * The resutls are stored inside the folder 'results' in the root of the project.
+    * The results are stored inside the folder 'results' in the root of the project.
+        - Main Files: First files for each CVE
+        - Similar Files: Files with high similarity with 'main files'
+        - Maybe Similar files: Files with lower similarity with 'main files', but also good chances of being similar
     """
 
     results = {}
@@ -114,7 +117,7 @@ def compare_files_and_store_results(
     results["no"] = 0
     results["errors"] = []
 
-    cves_unique_files = list(info_op_nvts["unique_files"].keys())
+    cves_main_files = list(info_op_nvts["main_files"].keys())
 
     all_cves_selected = []
 
@@ -123,7 +126,7 @@ def compare_files_and_store_results(
     while classified < number_of_files_compared:
 
         cve_selected = select_cve_to_analyze(
-            all_cves_selected, cves_unique_files, info_op_nvts, category_to_compare
+            all_cves_selected, cves_main_files, info_op_nvts, category_to_compare
         )
 
         unique_file_selected, file_to_compare = select_random_files_to_analyze(
