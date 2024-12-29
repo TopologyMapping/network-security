@@ -12,7 +12,6 @@ COMPARE_FILES_SIMILARS = "similars"
 DEFAULT_NUMBER_OF_FILES_COMPARED = 500
 PATTERN_ANSWER1 = re.compile(r"Answer1:\s*(.+?)\s*(?=Answer2:|$)")
 
-
 def receive_arguments():
 
     parser = argparse.ArgumentParser(
@@ -31,8 +30,9 @@ def receive_arguments():
     parser.add_argument(
         "--number_of_files_compared",
         type=int,
+        help="Number of files to compare [%(default)s]",
+        default=DEFAULT_NUMBER_OF_FILES_COMPARED,
         required=False,
-        help="Number of files to be compared. Default=500.",
     )
 
     return parser.parse_args()
@@ -166,9 +166,7 @@ def main():
         info_op_nvts = json.load(file)
 
     number_of_files_compared = (
-        int(args.number_of_files_compared)
-        if args.number_of_files_compared
-        else DEFAULT_NUMBER_OF_FILES_COMPARED
+        args.number_of_files_compared
     )
 
     compare_files_and_store_results(
