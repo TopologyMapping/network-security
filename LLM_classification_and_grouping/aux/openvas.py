@@ -7,7 +7,7 @@ from difflib import SequenceMatcher
 from .constants import (PROMPT_OPENVAS_AUTHENTICATED, PROMPT_OPENVAS_EXPLOIT,
                         PROMPT_OPENVAS_NOT_EXPLOIT_NOT_AUTHENTICATED)
 from .LLM import LLMHandler
-from .utils import ScriptClassificationResult, find_key_by_value, read_file_with_fallback
+from .utils import ScriptClassificationResult, read_file_with_fallback
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
 QOD_VALUE = {
@@ -27,6 +27,8 @@ QOD_VALUE = {
     "general_note": 1,
     "timeout": 0,
 }
+
+INVERSE_QOD_VALUE = {value: key for key, value in QOD_VALUE.items()}
 
 FILE_EXTENSION_OPENVAS = ".nasl"
 
@@ -95,8 +97,7 @@ def extract_qod_openvas(content) -> tuple:
 
     if qod_match.group("qod_value").isdigit():
         qod_value = int(qod_match.group("qod_value"))
-        qod_type = find_key_by_value(QOD_VALUE, qod_value)
-        return ()
+        qod_type = INVERSE_QOD_VALUE[qod_value] if qod_value in INVERSE_QOD_VALUE else None
     else:
         qod_type = qod_match.group("qod_value")
         qod_value = QOD_VALUE[qod_type] if qod_type in QOD_VALUE else None
