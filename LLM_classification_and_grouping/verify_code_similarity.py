@@ -82,7 +82,7 @@ def select_random_files_to_analyze(cve, info_op_nvts, key: str):
     This functions selects two random files to be compared. The first file is a unique file and the second file is a file from one of the categories to be compared (key = could be 'maybe_similars' or 'similars').
     """
 
-    unique_file = random.choice(info_op_nvts["unique_files"][cve])
+    unique_file = random.choice(info_op_nvts["main_files"][cve])
     file_to_compare = random.choice(info_op_nvts[key][cve])
 
     return unique_file, file_to_compare
@@ -168,16 +168,12 @@ def main():
     with open(args.input, "r") as file:
         info_op_nvts = json.load(file)
 
-    number_of_files_compared = (
-        args.number_of_files_compared
+    compare_files_and_store_results(
+        info_op_nvts, COMPARE_FILES_MAYBE_SIMILARS, args.number_of_files_compared, llm
     )
 
     compare_files_and_store_results(
-        info_op_nvts, COMPARE_FILES_MAYBE_SIMILARS, number_of_files_compared, llm
-    )
-
-    compare_files_and_store_results(
-        info_op_nvts, COMPARE_FILES_SIMILARS, number_of_files_compared, llm
+        info_op_nvts, COMPARE_FILES_SIMILARS, args.number_of_files_compared, llm
     )
 
 

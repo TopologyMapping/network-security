@@ -46,6 +46,8 @@ VALUES_SUBCATEGORY = [
     "Discovery",
 ]
 
+CLASSIFICATION_RESULTS_FOLDER = './classification'
+
 LLM_ERROR = "Error in LLM answer"
 REGEX_ERROR = "Error in regex match"
 
@@ -349,7 +351,7 @@ def process_json_files(folder_path):
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
-        if file_name.endswith("_classification.json"):
+        if file_name.endswith(".json"):
             file_path = os.path.join(folder_path, file_name)
 
             with open(file_path, "r") as file:
@@ -420,7 +422,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Match classification between Nmap, OpenVAS, and Nuclei"
     )
-    parser.add_argument("--input", required=False, help="input folder")
+    parser.add_argument("--input", required=False, default=CLASSIFICATION_FOLDER, help="input folder with classification results from 'distributed_classification.py'. The default folder is [%(default)s], but inform this argument if the files are stored in other place.")
 
     args = parser.parse_args()
 
