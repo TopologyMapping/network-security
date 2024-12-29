@@ -59,25 +59,15 @@ Check available versions:
 conda search cuda-toolkit
 ```
 
-Will output:
+Sample output:
 
 ```txt
 Loading channels: done
 # Name                       Version           Build  Channel
 cuda-toolkit                  12.0.0      h7428d3b_0  conda-forge
-cuda-toolkit                  12.0.0      h7428d3b_1  conda-forge
-cuda-toolkit                  12.0.0      ha770c72_0  conda-forge
-cuda-toolkit                  12.0.0      ha804496_0  conda-forge
-cuda-toolkit                  12.0.0      ha804496_1  conda-forge
-cuda-toolkit                  12.0.0      hd8ed1ab_0  conda-forge
 
 ...
 
-cuda-toolkit                  12.6.1      h7428d3b_0  conda-forge
-cuda-toolkit                  12.6.1      ha804496_0  conda-forge
-cuda-toolkit                  12.6.2      h7428d3b_0  conda-forge
-cuda-toolkit                  12.6.2      ha804496_0  conda-forge
-cuda-toolkit                  12.6.3      h7428d3b_0  conda-forge
 cuda-toolkit                  12.6.3      ha804496_0  conda-forge
 ```
 
@@ -87,59 +77,6 @@ Install any version above 12.0.
 
 ```bash
 conda install cuda-toolkit=12.0
-```
-
-Will output:
-
-```txt
-Channels:
- - conda-forge
-Platform: linux-64
-Collecting package metadata (repodata.json): done
-Solving environment: done
-
-## Package Plan ##
-
-  environment location: ~/install/path
-
-  added / updated specs:
-    - cuda-toolkit=12.0
-
-
-The following packages will be downloaded:
-
-    package                    |            build
-    ---------------------------|-----------------
-    alsa-lib-1.2.9             |       hd590300_0         534 KB  conda-forge
-    attr-2.5.1                 |       h166bdaf_1          69 KB  conda-forge
-    binutils-2.43              |       h4852527_2          33 KB  conda-forge
-    binutils_linux-64-2.43     |       h4852527_2          34 KB  conda-forge
-    bzip2-1.0.8                |       h4bc722e_7         247 KB  conda-forge
-    c-compiler-1.7.0           |       hd590300_1           6 KB  conda-forge
-    ca-certificates-2024.12.14 |       hbcca054_0         153 KB  conda-forge
-    cairo-1.16.0               |    hbbf8b49_1016         1.1 MB  conda-forge
-    cuda-cccl-12.0.90          |       ha770c72_1          20 KB  conda-forge
-
-...
-
-    zlib-1.3.1                 |       hb9d3cd8_2          90 KB  conda-forge
-    zstd-1.5.6                 |       ha6fb4c9_0         542 KB  conda-forge
-    ------------------------------------------------------------
-                                           Total:        1.91 GB
-
-The following NEW packages will be INSTALLED:
-
-  _libgcc_mutex      conda-forge/linux-64::_libgcc_mutex-0.1-conda_forge
-  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-2_gnu
-  alsa-lib           conda-forge/linux-64::alsa-lib-1.2.9-hd590300_0
-
-...
-
-Downloading and Extracting Packages
-
-Preparing transaction: done
-Verifying transaction: done
-Executing transaction: done
 ```
 
 More details about using Anaconda to manage dependencies are available here: [SPEED docs - Managing dependencies](https://github.com/WillianJunior/SpeedUFMG/blob/main/user/gerencia-de-deps.md).
@@ -159,47 +96,13 @@ cmake --build . --config Release
 
 *NOTE: These compilation instructions were taken directly from the [llama-cpp docs](https://github.com/ggerganov/llama.cpp/tree/master/examples/rpc) and are subject to change.*
 
-After the first cmake you should get the following output:
+After the first cmake, check if the CUDA environment is being recognized and if CUDA and RPC support are included in the build:
 
 ```txt
--- The C compiler identification is GNU 12.4.0
--- The CXX compiler identification is GNU 12.4.0
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: /path/to/bin/x86_64-conda-linux-gnu-cc - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: /path/to/bin/x86_64-conda-linux-gnu-c++ - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
--- Found Git: /usr/bin/git (found version "2.34.1")
--- Looking for pthread.h
--- Looking for pthread.h - found
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
--- Check if compiler accepts -pthread
--- Check if compiler accepts -pthread - yes
--- Found Threads: TRUE
--- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
--- CMAKE_SYSTEM_PROCESSOR: x86_64
--- Including CPU backend
--- Found OpenMP_C: -fopenmp (found version "4.5")
--- Found OpenMP_CXX: -fopenmp (found version "4.5")
--- Found OpenMP: TRUE (found version "4.5")
--- x86 detected
--- Adding CPU backend variant ggml-cpu: -march=native
 -- Found CUDAToolkit: /path/to/targets/x86_64-linux/include (found version "12.0.76")
 -- CUDA Toolkit found
--- Using CUDA architectures: 52;61;70;75
--- The CUDA compiler identification is NVIDIA 12.0.76
--- Detecting CUDA compiler ABI info
--- Detecting CUDA compiler ABI info - done
--- Check for working CUDA compiler: /path/to/bin/nvcc - skipped
--- Detecting CUDA compile features
--- Detecting CUDA compile features - done
--- CUDA host compiler is GNU 12.4.0
+
+...
 
 -- Including CUDA backend
 -- Using RPC backend
@@ -211,37 +114,13 @@ After the first cmake you should get the following output:
 
 The second cmake will compile llama-cpp, this process will take a while, close to an hour, so watch an episode of your favorite show while you wait.
 
-You should get the following output:
+Check if CUDA source files build successfully:
 
 ```txt
-[  1%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
-[  1%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
-[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
-[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
-[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
-[  3%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
-[  3%] Linking CXX shared library libggml-base.so
-
-...
-
 [  8%] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/acc.cu.o
 [  9%] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/arange.cu.o
 [  9%] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/argmax.cu.o
 [ 10%] Building CUDA object ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/argsort.cu.o
-
-...
-
-[ 97%] Linking CXX executable ../../bin/llama-qwen2vl-cli
-[ 97%] Built target llama-qwen2vl-cli
-[ 98%] Building CXX object examples/rpc/CMakeFiles/rpc-server.dir/rpc-server.cpp.o
-[ 98%] Linking CXX executable ../../bin/rpc-server
-[ 98%] Built target rpc-server
-[ 98%] Building CXX object pocs/vdot/CMakeFiles/llama-vdot.dir/vdot.cpp.o
-[ 99%] Linking CXX executable ../../bin/llama-vdot
-[ 99%] Built target llama-vdot
-[100%] Building CXX object pocs/vdot/CMakeFiles/llama-q8dot.dir/q8dot.cpp.o
-[100%] Linking CXX executable ../../bin/llama-q8dot
-[100%] Built target llama-q8dot
 ```
 
 After compilation, all binaries will be inside the **llama-cpp/build-rpc-cuda/bin** folder.
@@ -300,15 +179,9 @@ For gorgona5, the command will be:
 ./rpc-server -H 192.168.62.35 -p 50052
 ```
 
-Which will produce the following output:
+Check if the GPU is recongnized and if the server started successfully:
 
 ```txt
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-WARNING: Host ('192.168.62.35') is != '127.0.0.1'
-         Never expose the RPC server to an open network!
-         This is an experimental feature and is not secure!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 create_backend: using CUDA backend
 ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    no
 ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
@@ -316,6 +189,8 @@ ggml_cuda_init: found 1 CUDA devices:
   Device 0: NVIDIA GeForce RTX 3090 Ti, compute capability 8.6, VMM: yes
 Starting RPC server on 192.168.62.35:50052, backend memory: 23972 MB
 ```
+
+*NOTE: If the line "Starting RPC server ..." does not show, then the server hasn't started. Check if the port you chose is available and wait. In some rare cases, the server takes a few minutes to start. If the server doesn't start, end the process and try again.*
 
 Repeat this process for as many RPC servers as you need, leave them running and proceed to the next step.
 
@@ -347,44 +222,26 @@ For gorgona1 as the host and gorgona5 as an RPC server, the command will be:
 ./llama-server -m ~/.cache/gguf/Reflection-Llama-3.1-70B-Q4_K_S.gguf -c 8192 -ngl 99 --rpc 192.168.62.35:50052 --host 192.168.62.31 --port 50001
 ```
 
-Which will produce the following output:
+Check if the GPU is recognized and the RPC servers are working:
 
 ```txt
-...
-
 ggml_cuda_init: found 1 CUDA devices:
   Device 0: NVIDIA GeForce RTX 4090, compute capability 8.9, VMM: yes 
 
 ...
 
-llm_load_tensors: ggml ctx size =    1.01 MiB
-llm_load_tensors: offloading 80 repeating layers to GPU
-llm_load_tensors: offloading non-repeating layers to GPU
-llm_load_tensors: offloaded 81/81 layers to GPU
 llm_load_tensors: RPC[192.168.62.35:50052] buffer size = 19142.56 MiB
 llm_load_tensors:        CPU buffer size =   563.65 MiB
 llm_load_tensors:      CUDA0 buffer size = 18764.46 MiB
 
 ...
 
-llama_new_context_with_model:  CUDA_Host  output buffer size =     0.98 MiB
-llama_new_context_with_model:      CUDA0 compute buffer size =  1104.00 MiB
-llama_new_context_with_model: RPC[192.168.62.35:50052] compute buffer size =  1104.00 MiB
-llama_new_context_with_model:  CUDA_Host compute buffer size =    32.01 MiB
-llama_new_context_with_model: graph nodes  = 2566
-llama_new_context_with_model: graph splits = 3
-llama_init_from_gpt_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
-srv          init: initializing slots, n_slots = 1
-slot         init: id  0 | task -1 | new slot n_ctx_slot = 8192
-main: model loaded
-
-...
-
 main: server is listening on 192.168.62.31:50001 - starting the main loop
-srv  update_slots: all slots are idle
 ```
 
-*NOTE: to run .gguf models with multiple files, use just the first file as an argument, llama-server will load the rest:*
+*NOTE: If an RPC server does not show in the log, as shown above, check your IP settings. Also note that failing to connect to an RPC server may lead to an assertion error. This happens if no RPC server is detected, llama-server will try to allocate memory in only one GPU and the model may not fit.*
+
+To run .gguf models with multiple files, use just the first file as an argument, llama-server will load the rest:
 
 ```bash
 ./llama-server -m ~/.cache/gguf/Reflection-Llama-3.1-70B-Q6_K_L/Reflection-Llama-3.1-70B-Q6_K_L-00001-of-00002.gguf
