@@ -1,22 +1,22 @@
-"""
-Focus: Classificate scanners tests by categories:
-    - What is detected: for example, which CVEs are checked, what is the purpose of the script ...
-    - How is detected: for example, with an exploit, with version check, with an authenticated scan ...
-
-The results are stored in a JSON file called OUTPUT_NAME_classification.json
-"""
-
 import argparse
 import json
 import os
+import dataclasses
+from typing import Callable, Dict, List
 
 from aux.metasploit import analysis_metasploit_modules
 from aux.nmap import analysis_nmap_scripts
 from aux.nuclei import analysis_nuclei_templates
 from aux.openvas import analysis_openvas_NVTS
 
-CLASSIFICATION_RESULTS_FOLDER = './classification'
+from aux.utils import ScriptClassificationResult
 
+@dataclasses.dataclass
+class ToolSpec:
+    name: str
+    handler: Callable[[os.PathLike, int, int, str], ScriptClassificationResult]
+
+CLASSIFICATION_RESULTS_FOLDER = './classification'
 
 def receive_arguments():
     parser = argparse.ArgumentParser(
@@ -38,65 +38,47 @@ def receive_arguments():
     parser.add_argument(
         "--output",
         required=True,
-        help="Output JSON file name. Inform just the name, without the extension.",
+        help="Output JSON file name. Inform just the name, without the extension."
     )
-    parser.add_argument("--ip_port", required=True, help="LLM ip and port.")
+    parser.add_argument("--ip_port", required=True, help="LLM IP and port.")
 
     return parser.parse_args()
 
-
-def classification(args) -> dict:
+def classify_scripts(tool_specs: List[ToolSpec], args) -> Dict[str, Dict[str, List[str]]]:
     """
-    This function receives the arguments from the user and classifies the scripts for each tool. The output is divided between the files with CVEs and the files without CVEs. All results are grouped in a dictionary.
+    This function processes the classification of scripts for each specified tool.
+    The output is divided into scripts with CVEs and scripts without CVEs.
     """
+    results = {}
+    all_scripts_without_cves = []
 
-    tests_with_no_CVE: list = []
-    results: dict = {}
+    for tool_spec in tool_specs:
+        tool_path = getattr(args, tool_spec.name)
+        if tool_path:
+            result = tool_spec.handler(tool_path, args.initial_range, args.final_range, args.ip_port)
+            results[tool_spec.name] = {
+                "scripts_with_cves": result.scripts_with_cves,
+                "scripts_without_cves": result.scripts_without_cves
+            }
+            all_scripts_without_cves.extend(result.scripts_without_cves)
 
-    if args.nmap:
-        nmap_info, scripts_with_no_CVE = analysis_nmap_scripts(
-            args.nmap, args.initialRange, args.finalRange, args.ip_port
-        )
-
-        results["nmap"] = nmap_info
-        tests_with_no_CVE += scripts_with_no_CVE
-
-    if args.metasploit:
-        metasploit_info, modules_with_no_CVE = analysis_metasploit_modules(
-            args.metasploit, args.initialRange, args.finalRange, args.ip_port
-        )
-
-        results["metasploit"] = metasploit_info
-        tests_with_no_CVE += modules_with_no_CVE
-
-    if args.nuclei:
-        nuclei_info, templates_with_no_CVE = analysis_nuclei_templates(
-            args.nuclei, args.initialRange, args.finalRange, args.ip_port
-        )
-
-        results["nuclei"] = nuclei_info
-        tests_with_no_CVE += templates_with_no_CVE
-
-    if args.openvas:
-        openvas_info, NVTS_with_no_CVE = analysis_openvas_NVTS(
-            args.openvas, args.initialRange, args.finalRange, args.ip_port
-        )
-
-        results["openvas"] = openvas_info
-        tests_with_no_CVE += NVTS_with_no_CVE
-
-    results["tests_with_no_CVE"] = tests_with_no_CVE
-
+    results["tests_with_no_CVE"] = all_scripts_without_cves
     return results
 
-
 if __name__ == "__main__":
-
     args = receive_arguments()
 
-    results = classification(args)
+    tool_specs = [
+        ToolSpec("nmap", analysis_nmap_scripts),
+        ToolSpec("metasploit", analysis_metasploit_modules),
+        ToolSpec("nuclei", analysis_nuclei_templates),
+        ToolSpec("openvas", analysis_openvas_NVTS),
+    ]
+
+    classification_results = classify_scripts(tool_specs, args)
 
     os.makedirs(CLASSIFICATION_RESULTS_FOLDER, exist_ok=True)
+    output_file = os.path.join(CLASSIFICATION_RESULTS_FOLDER, f"{args.output}_classification.json")
 
-    with open(f"{CLASSIFICATION_RESULTS_FOLDER}{args.output}", "w") as f:
-        json.dump(results, f, indent=4)
+    with open(output_file, "w") as f:
+        json.dump(classification_results, f, indent=4)

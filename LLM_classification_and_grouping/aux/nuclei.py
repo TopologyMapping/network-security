@@ -5,7 +5,7 @@ import time
 from .constants import (PROMPT_NUCLEI, PROMPT_NUCLEI_AUTH_BYPASS,
                         PROMPT_NUCLEI_REMOTE_CODE_EXECUTION)
 from .LLM import LLMHandler
-from .utils import read_file_with_fallback
+from .utils import ScriptClassificationResult, read_file_with_fallback
 
 """
     This file contains the functions to classify Nuclei scripts.
@@ -82,7 +82,7 @@ def classification_nuclei(tags, content, llm) -> str:
 
 def analysis_nuclei_templates(
     nuclei_folder, initial_range, final_range, ip_port
-) -> tuple:
+) -> ScriptClassificationResult:
     """
     How the function works:
         This file handles the classification of Nuclei scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -143,4 +143,6 @@ def analysis_nuclei_templates(
 
         nuclei_info.append(info)
 
-    return nuclei_info, templates_with_no_CVE
+    #return nuclei_info, templates_with_no_CVE
+    return ScriptClassificationResult(scripts_with_cves=nuclei_info, scripts_without_cves=templates_with_no_CVE)
+
