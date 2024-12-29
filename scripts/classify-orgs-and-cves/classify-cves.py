@@ -199,8 +199,11 @@ def processCvesFromMitre(
     seenCves: dict[str, tuple[str, dict[str, float]]] = dict()
 
     with zipfile.ZipFile(filepath, "r") as file:
+        # NOTE: we will reverse the list to process the latest CVEs first.
+        # This way we process only the updated versions of the CVEs.
+
         # The zip file contains a folder with all the CVEs as JSON files
-        cveFilename: list[str] = file.namelist()
+        cveFilename: list[str] = file.namelist().reverse()
 
         for idx, cveFile in enumerate(cveFilename):
             if idx % 1000 == 0:
@@ -219,6 +222,9 @@ def processCvesFromMitre(
                     id: str = data["cveMetadata"]["cveId"]
                 except KeyError:
                     continue
+                
+                if id in seenCves:
+                    continue
 
                 if state == "REJECTED":
                     continue
@@ -229,12 +235,6 @@ def processCvesFromMitre(
                 resultConfig: dict[str, Any] = classifyCveConfiguration(
                     classifier, summary
                 )
-
-                # NOTE: we are overwriting the result if the CVE is already in the dictionary
-                # This is intended behavior, since the main CVE list also contains updates and
-                # is ordered from oldest to newest. This way, reading sequentially like we are doing
-                # will always keep the latest information.
-                # In other words, the oldest CVE is processed first and the newest is processed last.
 
                 seenCves[id] = (
                     {l: s for l, s in zip(resultVuln["labels"], resultVuln["scores"])},
