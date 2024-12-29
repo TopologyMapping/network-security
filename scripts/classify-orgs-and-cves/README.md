@@ -58,7 +58,7 @@ The resulting classification can be saved as a **.pickle** file or a **.json** f
 
 In order to get a good result, multiple classification tries are made using different variables from the scan:
 
-- First try with the 15 most common words in the webpage.
+- First try with the 50% most common sentences in the webpage.
 - If the score is too low, try with the webpage title and organization.
 - If the score is still too low, try with the hostnames.
 - Fallback to the original result if no extra data is available or if the score could not be improved.

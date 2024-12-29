@@ -162,11 +162,13 @@ def extractTextFromHtml(body: str) -> list[str]:
     return [t.strip() for t in visibleTexts]
 
 
-def buildBagOfWords(html: str) -> list[str]:
+def getMostCommonSentences(html: str) -> list[str]:
     """
-    Builds a bag of words from the visible text of an HTML body.
+    Retrieves the most common sentences from the visible text of an HTML body.
 
-    Separate words are counted and sorted by frequency.
+    Separate sentences are counted and sorted by frequency.
+
+    Returns the 50% most common sentences.
 
     Parameters
     ----------
@@ -174,31 +176,34 @@ def buildBagOfWords(html: str) -> list[str]:
 
     Returns
     -------
-    `sortedWords`: list of words sorted by frequency, from most to least frequent.
+    `sortedSentences`: list of sentences sorted by frequency, from most to least frequent.
     """
 
     allText: list[str] = extractTextFromHtml(html)
 
-    bow: dict[str, int] = defaultdict(int)
+    allSentences: dict[str, int] = defaultdict(int)
 
-    for word in allText:
-        if word.isspace():
+    for sentence in allText:
+        if sentence.isspace():
             continue
 
         # Don't include prepositions, articles, etc
-        if len(word) < 5:
+        if len(sentence) < 5:
             continue
 
-        bow[word] += 1
+        allSentences[sentence] += 1
 
-    # Sort words
-    sortedWords: list[str] = sorted(bow, key=bow.get, reverse=True)
+    # Sort by frequency
+    sortedSentences: list[str] = sorted(
+        allSentences, key=allSentences.get, reverse=True
+    )
 
-    return sortedWords
+    # Return 50% most common sentences
+    return sortedSentences[: len(sortedSentences) // 2]
 
 
 def classifyOrganization(
-    classifier: Pipeline, translator, sortedWords: list[str], scan: dict[str, Any]
+    classifier: Pipeline, translator, sortedSentences: list[str], scan: dict[str, Any]
 ) -> dict[str, Any]:
     """
     Classifies the organization of a webpage from Shodan using a zero-shot classifier.
@@ -206,7 +211,7 @@ def classifyOrganization(
     Only HTTP or HTTPS scans are considered. All text in the webpage is translated to English before classification.
 
     In order to get a good result, multiple tries are made using different data from the scan:
-    - First try with the 15 most common words in the webpage.
+    - First try with the 50% most common sentences in the webpage.
     - If the score is too low, try with the webpage title and organization.
     - If the score is still too low, try with the hostnames.
     - Fallback to the original result if no extra data is available or if the score could not be improved.
@@ -215,7 +220,7 @@ def classifyOrganization(
     ----------
     `classifier`: zero-shot classifier model.
     `translator`: translation model.
-    `sortedWords`: list of words in the webpage sorted by frequency, from most to least frequent.
+    `sortedSentences`: list of sentences in the webpage sorted by frequency, from most to least frequent.
     `scan`: scan data from Shodan, used to get extra data if needed.
 
     Returns
@@ -227,12 +232,12 @@ def classifyOrganization(
     THRESHOLD: float = 0.3
 
     # Translate to PT, EN text is left untouched
-    sortedWordsEn: list[str] = translator.translate(
-        sortedWords[:15], source_lang="pt", target_lang="en"
+    sortedSentencesEn: list[str] = translator.translate(
+        sortedSentences, source_lang="pt", target_lang="en"
     )
 
     # Get sequence to classify, will join using ; because sentences are not necessarily connected
-    sequence: str = "; ".join(w for w in sortedWordsEn)
+    sequence: str = "; ".join(w for w in sortedSentencesEn)
     hypothesis: str = "This list of sequences is from a {} webpage."
 
     result: dict = classifier(
@@ -363,17 +368,17 @@ def processOrgsFromShodan(
             if html is None or status != 200:
                 continue
 
-            # Get most common words
-            sortedWords: list[str] = buildBagOfWords(html)
+            # Get most common sentences, this preserves whole sentences
+            sortedSentences: list[str] = getMostCommonSentences(html)
 
-            if not sortedWords:
+            if not sortedSentences:
                 continue
 
             if shodanId in seenOrgs:
                 continue
 
             result: dict[str, Any] = classifyOrganization(
-                classifier, translator, sortedWords[:20], scan
+                classifier, translator, sortedSentences, scan
             )
 
             # Save to seen
