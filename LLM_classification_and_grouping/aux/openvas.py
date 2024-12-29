@@ -7,7 +7,7 @@ from difflib import SequenceMatcher
 
 from .constants import (PROMPT_OPENVAS_AUTHENTICATED, PROMPT_OPENVAS_EXPLOIT,
                         PROMPT_OPENVAS_NOT_EXPLOIT_NOT_AUTHENTICATED)
-from .LLM import LLMHandler
+from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
 @dataclasses.dataclass

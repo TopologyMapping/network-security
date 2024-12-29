@@ -7,7 +7,7 @@ from .constants import (PROMPT_METASPLOIT_EXPLOIT,
                         PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
                         PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
                         PROMPT_METASPLOIT_POST, PROMPT_METASPLOIT_PRIVILEGED)
-from .LLM import LLMHandler
+from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
 """

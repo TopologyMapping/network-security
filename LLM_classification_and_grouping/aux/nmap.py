@@ -5,7 +5,7 @@ import time
 
 from .constants import (PROMPT_NMAP, PROMPT_NMAP_ATTACK, PROMPT_NMAP_BRUTE_DOS,
                         PROMPT_NMAP_DISCOVERY)
-from .LLM import LLMHandler
+from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
 """
