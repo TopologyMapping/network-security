@@ -375,9 +375,9 @@ def compare_similarity_openvas(openvas_folder) -> dict[str, dict]:
 
         Files are classified into 3 groups:
 
-        - Unique = Files with unique characteristics for each set of CVE + QOD
+        - Main files = Files with unique characteristics for each set of CVE + QOD
 
-        - Similar = Files that have a high chance of being similar to files marked as unique, sharing several characteristics.
+        - Similar = Files that have a high chance of being similar to files marked as main, sharing several characteristics.
 
         - Maybe similar = Files that have fewer characteristics in common, but that are probably similar.
 
@@ -475,13 +475,13 @@ def compare_similarity_openvas(openvas_folder) -> dict[str, dict]:
 
     results: dict = {
         "number_skipped_files": len(files_skipped),
-        "number_unique_files": sum(len(value) for value in openvas_qod_cve.values()),
+        "number_main_files": sum(len(value) for value in openvas_qod_cve.values()),
         "number_similar_files": sum(len(value) for value in similars.values()),
         "number_maybe_similar_files": sum(
             len(value) for value in maybe_similars.values()
         ),
-        "categories_in_unique_files": len(openvas_qod_cve.keys()),
-        "unique_files": openvas_qod_cve,
+        "categories_in_main_files": len(openvas_qod_cve.keys()),
+        "main_files": openvas_qod_cve,
         "similars": similars,
         "maybe_similars": maybe_similars,
         "NVTS_with_no_CVE": NVTS_with_no_CVE,
