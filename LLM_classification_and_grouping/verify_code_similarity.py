@@ -1,9 +1,3 @@
-"""
-This scrypt verifies the similarity between Openvas files using LLM.
-The main objective is to verify if the files that were clasified as 'similars' and 'maybe_similars' are related to the main file or not.
-This module is not useful to be used alone, but is important to use it after calling the function 'compare_similarity_openvas' in the file 'openvas.py' to evaluate the results.
-"""
-
 import argparse
 import json
 import random
@@ -22,7 +16,11 @@ PATTERN_ANSWER1 = re.compile(r"Answer1:\s*(.+?)\s*(?=Answer2:|$)")
 def receive_arguments():
 
     parser = argparse.ArgumentParser(
-        description="This code verifies the similarity between Openvas files using LLM."
+        description="""
+        This code verifies the similarity between Openvas files using LLM.
+        The main objective is to verify if the files that were clasified as 'similars' and 'maybe_similars' are related to the main file or not.
+        This module is not useful to be used alone, but is important to use it after calling the function 'compare_similarity_openvas' in the file 'openvas.py' to evaluate the results.
+        """
     )
     parser.add_argument(
         "--input",
@@ -66,7 +64,7 @@ def select_cve_to_analyze(
 
 def get_similarity_classification_info(result: str):
     """
-    This fnctions extracts the answer and the explanation from the result of the classification.
+    This functions extracts the answer and the explanation from the result of the classification.
     """
 
     match = PATTERN_ANSWER1.search(result)
