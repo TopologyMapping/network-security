@@ -1,3 +1,4 @@
+import dataclasses
 import os
 import re
 import time
@@ -20,6 +21,13 @@ CVE_NUCLEI_REGEX = re.compile(r"cve-id:\s*(?P<cve>CVE-[\d-]+)")
 NUCLEI_ID_REGEX = re.compile(r"id:\s*(?P<id>[\w\-]+)")
 NUCLEI_TAGS_REGEX = re.compile(r"tags:\s*(?P<tags>[\w,\-]+)")
 
+# class to organize information about the Nuclei script
+@dataclasses.dataclass
+class NucleiTemplateInfo:
+    file: str
+    cves: list[str]
+    id: str
+    classification: str
 
 # REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_nuclei(content) -> list:
@@ -134,12 +142,12 @@ def analysis_nuclei_templates(
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
-        info = {
-            "file": nuclei_file,
-            "cves": cves,
-            "id": id,
-            "classification": classification,
-        }
+        info = NucleiTemplateInfo(
+            file=nuclei_file,
+            cves=cves,
+            id=id,
+            classification=classification,
+        )
 
         nuclei_info.append(info)
 

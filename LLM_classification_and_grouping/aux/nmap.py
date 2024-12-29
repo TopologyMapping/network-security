@@ -1,3 +1,4 @@
+import dataclasses
 import os
 import re
 import time
@@ -17,6 +18,14 @@ FILE_EXTENSION_NMAP = ".nse"
 
 NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
 NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
+
+@dataclasses.dataclass
+class NmapScriptInfo:
+    file: str
+    classification: str
+    name: str
+    cves: list
+    categories: str
 
 
 # REGEX FUNCTIONS TO EXTRACT INFO
@@ -137,25 +146,25 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> S
 
             scripts_with_no_CVE.append(nmap_file)
 
-        categorie = extract_categorie_nmap(content)
+        categories = extract_categorie_nmap(content)
 
         file_name = os.path.basename(nmap_file)
 
         start_time = time.time()
 
-        classification = classification_nmap(categorie, content, llm)
+        classification = classification_nmap(categories, content, llm)
 
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
-        info = {
-            "file": nmap_file,
-            "cves": cves,
-            "name": file_name,
-            "categories": categorie,
-            "classification": classification,
-        }
+        info = NmapScriptInfo(
+            file=nmap_file,
+            cves=cves,
+            name=file_name,
+            categories=categories,
+            classification=classification
+        )
 
         nmap_info.append(info)
 

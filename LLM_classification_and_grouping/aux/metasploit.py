@@ -1,3 +1,4 @@
+import dataclasses
 import os
 import re
 import time
@@ -15,7 +16,13 @@ from .utils import ScriptClassificationResult, read_file_with_fallback
     The classification is done in batches, as there are many files to be classified.
     Below, the functions are described in more detail.
 """
-
+@dataclasses.dataclass
+class MetasploitModulesInfo:
+    file: str
+    privileged: bool
+    cves: list
+    module: str
+    classification: str
 
 PRIVILEGED_REGEX = re.compile(
     r"'Privileged'\s*=>\s*(?P<privileged>true|false)\s*,", re.IGNORECASE
@@ -169,13 +176,13 @@ def analysis_metasploit_modules(
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
-        info = {
-            "file": metasploit_file,
-            "cves": cves,
-            "module": module,
-            "privileged": privileged,
-            "classification": classification,
-        }
+        info = MetasploitModulesInfo(
+            file=metasploit_file,
+            cves=cves,
+            module=module,
+            privileged=privileged,
+            classification=classification
+        )
 
         metasploit_info.append(info)
 

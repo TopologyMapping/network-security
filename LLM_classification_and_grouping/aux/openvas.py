@@ -1,3 +1,4 @@
+import dataclasses
 import json
 import os
 import re
@@ -8,6 +9,27 @@ from .constants import (PROMPT_OPENVAS_AUTHENTICATED, PROMPT_OPENVAS_EXPLOIT,
                         PROMPT_OPENVAS_NOT_EXPLOIT_NOT_AUTHENTICATED)
 from .LLM import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
+
+@dataclasses.dataclass
+class OpenvasNVTInfo:
+    file: str
+    cves: list[str]
+    oid: str
+    classification: str
+    qod_info: tuple[str, int]
+
+@dataclasses.dataclass
+class OpenvasSimilarityResults:
+    number_skipped_files: int
+    number_main_files: int
+    number_similar_files: int
+    number_maybe_similar_files: int
+    categories_in_main_files: int
+    main_files: dict
+    similars: dict
+    maybe_similars: dict
+    NVTS_with_no_CVE: list
+    
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
 QOD_VALUE = {
@@ -228,17 +250,15 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
-        info = {
-            "file": openvas_file,
-            "qod": qod_info,
-            "cves": cves,
-            "oid": oid,
-            "classification": classification,
-        }
+        info = OpenvasNVTInfo(
+            file=openvas_file,
+            cves=cves,
+            oid=oid,
+            classification=classification,
+            qod_info=qod_info,
+        )
 
         openvas_info.append(info)
-
-        print(classification)
 
     return ScriptClassificationResult(scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE)
 
@@ -302,10 +322,10 @@ def return_similarity_score(
 
 def get_list_unique_files(openvas_folder) -> list:
 
-    openvas_checked_files = compare_similarity_openvas(openvas_folder)
+    openvas_checked_files : OpenvasSimilarityResults = compare_similarity_openvas(openvas_folder)
 
     list_unique_files = []
-    for value in openvas_checked_files["unique_files"].values():
+    for value in openvas_checked_files.main_files.values():
         list_unique_files += value
 
     return list_unique_files
@@ -367,7 +387,7 @@ def verifies_similarity(
     return similar
 
 
-def compare_similarity_openvas(openvas_folder) -> dict[str, dict]:
+def compare_similarity_openvas(openvas_folder) -> OpenvasSimilarityResults:
     """
     How the function works:
         When classifying scripts, since Openvas has almost 100 thousand files, it is important to group similar files to avoid computational costs.
@@ -403,7 +423,7 @@ def compare_similarity_openvas(openvas_folder) -> dict[str, dict]:
 
     files_skipped: list = []
 
-    NVTS_with_no_CVE = []
+    NVTS_with_no_CVE : list[str] = []
 
     print("Total files ", len(openvas_files))
     for openvas_file in openvas_files:
@@ -474,19 +494,17 @@ def compare_similarity_openvas(openvas_folder) -> dict[str, dict]:
         if similar is False:
             openvas_qod_cve[key].append(openvas_file)
 
-    results: dict = {
-        "number_skipped_files": len(files_skipped),
-        "number_main_files": sum(len(value) for value in openvas_qod_cve.values()),
-        "number_similar_files": sum(len(value) for value in similars.values()),
-        "number_maybe_similar_files": sum(
-            len(value) for value in maybe_similars.values()
-        ),
-        "categories_in_main_files": len(openvas_qod_cve.keys()),
-        "main_files": openvas_qod_cve,
-        "similars": similars,
-        "maybe_similars": maybe_similars,
-        "NVTS_with_no_CVE": NVTS_with_no_CVE,
-    }
+    results = OpenvasSimilarityResults(
+        number_skipped_files=len(files_skipped),
+        number_main_files=sum(len(value) for value in openvas_qod_cve.values()),
+        number_similar_files=sum(len(value) for value in similars.values()),
+        number_maybe_similar_files=sum(len(value) for value in maybe_similars.values()),
+        categories_in_main_files=len(openvas_qod_cve.keys()),
+        main_files=openvas_qod_cve,
+        similars=similars,
+        maybe_similars=maybe_similars,
+        NVTS_with_no_CVE=NVTS_with_no_CVE,
+    )
 
     directory_path = os.path.abspath("results")
     os.makedirs(directory_path, exist_ok=True)
