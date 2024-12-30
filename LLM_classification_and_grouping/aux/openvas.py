@@ -10,6 +10,7 @@ from .constants import (PROMPT_OPENVAS_AUTHENTICATED, PROMPT_OPENVAS_EXPLOIT,
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
+# defining the dataclasses to store information
 @dataclasses.dataclass
 class OpenvasNVTInfo:
     file: str
@@ -18,17 +19,25 @@ class OpenvasNVTInfo:
     classification: str
     qod_info: tuple[str, int]
 
-@dataclasses.dataclass
-class OpenvasSimilarityResults:
-    number_skipped_files: int
-    number_main_files: int
-    number_similar_files: int
-    number_maybe_similar_files: int
-    categories_in_main_files: int
-    main_files: dict
-    similars: dict
-    maybe_similars: dict
-    NVTS_with_no_CVE: list
+@dataclasses.dataclass(frozen=True)
+class CVE_QOD_Key:
+    cves: tuple[str, ...]
+    qod_type: str
+
+    # functions to be able to store the results in a json file
+    def __hash__(self):
+        return hash((self.cves, self.qod_type))
+
+    def __eq__(self, other):
+        if not isinstance(other, CVE_QOD_Key):
+            return False
+        return self.cves == other.cves and self.qod_type == other.qod_type
+
+    def to_dict(self):
+        return {
+            'cves': list(self.cves),  # Convert tuple to list for JSON serialization
+            'qod_type': self.qod_type 
+        }
     
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
@@ -322,17 +331,17 @@ def return_similarity_score(
 
 def get_list_unique_files(openvas_folder) -> list:
 
-    openvas_checked_files : OpenvasSimilarityResults = compare_similarity_openvas(openvas_folder)
+    openvas_checked_files : dict = compare_similarity_openvas(openvas_folder)
 
     list_unique_files = []
-    for value in openvas_checked_files.main_files.values():
+    for value in openvas_checked_files['main_files'].values():
         list_unique_files += value
 
     return list_unique_files
 
 
 def check_active_script(
-    qod_value: int, key: tuple, openvas_qod_cve: dict, openvas_file: str
+    qod_value: int, key: CVE_QOD_Key, openvas_qod_cve: dict, openvas_file: str
 ) -> bool:
     """
     Function to check if a script performs actives checks or not.
@@ -342,12 +351,12 @@ def check_active_script(
     if qod_value >= QOD_VALUE["remote_app"] or qod_value == QOD_VALUE["remote_active"]:
 
         # using a new key to separate the active codes
-        new_key_active_check = key + ("active",)
+        active_key = CVE_QOD_Key(cves=key.cves, qod_type=f"{key.qod_type} active")
 
-        if new_key_active_check not in openvas_qod_cve:
-            openvas_qod_cve[new_key_active_check] = []
+        if active_key not in openvas_qod_cve:
+            openvas_qod_cve[active_key] = []
 
-        openvas_qod_cve[new_key_active_check].append(openvas_file)
+        openvas_qod_cve[active_key].append(openvas_file)
 
         return True
 
@@ -355,7 +364,7 @@ def check_active_script(
 
 
 def verifies_similarity(
-    score: int, key: tuple, similars: dict, maybe_similars: dict, openvas_file: str
+    score: int, key: CVE_QOD_Key, similars: dict, maybe_similars: dict, openvas_file: str
 ) -> bool:
     """
     This functions verifies if the analyzed file is similar to another file. Based on the score received, it classifies the file as similar or maybe similar to the initial file.
@@ -387,7 +396,7 @@ def verifies_similarity(
     return similar
 
 
-def compare_similarity_openvas(openvas_folder) -> OpenvasSimilarityResults:
+def compare_similarity_openvas(openvas_folder) -> dict:
     """
     How the function works:
         When classifying scripts, since Openvas has almost 100 thousand files, it is important to group similar files to avoid computational costs.
@@ -456,7 +465,8 @@ def compare_similarity_openvas(openvas_folder) -> OpenvasSimilarityResults:
 
         # the dict key is the cve checked and the qod
         # with this is possible to separate codes that verifies the same CVE
-        key = (tuple(sorted(cves_str)), qod_type)
+        sorted_cves = tuple(sorted(cves))  # Ensure the CVEs are sorted and converted to a tuple
+        key = CVE_QOD_Key(cves=sorted_cves, qod_type=qod_type)
 
         # Use the tuple as a key in your dictionary
         if key not in openvas_qod_cve:
@@ -495,17 +505,19 @@ def compare_similarity_openvas(openvas_folder) -> OpenvasSimilarityResults:
         if similar is False:
             openvas_qod_cve[key].append(openvas_file)
 
-    results = OpenvasSimilarityResults(
-        number_skipped_files=len(files_skipped),
-        number_main_files=sum(len(value) for value in openvas_qod_cve.values()),
-        number_similar_files=sum(len(value) for value in similars.values()),
-        number_maybe_similar_files=sum(len(value) for value in maybe_similars.values()),
-        categories_in_main_files=len(openvas_qod_cve.keys()),
-        main_files=openvas_qod_cve,
-        similars=similars,
-        maybe_similars=maybe_similars,
-        NVTS_with_no_CVE=NVTS_with_no_CVE,
-    )
+    results: dict = {
+        "number_skipped_files": len(files_skipped),
+        "number_unique_files": sum(len(value) for value in openvas_qod_cve.values()),
+        "number_similar_files": sum(len(value) for value in similars.values()),
+        "number_maybe_similar_files": sum(
+            len(value) for value in maybe_similars.values()
+        ),
+        "categories_in_unique_files": len(openvas_qod_cve.keys()),
+        "unique_files": openvas_qod_cve,
+        "similars": similars,
+        "maybe_similars": maybe_similars,
+        "NVTS_with_no_CVE": NVTS_with_no_CVE,
+    }
 
     directory_path = os.path.abspath("results")
     os.makedirs(directory_path, exist_ok=True)
