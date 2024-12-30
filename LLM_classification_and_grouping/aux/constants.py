@@ -17,45 +17,75 @@ For each scanner action, a specific prompt is provided to guide the AI towards t
 All prompts used for this task are stored in `.txt` files located in the 'prompts' folder.
 """
 
+# get current location
+import os
 
+# get the current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-with open("../prompts/prompt_LLM_system.txt", "r") as f:
+path_prompt_LLM_system = os.path.join(current_dir, "../prompts/prompt_LLM_system.txt")
+
+with open(path_prompt_LLM_system, "r") as f:
     SYSTEM_PROMPT = f.read()
 
-with open("../prompts/_what_is_detected_attack.txt", "r") as f:
+path_prompt_what_is_detected_attack = os.path.join(current_dir, "../prompts/what_is_detected_attack.txt")
+
+with open(path_prompt_what_is_detected_attack, "r") as f:
     WHAT_IS_DETECTED_ATTACK = f.read()
 
-with open("../prompts/_what_is_detected_proerties.txt", "r") as f:
+path_prompt_what_is_detected_properties = os.path.join(current_dir, "../prompts/what_is_detected_properties.txt")
+
+with open(path_prompt_what_is_detected_properties, "r") as f:
     WHAT_IS_DETECTED_PROPERTIES = f.read()
 
-with open("../prompts/_what_is_detected_old_software.txt", "r") as f:
+path_prompt_what_is_detected_old_software = os.path.join(current_dir, "../prompts/what_is_detected_old_software.txt")
+
+with open(path_prompt_what_is_detected_old_software, "r") as f:
     WHAT_IS_DETECTED_OLD_SOFTWARE = f.read()
 
-with open("../prompts/prompt_what_is_detected.txt", "r") as f:
+path_prompt_what_is_detected = os.path.join(current_dir, "../prompts/prompt_what_is_detected.txt")
+
+with open(path_prompt_what_is_detected, "r") as f:
     PROMPT_WHAT_IS_DETECTED = f.read()
 
-with open("../prompts/category_attack.txt", "r") as f:
+path_prompt_category_attack = os.path.join(current_dir, "../prompts/category_attack.txt")
+
+with open(path_prompt_category_attack, "r") as f:
     CATEGORY_ATTACK = f.read()
 
-with open("../prompts/category_privileged.txt", "r") as f:
+path_prompt_category_privileged = os.path.join(current_dir, "../prompts/category_privileged.txt")
+
+with open(path_prompt_category_privileged, "r") as f:
     CATEGORY_PRIVILEGED = f.read()
 
-with open("../prompts/category_basic_request.txt", "r") as f:
+path_prompt_category_basic_request = os.path.join(current_dir, "../prompts/category_basic_request.txt")
+
+with open(path_prompt_category_basic_request, "r") as f:
     CATEGORY_BASIC_REQUEST = f.read()
 
-with open("../prompts/prompt_categories.txt", "r") as f:
+path_prompt_categories = os.path.join(current_dir, "../prompts/prompt_categories.txt")
+
+with open(path_prompt_categories, "r") as f:
     PROMPT_CATEGORIES = f.read()
 
-with open("../prompts/prompt_compare_similarity.txt", "r") as f:
+path_prompt_compare_similarity = os.path.join(current_dir, "../prompts/prompt_compare_similarity.txt")
+
+with open(path_prompt_compare_similarity, "r") as f:
     PROMPT_COMPARE_SIMILARITY = f.read()
 
-with open("../prompts/openvas_qod_info.txt", "r") as f:
+path_openvas_qod_info = os.path.join(current_dir, "../prompts/openvas_qod_info.txt")
+
+with open(path_openvas_qod_info, "r") as f:
     QOD_INFO = f.read()
 
-with open("../prompts/metasploit_modules_ranking_info.txt", "r") as f:
+prompt_metasploit_modules_ranking_info = os.path.join(current_dir, "../prompts/metasploit_modules_ranking_info.txt")
+
+with open(prompt_metasploit_modules_ranking_info, "r") as f:
     RANKING_INFO = f.read()
 
-with open("../prompts/metasploit_modules_info.txt", "r") as f:
+prompt_metasploit_modules_info = os.path.join(current_dir, "../prompts/metasploit_modules_info.txt")
+
+with open(prompt_metasploit_modules_info, "r") as f:
     MODULES_INFO = f.read()
 
 ######### METASPLOIT ##################
