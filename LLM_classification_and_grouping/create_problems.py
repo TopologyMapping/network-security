@@ -14,13 +14,15 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-from aux.nuclei import extract_nuclei_id
+from aux.nuclei import extract_nuclei_id, parse_nuclei_yaml
 from aux.openvas import extract_oid_openvas
 from aux.utils import read_file_with_fallback
 
 nltk.download("punkt_tab")
 nltk.download("stopwords")
 STOP_WORDS = set(stopwords.words("english"))
+
+CLASSIFICATION_FOLDER = './classification'
 
 VALUES_WHAT_IS_DETECTED = [
     "Vulnerability",
@@ -148,16 +150,16 @@ def extract_task_information(classification_text) -> dict:
 
 
 def check_if_scripts_application_contains_similar_tokens(
-    applications, filtered_tokens
+    application_tokens_list: list, filtered_tokens
 ) -> str:
-    for key in applications:
+    for application_token in application_tokens_list:
 
-        tokens_key = key.split("_")
+        tokens = application_token.split("_")
 
-        for i in tokens_key:
+        for i in tokens:
             for j in filtered_tokens:
                 if i in j or j in i:
-                    return key
+                    return application_token
     return ""
 
 
@@ -219,17 +221,17 @@ def grouping_info(
 
     """
     # starting grouping by CVE -> most constant info
-    for cves_key in cves:
+    for cve in cves:
 
-        if cves_key not in problems:
-            problems[cves_key] = {}
+        if cve not in problems:
+            problems[cve] = {}
 
         # grouping by constant info again (task2 refers to the category and subcategory)
-        if category_subcategory not in problems[cves_key]:
-            problems[cves_key][category_subcategory] = {}
+        if category_subcategory not in problems[cve]:
+            problems[cve][category_subcategory] = {}
 
-        if what_is_detected not in problems[cves_key][category_subcategory]:
-            problems[cves_key][category_subcategory][what_is_detected] = {}
+        if what_is_detected not in problems[cve][category_subcategory]:
+            problems[cve][category_subcategory][what_is_detected] = {}
 
         tokens_application = word_tokenize(application.lower())
 
@@ -248,7 +250,7 @@ def grouping_info(
         # storing the tokens in a string to be used as a key
         key_tokens_taks1_application = "_".join(filtered_tokens_application) + "_"
 
-        application_tokens_list = problems[cves_key][category_subcategory][
+        application_tokens_list = problems[cve][category_subcategory][
             what_is_detected
         ].keys()
 
@@ -257,15 +259,15 @@ def grouping_info(
         )
 
         if match_application_tokens:
-            problems[cves_key][category_subcategory][what_is_detected][
+            problems[cve][category_subcategory][what_is_detected][
                 match_application_tokens
             ].append(info_to_store)
             return
 
-        problems[cves_key][category_subcategory][what_is_detected][
+        problems[cve][category_subcategory][what_is_detected][
             key_tokens_taks1_application
         ] = []
-        problems[cves_key][category_subcategory][what_is_detected][
+        problems[cve][category_subcategory][what_is_detected][
             key_tokens_taks1_application
         ].append(info_to_store)
 
@@ -309,11 +311,11 @@ def organizing_grouping_structure(result: dict):
                         if "openvas" in script_name:
                             id = extract_oid_openvas(file_content)
                         elif "nuclei" in script_name:
-                            id = extract_nuclei_id(file_content)
+                            yaml_content = parse_nuclei_yaml(file_content)
+                            id = extract_nuclei_id(yaml_content)
                         elif "nmap" in script_name:
-                            id = os.path.basename(script_name).split(".")[
-                                0
-                            ]  # removing file extension
+                            # removing file extension
+                            id = os.path.basename(script_name).split(".")[0]  
                         else:
                             id = script_name
 
