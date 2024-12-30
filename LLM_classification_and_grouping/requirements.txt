@@ -1,3 +1,4 @@
 openai
 argparse
 dataclasses
+dataclasses_json
