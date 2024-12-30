@@ -5,6 +5,7 @@ The results of this script are stored in a JSON file, containing the 'problems' 
 """
 
 import argparse
+import dataclasses
 import json
 import os
 import re
@@ -47,6 +48,16 @@ VALUES_SUBCATEGORY = [
     "URLPresenceCheck",
     "Discovery",
 ]
+
+@dataclasses.dataclass
+class FileInfo:
+    file_name: str
+    entry_file: str
+
+@dataclasses.dataclass(frozen=True)
+class CategorySubcategory:
+    category: str
+    subcategory: str
 
 CLASSIFICATION_RESULTS_FOLDER = './classification'
 
@@ -201,10 +212,10 @@ def filter_classification_text(
 def grouping_info(
     problems: dict,
     cves: list,
-    category_subcategory: str,
+    category_subcategory: CategorySubcategory,
     what_is_detected: str,
     application: str,
-    info_to_store: str,
+    info_to_store: FileInfo,
     errors_LLM: list,
 ):
     """
@@ -373,7 +384,8 @@ def process_json_files(folder_path):
                         cves = [""]
 
                     # storing results of grouping as the classificaiton file where the script was classified together with the script name
-                    info_to_store = file_name + " - " + entry["file"]
+                    #info_to_store = file_name + " - " + entry["file"]
+                    info_to_store = FileInfo(file_name=file_name, entry_file=entry["file"])
 
                     classification_info_extracted = filter_classification_text(
                         entry["classification"], errors_LLM, errors_regex, info_to_store
@@ -389,7 +401,8 @@ def process_json_files(folder_path):
                     category = info["category"]
                     subcategory = info["subcategory"]
 
-                    category_subcategory = category + "_" + subcategory
+                    #category_subcategory = category + "_" + subcategory
+                    category_subcategory = CategorySubcategory(category=category, subcategory=subcategory)
 
                     grouping_info(
                         problems,
