@@ -49,6 +49,7 @@ VALUES_SUBCATEGORY = [
     "Discovery",
 ]
 
+# Classes to handle information storage
 @dataclasses.dataclass
 class FileInfo:
     file_name: str
@@ -58,6 +59,53 @@ class FileInfo:
 class CategorySubcategory:
     category: str
     subcategory: str
+
+    def __hash__(self):
+        # Combine the hashes of category and subcategory for the overall hash
+        return hash((self.category, self.subcategory))
+
+    def __eq__(self, other):
+        if isinstance(other, CategorySubcategory):
+            return (self.category, self.subcategory) == (other.category, other.subcategory)
+        return False
+
+@dataclasses.dataclass(frozen=True)
+class KeysProblemsInfo:
+    cve: str
+    attack: CategorySubcategory
+    vuln_type: str
+    vuln_name: tuple
+
+    # defining functions to be able to store results in a json file
+    def __hash__(self):
+        return hash((self.cve, 
+                     self.attack.category, 
+                     self.attack.subcategory, 
+                     self.vuln_type, 
+                     self.vuln_name))
+
+    def __eq__(self, other):
+        if not isinstance(other, KeysProblemsInfo):
+            return False
+        return (self.cve == other.cve and 
+                self.attack.category == other.attack.category and 
+                self.attack.subcategory == other.attack.subcategory and 
+                self.vuln_type == other.vuln_type and 
+                self.vuln_name == other.vuln_name)
+
+    def to_dict(self):
+        return {
+            'cve': self.cve,
+            'attack': {'category': self.attack.category, 'subcategory': self.attack.subcategory},
+            'vuln_type': self.vuln_type,
+            'vuln_name': list(self.vuln_name)  # Convert tuple to list for JSON serialization
+        }
+
+
+def dataclass_to_dict(obj):
+    if dataclasses.is_dataclass(obj):
+        return {k: dataclass_to_dict(v) for k, v in obj.__dict__.items()}
+    return obj
 
 CLASSIFICATION_RESULTS_FOLDER = './classification'
 
@@ -297,18 +345,22 @@ def organizing_grouping_structure(result: dict):
     """
     organized_grouping = defaultdict(list)
 
-    # Traverse the nested dictionary structure
+    # Traverse the nested dictionary structure -> there is not too much information to be extracted. The CVE could contain multiple values, but the other keys are more limited
     for cve, attacks in result["problems"].items():
         for attack, attack_details in attacks.items():
             for vuln_type, vuln_paths in attack_details.items():
                 for vuln_name, files in vuln_paths.items():
                     for file_path in files:
+                        
+                        # Create the structured key using the dataclass
+                        value = KeysProblemsInfo(
+                            cve=cve,
+                            attack=attack, 
+                            vuln_type=vuln_type,
+                            vuln_name=tuple(vuln_name.split()) if isinstance(vuln_name, str) else vuln_name,
+                        )
 
-                        # the 'grouping' value is the information in common between the scripts, separated by '@'
-                        value = cve + "@" + attack + "@" + vuln_type + "@" + vuln_name
-
-                        # the values were stored as 'file_with_classification' - 'script_name'
-                        script_name = file_path.split(" - ")[1]
+                        script_name = file_path.entry_file
 
                         if "metasploit" in script_name:
                             continue
@@ -332,20 +384,21 @@ def organizing_grouping_structure(result: dict):
 
                         organized_grouping[value].append(id)
 
-    # Convert defaultdict to a regular dict
-    inverted_dict = dict(organized_grouping)
 
     # removing the keys that have only one value, because they are not grouped
     keys_to_delete = [
         key
-        for key, value in inverted_dict.items()
+        for key, value in organized_grouping.items()
         if isinstance(value, (list, set)) and len(value) == 1
     ]
     for key in keys_to_delete:
-        del inverted_dict[key]
+        del organized_grouping[key]
 
+    # transforming dataclasses in dicts
+    organized_grouping_json = {str(key): value for key, value in organized_grouping.items()} 
+    
     with open("./results/problems.json", "w") as f:
-        json.dump(inverted_dict, f, indent=4)
+        json.dump(organized_grouping_json, f, indent=4)
 
 
 def process_json_files(folder_path):
@@ -354,9 +407,8 @@ def process_json_files(folder_path):
     :param folder_path: Path to the folder containing JSON files.
     :param output_folder: Path to the folder to save the processed files.
 
-    Important: The input file must be a JSON file containing the classification information of the scripts, performed by the code in the 'distributed_classification.py' script. The input file also needs to end with the string '_classification.json'.
+    Important: The input file must be a JSON file containing the classification information of the scripts, performed by the code in the 'distributed_classification.py' script.
 
-    The output is stored in a JSON file called 'grouped_scripts.json'.
     """
 
     problems: dict = {}
@@ -364,7 +416,7 @@ def process_json_files(folder_path):
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
-        if file_name.endswith(".json"):
+        if file_name.endswith(".json") and file_name.startswith("output_classification_"):
             file_path = os.path.join(folder_path, file_name)
 
             with open(file_path, "r") as file:
@@ -384,7 +436,6 @@ def process_json_files(folder_path):
                         cves = [""]
 
                     # storing results of grouping as the classificaiton file where the script was classified together with the script name
-                    #info_to_store = file_name + " - " + entry["file"]
                     info_to_store = FileInfo(file_name=file_name, entry_file=entry["file"])
 
                     classification_info_extracted = filter_classification_text(
@@ -424,11 +475,7 @@ def process_json_files(folder_path):
         "errors_LLM": errors_LLM,
         "errors_regex": errors_regex,
     }
-
-    # Save processed data
-    with open("./results/grouped_scripts.json", "w") as f:
-        json.dump(result, f, indent=4)
-
+    
     organizing_grouping_structure(result)
 
 
