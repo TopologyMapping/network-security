@@ -1,12 +1,9 @@
 import dataclasses
 import os
-import re
 import time
+import yaml
 
-from sympy import intersection
-
-from .constants import (PROMPT_NUCLEI, PROMPT_NUCLEI_AUTH_BYPASS,
-                        PROMPT_NUCLEI_REMOTE_CODE_EXECUTION)
+from .constants import (PROMPT_NUCLEI, PROMPT_NUCLEI_AUTH_BYPASS, PROMPT_NUCLEI_REMOTE_CODE_EXECUTION)
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
@@ -22,10 +19,6 @@ FILE_EXTENSION_NUCLEI = ".yaml"
 REMOTE_CODE_EXECUTION_TAGS : set = {"rce", "sqli", "xss", "injection"}
 AUTH_BYPASS_TAGS : set = {"auth-bypass", "unauth", "default-login"}
 
-CVE_NUCLEI_REGEX = re.compile(r"cve-id:\s*(?P<cve>CVE-[\d-]+)")
-NUCLEI_ID_REGEX = re.compile(r"id:\s*(?P<id>[\w\-]+)")
-NUCLEI_TAGS_REGEX = re.compile(r"tags:\s*(?P<tags>[\w,\-]+)")
-
 # class to organize information about the Nuclei script
 @dataclasses.dataclass
 class NucleiTemplateInfo:
@@ -34,21 +27,32 @@ class NucleiTemplateInfo:
     id: str
     classification: str
 
-# REGEX FUNCTIONS TO EXTRACT INFO
-def extract_cve_nuclei(content) -> list:
-    cves = [match.group("cve") for match in CVE_NUCLEI_REGEX.finditer(content)]
-    return cves if cves else []
+# get information from the Nuclei YAML file
+def parse_nuclei_yaml(content) -> dict:
+    """
+    Parse YAML content into a Python dictionary.
+    """
+    try:
+        return yaml.safe_load(content)
+    except yaml.YAMLError as e:
+        print(f"Error parsing YAML content: {e}")
+        return {}
 
+def extract_cve_nuclei(yaml_data: dict) -> list:
+    try:
+        return yaml_data["info"]["classification"]["cve-id"] # nuclei structure to get cve-id
+    except:
+        return []
 
-def extract_nuclei_id(content) -> str:
-    match = NUCLEI_ID_REGEX.search(content)
-    return match.group("id") if match else ""
+def extract_nuclei_id(yaml_data: dict) -> str:
+    return yaml_data.get("id", "")
 
-
-def extract_nuclei_tags(content) -> list:
-    match = NUCLEI_TAGS_REGEX.search(content)
-    return match.group("tags").split(",") if match else []
-
+def extract_nuclei_tags(yaml_data: dict) -> list:
+    try:
+        str_tags = yaml_data["info"]["tags"]  # nuclei structure to get tags
+        return str_tags.split(",")
+    except:
+        return []
 
 def classification_nuclei(tags: list, content, llm) -> str:
     """
@@ -128,16 +132,20 @@ def analysis_nuclei_templates(
     for nuclei_file in nuclei_files[initial_range:final_range]:
 
         content = read_file_with_fallback(nuclei_file)
+        yaml_data = parse_nuclei_yaml(content)
 
-        cves = extract_cve_nuclei(content)
+        id = extract_nuclei_id(yaml_data)
 
-        if not (cves):
+        if not id:
+            continue
+
+        cves = extract_cve_nuclei(yaml_data)
+
+        if not cves:
 
             templates_with_no_CVE.append(nuclei_file)
 
-        id = extract_nuclei_id(content)
-
-        tags = extract_nuclei_tags(content)
+        tags = extract_nuclei_tags(yaml_data)
 
         start_time = time.time()
 
