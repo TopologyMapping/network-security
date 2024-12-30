@@ -1,4 +1,5 @@
 import dataclasses
+from dataclasses_json import dataclass_json
 import os
 import time
 import yaml
@@ -20,6 +21,7 @@ REMOTE_CODE_EXECUTION_TAGS : set = {"rce", "sqli", "xss", "injection"}
 AUTH_BYPASS_TAGS : set = {"auth-bypass", "unauth", "default-login"}
 
 # class to organize information about the Nuclei script
+@dataclass_json
 @dataclasses.dataclass
 class NucleiTemplateInfo:
     file: str
@@ -141,6 +143,7 @@ def analysis_nuclei_templates(
 
         cves = extract_cve_nuclei(yaml_data)
 
+
         if not cves:
 
             templates_with_no_CVE.append(nuclei_file)
@@ -160,7 +163,7 @@ def analysis_nuclei_templates(
             cves=cves,
             id=id,
             classification=classification,
-        )
+        ).to_dict()
 
         nuclei_info.append(info)
 

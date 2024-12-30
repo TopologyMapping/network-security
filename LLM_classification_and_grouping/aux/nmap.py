@@ -8,6 +8,8 @@ from .constants import (PROMPT_NMAP, PROMPT_NMAP_ATTACK, PROMPT_NMAP_BRUTE_DOS,
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
+from dataclasses_json import dataclass_json
+
 """
     This file contains the functions to classify Nmap scripts.
     The classification is done by analyzing the content of the script, extracting metadada using regex and then sending the information to the LLM with the appropriate prompt.
@@ -19,6 +21,8 @@ FILE_EXTENSION_NMAP = ".nse"
 NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
 NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
 
+# class to organize information about the Nmap script
+@dataclass_json
 @dataclasses.dataclass
 class NmapScriptInfo:
     file: str
@@ -164,7 +168,7 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> S
             name=file_name,
             categories=categories,
             classification=classification
-        )
+        ).to_dict()
 
         nmap_info.append(info)
 

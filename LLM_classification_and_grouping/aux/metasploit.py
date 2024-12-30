@@ -16,6 +16,10 @@ from .utils import ScriptClassificationResult, read_file_with_fallback
     The classification is done in batches, as there are many files to be classified.
     Below, the functions are described in more detail.
 """
+from dataclasses_json import dataclass_json
+
+# class to organize information about the Metasploit script
+@dataclass_json
 @dataclasses.dataclass
 class MetasploitModulesInfo:
     file: str
@@ -182,7 +186,7 @@ def analysis_metasploit_modules(
             module=module,
             privileged=privileged,
             classification=classification
-        )
+        ).to_dict()
 
         metasploit_info.append(info)
 
