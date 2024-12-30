@@ -62,7 +62,6 @@ def classify_scripts(tool_specs: List[ToolSpec], args) -> Dict[str, Dict[str, Li
             }
             all_scripts_without_cves.extend(result.scripts_without_cves)
 
-    results["tests_with_no_CVE"] = all_scripts_without_cves
     return results
 
 if __name__ == "__main__":

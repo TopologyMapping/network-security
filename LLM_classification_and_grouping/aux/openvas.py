@@ -5,12 +5,17 @@ import re
 import time
 from difflib import SequenceMatcher
 
+from dataclasses_json import dataclass_json
+
 from .constants import (PROMPT_OPENVAS_AUTHENTICATED, PROMPT_OPENVAS_EXPLOIT,
                         PROMPT_OPENVAS_NOT_EXPLOIT_NOT_AUTHENTICATED)
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
+RESULTS_DIRECTORY_NAME = './results'
+
 # defining the dataclasses to store information
+@dataclass_json
 @dataclasses.dataclass
 class OpenvasNVTInfo:
     file: str
@@ -19,26 +24,26 @@ class OpenvasNVTInfo:
     classification: str
     qod_info: tuple[str, int]
 
+@dataclass_json
+@dataclasses.dataclass
+class OpenvasSimilarityResults:
+    number_skipped_files: int
+    number_main_files: int
+    number_similar_files: int
+    number_maybe_similar_files: int
+    categories_in_main_files: int
+    main_files: dict
+    similars: dict
+    maybe_similars: dict
+    NVTS_with_no_CVE: list
+
+
+@dataclass_json
 @dataclasses.dataclass(frozen=True)
 class CVE_QOD_Key:
-    cves: tuple[str, ...]
+    cves: tuple
     qod_type: str
 
-    # functions to be able to store the results in a json file
-    def __hash__(self):
-        return hash((self.cves, self.qod_type))
-
-    def __eq__(self, other):
-        if not isinstance(other, CVE_QOD_Key):
-            return False
-        return self.cves == other.cves and self.qod_type == other.qod_type
-
-    def to_dict(self):
-        return {
-            'cves': list(self.cves),  # Convert tuple to list for JSON serialization
-            'qod_type': self.qod_type 
-        }
-    
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
 QOD_VALUE = {
@@ -179,7 +184,7 @@ def extract_affected_openvas(content) -> str:
     return affected.group("value").replace("\n", "") if affected else ""
 
 
-def classification_openvas(content, qod_value, qod_type, llm) -> str:
+def classification_openvas(content, qod_value: int, qod_type: str, llm) -> str:
     """
     This function filters the content of the Openvas script and classifies it according to the QOD value and type.
     """
@@ -254,6 +259,7 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
         start_time = time.time()
 
         classification = classification_openvas(content, qod_value, qod_type, llm)
+        classification = ''
 
         end_time = time.time()
         elapsed_time = end_time - start_time
@@ -265,14 +271,15 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
             oid=oid,
             classification=classification,
             qod_info=qod_info,
-        )
+        ).to_dict()
 
         openvas_info.append(info)
+        break
 
     return ScriptClassificationResult(scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE)
 
 
-def similarity_text(a, b):
+def similarity_text(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
 
 
@@ -329,7 +336,7 @@ def return_similarity_score(
     return score
 
 
-def get_list_unique_files(openvas_folder) -> list:
+def get_list_unique_files(openvas_folder: str) -> list:
 
     openvas_checked_files : dict = compare_similarity_openvas(openvas_folder)
 
@@ -396,7 +403,7 @@ def verifies_similarity(
     return similar
 
 
-def compare_similarity_openvas(openvas_folder) -> dict:
+def compare_similarity_openvas(openvas_folder: str) -> dict:
     """
     How the function works:
         When classifying scripts, since Openvas has almost 100 thousand files, it is important to group similar files to avoid computational costs.
@@ -457,10 +464,6 @@ def compare_similarity_openvas(openvas_folder) -> dict:
 
             NVTS_with_no_CVE.append(openvas_file)
 
-        cves_str: str = ""
-        for i in cves:
-            cves_str += i + " "
-
         qod_type, qod_value = new_file_info["qod"]
 
         # the dict key is the cve checked and the qod
@@ -505,21 +508,34 @@ def compare_similarity_openvas(openvas_folder) -> dict:
         if similar is False:
             openvas_qod_cve[key].append(openvas_file)
 
+    openvas_qod_cve_serializable = {
+        key.to_json(): value for key, value in openvas_qod_cve.items()
+    }
+
+    similars_serializable = {
+        key.to_json(): value for key, value in similars.items()
+    }
+
+    maybe_similars_serializable = {
+        key.to_json(): value for key, value in maybe_similars.items()
+    }
+
+
     results: dict = {
         "number_skipped_files": len(files_skipped),
-        "number_unique_files": sum(len(value) for value in openvas_qod_cve.values()),
+        "number_main_files": sum(len(value) for value in openvas_qod_cve.values()),
         "number_similar_files": sum(len(value) for value in similars.values()),
         "number_maybe_similar_files": sum(
             len(value) for value in maybe_similars.values()
         ),
-        "categories_in_unique_files": len(openvas_qod_cve.keys()),
-        "unique_files": openvas_qod_cve,
-        "similars": similars,
-        "maybe_similars": maybe_similars,
+        "categories_in_main_files": len(openvas_qod_cve.keys()),
+        "main_files": openvas_qod_cve_serializable,
+        "similars": similars_serializable,
+        "maybe_similars": maybe_similars_serializable,
         "NVTS_with_no_CVE": NVTS_with_no_CVE,
     }
 
-    directory_path = os.path.abspath("results")
+    directory_path = os.path.abspath(RESULTS_DIRECTORY_NAME)
     os.makedirs(directory_path, exist_ok=True)
     file_path = os.path.join(directory_path, "info_similarity_NVTS_openvas.json")
     with open(file_path, "w") as json_file:
