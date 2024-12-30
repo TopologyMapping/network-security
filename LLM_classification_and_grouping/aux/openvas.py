@@ -332,7 +332,7 @@ def get_list_unique_files(openvas_folder) -> list:
 
 
 def check_active_script(
-    qod_value: int, key: str, openvas_qod_cve: dict, openvas_file: str
+    qod_value: int, key: tuple, openvas_qod_cve: dict, openvas_file: str
 ) -> bool:
     """
     Function to check if a script performs actives checks or not.
@@ -342,7 +342,7 @@ def check_active_script(
     if qod_value >= QOD_VALUE["remote_app"] or qod_value == QOD_VALUE["remote_active"]:
 
         # using a new key to separate the active codes
-        new_key_active_check = key + " active"
+        new_key_active_check = key + ("active",)
 
         if new_key_active_check not in openvas_qod_cve:
             openvas_qod_cve[new_key_active_check] = []
@@ -355,7 +355,7 @@ def check_active_script(
 
 
 def verifies_similarity(
-    score: int, key: str, similars: dict, maybe_similars: dict, openvas_file: str
+    score: int, key: tuple, similars: dict, maybe_similars: dict, openvas_file: str
 ) -> bool:
     """
     This functions verifies if the analyzed file is similar to another file. Based on the score received, it classifies the file as similar or maybe similar to the initial file.
@@ -448,14 +448,17 @@ def compare_similarity_openvas(openvas_folder) -> OpenvasSimilarityResults:
 
             NVTS_with_no_CVE.append(openvas_file)
 
-        cves_str = " ".join(cves)
+        cves_str: str = ""
+        for i in cves:
+            cves_str += i + " "
 
         qod_type, qod_value = new_file_info["qod"]
 
         # the dict key is the cve checked and the qod
         # with this is possible to separate codes that verifies the same CVE
-        key = cves_str + qod_type
+        key = (tuple(sorted(cves_str)), qod_type)
 
+        # Use the tuple as a key in your dictionary
         if key not in openvas_qod_cve:
             openvas_qod_cve[key] = []
             openvas_qod_cve[key].append(openvas_file)
