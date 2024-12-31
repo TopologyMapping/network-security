@@ -11,6 +11,8 @@ import os
 import re
 from collections import defaultdict
 
+from dataclasses_json import dataclass_json
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -22,6 +24,8 @@ from aux.utils import read_file_with_fallback
 nltk.download("punkt_tab")
 nltk.download("stopwords")
 STOP_WORDS = set(stopwords.words("english"))
+
+RESULTS_DIRECTORY_NAME = './results'
 
 CLASSIFICATION_FOLDER = './classification'
 
@@ -55,20 +59,22 @@ class FileInfo:
     file_name: str
     entry_file: str
 
+@dataclass_json
 @dataclasses.dataclass(frozen=True)
 class CategorySubcategory:
     category: str
     subcategory: str
 
-    def __hash__(self):
+    """ def __hash__(self):
         # Combine the hashes of category and subcategory for the overall hash
         return hash((self.category, self.subcategory))
 
     def __eq__(self, other):
         if isinstance(other, CategorySubcategory):
             return (self.category, self.subcategory) == (other.category, other.subcategory)
-        return False
+        return False """
 
+@dataclass_json
 @dataclasses.dataclass(frozen=True)
 class KeysProblemsInfo:
     cve: str
@@ -77,7 +83,7 @@ class KeysProblemsInfo:
     vuln_name: tuple
 
     # defining functions to be able to store results in a json file
-    def __hash__(self):
+    """ def __hash__(self):
         return hash((self.cve, 
                      self.attack.category, 
                      self.attack.subcategory, 
@@ -99,7 +105,7 @@ class KeysProblemsInfo:
             'attack': {'category': self.attack.category, 'subcategory': self.attack.subcategory},
             'vuln_type': self.vuln_type,
             'vuln_name': list(self.vuln_name)  # Convert tuple to list for JSON serialization
-        }
+        } """
 
 
 def dataclass_to_dict(obj):
@@ -211,14 +217,12 @@ def extract_task_information(classification_text) -> dict:
 def check_if_scripts_application_contains_similar_tokens(
     application_tokens_list: list, filtered_tokens
 ) -> str:
-    for application_token in application_tokens_list:
-
-        tokens = application_token.split("_")
-
-        for i in tokens:
-            for j in filtered_tokens:
-                if i in j or j in i:
-                    return application_token
+    for token in application_tokens_list:
+        sub_tokens = token.split("_")
+        for sub_token in sub_tokens:
+            for filtered_token in filtered_tokens:
+                if sub_token in filtered_token or filtered_token in sub_token:
+                    return token
     return ""
 
 
@@ -306,7 +310,8 @@ def grouping_info(
 
         # starting grouping by the classified application name. Too variable info, so it is the last to be grouped
 
-        # storing the tokens in a string to be used as a key
+        # storing the tokens in a string to be used as a key 
+        # (the key is a string because the information is too variable, so it is not possible to use a dataclass as a key)
         key_tokens_taks1_application = "_".join(filtered_tokens_application) + "_"
 
         application_tokens_list = problems[cve][category_subcategory][
@@ -396,8 +401,12 @@ def organizing_grouping_structure(result: dict):
 
     # transforming dataclasses in dicts
     organized_grouping_json = {str(key): value for key, value in organized_grouping.items()} 
+
+    directory_path = os.path.abspath(RESULTS_DIRECTORY_NAME)
+    os.makedirs(directory_path, exist_ok=True)
+    file_path = os.path.join(directory_path, "problems.json")
     
-    with open("./results/problems.json", "w") as f:
+    with open(file_path, "w") as f:
         json.dump(organized_grouping_json, f, indent=4)
 
 
@@ -452,7 +461,6 @@ def process_json_files(folder_path):
                     category = info["category"]
                     subcategory = info["subcategory"]
 
-                    #category_subcategory = category + "_" + subcategory
                     category_subcategory = CategorySubcategory(category=category, subcategory=subcategory)
 
                     grouping_info(
