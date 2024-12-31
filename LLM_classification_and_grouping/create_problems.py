@@ -222,7 +222,7 @@ def filter_classification_text(
 ) -> dict:
     info = {}
 
-    file_info = file_info.to_dict()
+    file_info = file_info.to_dict()  # this will help to store information in a JSON file
 
     try:
         info = extract_task_information(classification_text)
@@ -261,7 +261,7 @@ def grouping_info(
 
     """
 
-    file_info = file_info.to_dict() # this will help to store information
+    file_info = file_info.to_dict() # this will help to store information in a JSON file
 
     # starting grouping by CVE -> most constant info
     for cve in cves:
@@ -421,7 +421,7 @@ def process_json_files(folder_path):
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
-        if file_name.endswith(".json") and file_name.startswith("output_classification_"):
+        if file_name.endswith(".json"):
             file_path = os.path.join(folder_path, file_name)
 
             with open(file_path, "r") as file:
