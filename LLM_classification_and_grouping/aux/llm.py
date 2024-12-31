@@ -2,6 +2,7 @@ import openai
 
 from .constants import PROMPT_COMPARE_SIMILARITY, SYSTEM_PROMPT
 
+
 class LLMHandler:
     def __init__(self, ip_port: str):
         """

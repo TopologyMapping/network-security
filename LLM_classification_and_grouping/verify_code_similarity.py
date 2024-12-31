@@ -12,6 +12,7 @@ COMPARE_FILES_SIMILARS = "similars"
 DEFAULT_NUMBER_OF_FILES_COMPARED = 500
 PATTERN_ANSWER1 = re.compile(r"Answer1:\s*(.+?)\s*(?=Answer2:|$)")
 
+
 def receive_arguments():
 
     parser = argparse.ArgumentParser(
@@ -46,7 +47,9 @@ def select_cve_to_analyze(
     """
 
     cves = set(cves_unique_files) & set(info_op_nvts[key])
-    filtered_cves = [cve for cve in cves if cve.startswith("CVE")] # avoiding elements with no CVE
+    filtered_cves = [
+        cve for cve in cves if cve.startswith("CVE")
+    ]  # avoiding elements with no CVE
     return random.sample(filtered_cves, number_of_files_compared)
 
 
@@ -141,6 +144,7 @@ def compare_files_and_store_results(
         f"./results/verify_simil_openvas__similars_{category_to_compare}.json", "w"
     ) as json_file:
         json.dump(results, json_file, indent=4)
+
 
 def main():
 

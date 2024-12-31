@@ -28,37 +28,51 @@ path_prompt_LLM_system = os.path.join(current_dir, "../prompts/prompt_LLM_system
 with open(path_prompt_LLM_system, "r") as f:
     SYSTEM_PROMPT = f.read()
 
-path_prompt_what_is_detected_attack = os.path.join(current_dir, "../prompts/what_is_detected_attack.txt")
+path_prompt_what_is_detected_attack = os.path.join(
+    current_dir, "../prompts/what_is_detected_attack.txt"
+)
 
 with open(path_prompt_what_is_detected_attack, "r") as f:
     WHAT_IS_DETECTED_ATTACK = f.read()
 
-path_prompt_what_is_detected_properties = os.path.join(current_dir, "../prompts/what_is_detected_properties.txt")
+path_prompt_what_is_detected_properties = os.path.join(
+    current_dir, "../prompts/what_is_detected_properties.txt"
+)
 
 with open(path_prompt_what_is_detected_properties, "r") as f:
     WHAT_IS_DETECTED_PROPERTIES = f.read()
 
-path_prompt_what_is_detected_old_software = os.path.join(current_dir, "../prompts/what_is_detected_old_software.txt")
+path_prompt_what_is_detected_old_software = os.path.join(
+    current_dir, "../prompts/what_is_detected_old_software.txt"
+)
 
 with open(path_prompt_what_is_detected_old_software, "r") as f:
     WHAT_IS_DETECTED_OLD_SOFTWARE = f.read()
 
-path_prompt_what_is_detected = os.path.join(current_dir, "../prompts/prompt_what_is_detected.txt")
+path_prompt_what_is_detected = os.path.join(
+    current_dir, "../prompts/prompt_what_is_detected.txt"
+)
 
 with open(path_prompt_what_is_detected, "r") as f:
     PROMPT_WHAT_IS_DETECTED = f.read()
 
-path_prompt_category_attack = os.path.join(current_dir, "../prompts/category_attack.txt")
+path_prompt_category_attack = os.path.join(
+    current_dir, "../prompts/category_attack.txt"
+)
 
 with open(path_prompt_category_attack, "r") as f:
     CATEGORY_ATTACK = f.read()
 
-path_prompt_category_privileged = os.path.join(current_dir, "../prompts/category_privileged.txt")
+path_prompt_category_privileged = os.path.join(
+    current_dir, "../prompts/category_privileged.txt"
+)
 
 with open(path_prompt_category_privileged, "r") as f:
     CATEGORY_PRIVILEGED = f.read()
 
-path_prompt_category_basic_request = os.path.join(current_dir, "../prompts/category_basic_request.txt")
+path_prompt_category_basic_request = os.path.join(
+    current_dir, "../prompts/category_basic_request.txt"
+)
 
 with open(path_prompt_category_basic_request, "r") as f:
     CATEGORY_BASIC_REQUEST = f.read()
@@ -68,7 +82,9 @@ path_prompt_categories = os.path.join(current_dir, "../prompts/prompt_categories
 with open(path_prompt_categories, "r") as f:
     PROMPT_CATEGORIES = f.read()
 
-path_prompt_compare_similarity = os.path.join(current_dir, "../prompts/prompt_compare_similarity.txt")
+path_prompt_compare_similarity = os.path.join(
+    current_dir, "../prompts/prompt_compare_similarity.txt"
+)
 
 with open(path_prompt_compare_similarity, "r") as f:
     PROMPT_COMPARE_SIMILARITY = f.read()
@@ -78,12 +94,16 @@ path_openvas_qod_info = os.path.join(current_dir, "../prompts/openvas_qod_info.t
 with open(path_openvas_qod_info, "r") as f:
     QOD_INFO = f.read()
 
-prompt_metasploit_modules_ranking_info = os.path.join(current_dir, "../prompts/metasploit_modules_ranking_info.txt")
+prompt_metasploit_modules_ranking_info = os.path.join(
+    current_dir, "../prompts/metasploit_modules_ranking_info.txt"
+)
 
 with open(prompt_metasploit_modules_ranking_info, "r") as f:
     RANKING_INFO = f.read()
 
-prompt_metasploit_modules_info = os.path.join(current_dir, "../prompts/metasploit_modules_info.txt")
+prompt_metasploit_modules_info = os.path.join(
+    current_dir, "../prompts/metasploit_modules_info.txt"
+)
 
 with open(prompt_metasploit_modules_info, "r") as f:
     MODULES_INFO = f.read()
@@ -137,8 +157,9 @@ You are a cibersecurity expert. In this task we will analyze vulnerability detec
 
 Below is some reference information about Metasploit's Modules. Each Metasploit files has a module identification, with each identification representing some behavior about the code. This will be helpfull to analyze the codes presented. We precede each Module information and separate them using the special "=====" string:
 
-""" + MODULES_INFO
-+ """
+"""
+    + MODULES_INFO
+    + """
 
 #####
 
@@ -183,8 +204,9 @@ Module description: Exploit modules are used to leverage vulnerabilities in a ma
 
 Futhermore, is presented information about Metasploit ranking, representing a category received by each script that describes the behavior of Exploit modules. Again, the content is separated by '====='. Below is presented the ranking name and the description.
 
-""" + RANKING_INFO
-+ """
+"""
+    + RANKING_INFO
+    + """
 
 #####
 
@@ -227,8 +249,9 @@ Module description: Exploit modules are used to leverage vulnerabilities in a ma
 
 Futhermore, is presented information about Metasploit ranking, representing a category received by each script that describes the behavior of Exploit modules. Again, the content is separated by '====='. Below is presented the ranking name and the description.
 
-""" + RANKING_INFO
-+ """
+"""
+    + RANKING_INFO
+    + """
 
 #####
 
@@ -257,14 +280,16 @@ Below is some reference information about Metasploit's Modules. Each Metasploit 
 Module name: Exploit modules
 Module description: Exploit modules are used to leverage vulnerabilities in a manner that allows the framework to execute arbitrary code. The arbitrary code that is executed is referred to as the payload.
 
-""" + MODULES_INFO
-+ """ 
+"""
+    + MODULES_INFO
+    + """ 
 #####
 
 Futhermore, is presented information about Metasploit ranking, representing a category received by each script that describes the behavior of Exploit modules. Again, the content is separated by '====='. Below is presented the ranking name and the description.
 
-""" + RANKING_INFO
-+ """
+"""
+    + RANKING_INFO
+    + """
 
 #####
 
@@ -449,9 +474,9 @@ You are a cibersecurity expert. In this task we will analyze vulnerability detec
 
 Below is some reference information about OpenVAS's Quality of Detection (QOD) metric.  Each detection script has an associated QOD metric. The QOD varies from 0 to 100 and indicates how confident OpenVAS is that a vulnerability exists if the script reports a vulnerability. Below we list all possible QODs, specifying their values, names, and description. We precede each QOD and separate them using the special "=====" string:
 
-""" 
-+ QOD_INFO
-+ """
+"""
+    + QOD_INFO
+    + """
 
 #####
 
@@ -560,4 +585,3 @@ An OpenVAS script can work in many different ways. We want to classify how a scr
     + CATEGORY_PRIVILEGED
     + PROMPT_CATEGORIES
 )
-

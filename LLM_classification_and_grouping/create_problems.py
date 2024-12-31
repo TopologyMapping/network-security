@@ -11,12 +11,10 @@ import os
 import re
 from collections import defaultdict
 
-from dataclasses_json import dataclass_json
-
 import nltk
+from dataclasses_json import dataclass_json
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from regex import R
 
 from aux.nuclei import extract_nuclei_id, parse_nuclei_yaml
 from aux.openvas import extract_oid_openvas
@@ -26,9 +24,9 @@ nltk.download("punkt_tab")
 nltk.download("stopwords")
 STOP_WORDS = set(stopwords.words("english"))
 
-RESULTS_DIRECTORY_NAME = './results'
+RESULTS_DIRECTORY_NAME = "./results"
 
-CLASSIFICATION_FOLDER = './classification'
+CLASSIFICATION_FOLDER = "./classification"
 
 VALUES_WHAT_IS_DETECTED = [
     "Vulnerability",
@@ -54,6 +52,7 @@ VALUES_SUBCATEGORY = [
     "Discovery",
 ]
 
+
 # Classes to handle information storage
 @dataclass_json
 @dataclasses.dataclass
@@ -61,11 +60,13 @@ class FileInfo:
     file_name: str
     entry_file: str
 
+
 @dataclass_json
 @dataclasses.dataclass(frozen=True)
 class CategorySubcategory:
     category: str
     subcategory: str
+
 
 @dataclass_json
 @dataclasses.dataclass(frozen=True)
@@ -75,16 +76,21 @@ class KeysProblemsInfo:
     vuln_type: str
     vuln_name: tuple
 
+
 # Classes to handle exceptions
 class RegexError(Exception):
     """Exception raised for errors related to regular expressions."""
+
     pass
+
 
 class LLMError(Exception):
     """Exception raised for errors related to LLM processing."""
+
     pass
 
-CLASSIFICATION_RESULTS_FOLDER = './classification'
+
+CLASSIFICATION_RESULTS_FOLDER = "./classification"
 
 LLM_ERROR = "Error in LLM answer"
 REGEX_ERROR = "Error in regex match"
@@ -222,7 +228,9 @@ def filter_classification_text(
 ) -> dict:
     info = {}
 
-    file_info = file_info.to_dict()  # this will help to store information in a JSON file
+    file_info = (
+        file_info.to_dict()
+    )  # this will help to store information in a JSON file
 
     try:
         info = extract_task_information(classification_text)
@@ -252,7 +260,7 @@ def grouping_info(
             - Task2 (category and subcategory) -> not so constant, but the LLM is restricted to a few options
                 - Task1 (what is detected) -> the same case as before
                     - Task1 (application name) -> the most variable information. Could be any string
-    
+
     To know more about the classification, Taks1 and Taks2, see the file 'distributed_classification.py' and the folder 'prompts'.
 
     To handle the variability of the application name, the value is tokenized and then is compared the similarity between the tokens of the application name and the tokens of the already classified scripts. If the current script contains similar tokens, then they are grouped together. Otherwise, a new group is created.
@@ -261,7 +269,9 @@ def grouping_info(
 
     """
 
-    file_info = file_info.to_dict() # this will help to store information in a JSON file
+    file_info = (
+        file_info.to_dict()
+    )  # this will help to store information in a JSON file
 
     # starting grouping by CVE -> most constant info
     for cve in cves:
@@ -273,10 +283,15 @@ def grouping_info(
         if classification_category_subcategory not in problems[cve]:
             problems[cve][classification_category_subcategory] = {}
 
-        if classification_what_is_detected not in problems[cve][classification_category_subcategory]:
-            problems[cve][classification_category_subcategory][classification_what_is_detected] = {}
-        
-        #problems = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+        if (
+            classification_what_is_detected
+            not in problems[cve][classification_category_subcategory]
+        ):
+            problems[cve][classification_category_subcategory][
+                classification_what_is_detected
+            ] = {}
+
+        # problems = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
         tokens_application = word_tokenize(application.lower())
 
@@ -292,7 +307,7 @@ def grouping_info(
 
         # starting grouping by the classified application name. Too variable info, so it is the last to be grouped
 
-        # storing the tokens in a string to be used as a key 
+        # storing the tokens in a string to be used as a key
         # (the key is a string because the information is too variable, so it is not possible to use a dataclass as a key)
         key_tokens_taks1_application = "_".join(filtered_tokens_application) + "_"
 
@@ -305,19 +320,20 @@ def grouping_info(
         )
 
         if match_application_tokens:
-            problems[cve][classification_category_subcategory][classification_what_is_detected][
-                match_application_tokens
-            ].append(file_info)
+            problems[cve][classification_category_subcategory][
+                classification_what_is_detected
+            ][match_application_tokens].append(file_info)
             return
 
-        problems[cve][classification_category_subcategory][classification_what_is_detected][
-            key_tokens_taks1_application
-        ] = []
-        problems[cve][classification_category_subcategory][classification_what_is_detected][
-            key_tokens_taks1_application
-        ].append(file_info)
+        problems[cve][classification_category_subcategory][
+            classification_what_is_detected
+        ][key_tokens_taks1_application] = []
+        problems[cve][classification_category_subcategory][
+            classification_what_is_detected
+        ][key_tokens_taks1_application].append(file_info)
 
     return
+
 
 def convert_problems_for_serialization(problems):
     serializable_problems = {}
@@ -325,12 +341,15 @@ def convert_problems_for_serialization(problems):
         serializable_problems[cve] = {}
         for category_subcategory, inner_dict in classification.items():
             serializable_problems[cve][str(category_subcategory)] = {
-                key: [dataclasses.asdict(item) for item in value]
-                if isinstance(value, list) and isinstance(value[0], FileInfo)
-                else value
+                key: (
+                    [dataclasses.asdict(item) for item in value]
+                    if isinstance(value, list) and isinstance(value[0], FileInfo)
+                    else value
+                )
                 for key, value in inner_dict.items()
             }
     return serializable_problems
+
 
 def organizing_grouping_structure(result: dict):
     """
@@ -350,16 +369,20 @@ def organizing_grouping_structure(result: dict):
             for vuln_type, vuln_paths in attack_details.items():
                 for vuln_name, files in vuln_paths.items():
                     for file_path in files:
-                        
+
                         # Create the structured key using the dataclass
                         value = KeysProblemsInfo(
                             cve=cve,
-                            attack=attack, 
+                            attack=attack,
                             vuln_type=vuln_type,
-                            vuln_name=tuple(vuln_name.split()) if isinstance(vuln_name, str) else vuln_name,
+                            vuln_name=(
+                                tuple(vuln_name.split())
+                                if isinstance(vuln_name, str)
+                                else vuln_name
+                            ),
                         )
 
-                        script_name = file_path['entry_file']
+                        script_name = file_path["entry_file"]
 
                         if "metasploit" in script_name:
                             continue
@@ -377,12 +400,11 @@ def organizing_grouping_structure(result: dict):
                             id = extract_nuclei_id(yaml_content)
                         elif "nmap" in script_name:
                             # removing file extension
-                            id = os.path.basename(script_name).split(".")[0]  
+                            id = os.path.basename(script_name).split(".")[0]
                         else:
                             id = script_name
 
                         organized_grouping[value].append(id)
-
 
     # removing the keys that have only one value, because they are not grouped
     keys_to_delete = [
@@ -394,12 +416,14 @@ def organizing_grouping_structure(result: dict):
         del organized_grouping[key]
 
     # transforming dataclasses in dicts
-    organized_grouping_json = {str(key): value for key, value in organized_grouping.items()} 
+    organized_grouping_json = {
+        str(key): value for key, value in organized_grouping.items()
+    }
 
     directory_path = os.path.abspath(RESULTS_DIRECTORY_NAME)
     os.makedirs(directory_path, exist_ok=True)
     file_path = os.path.join(directory_path, "problems.json")
-    
+
     with open(file_path, "w") as f:
         json.dump(organized_grouping_json, f, indent=4)
 
@@ -432,19 +456,33 @@ def process_json_files(folder_path):
                 if scan_app == "tests_with_no_CVE":
                     continue
 
-                for classification_results_for_vulnerability_scanner_script in data[scan_app]:
+                for classification_results_for_vulnerability_scanner_script in data[
+                    scan_app
+                ]:
 
-                    cves = classification_results_for_vulnerability_scanner_script["cves"]
+                    cves = classification_results_for_vulnerability_scanner_script[
+                        "cves"
+                    ]
 
                     # if there is no CVE, it is stored as an empty string
                     if cves == []:
                         cves = [""]
 
                     # storing results of grouping as the classificaiton file where the script was classified together with the script name
-                    file_info = FileInfo(file_name=file_name, entry_file=classification_results_for_vulnerability_scanner_script["file"])
+                    file_info = FileInfo(
+                        file_name=file_name,
+                        entry_file=classification_results_for_vulnerability_scanner_script[
+                            "file"
+                        ],
+                    )
 
                     classification_info_extracted = filter_classification_text(
-                        classification_results_for_vulnerability_scanner_script["classification"], errors_LLM, errors_regex, file_info
+                        classification_results_for_vulnerability_scanner_script[
+                            "classification"
+                        ],
+                        errors_LLM,
+                        errors_regex,
+                        file_info,
                     )
 
                     if not classification_info_extracted:
@@ -455,7 +493,9 @@ def process_json_files(folder_path):
                     category = classification_info_extracted["category"]
                     subcategory = classification_info_extracted["subcategory"]
 
-                    category_subcategory = CategorySubcategory(category=category, subcategory=subcategory)
+                    category_subcategory = CategorySubcategory(
+                        category=category, subcategory=subcategory
+                    )
 
                     grouping_info(
                         problems,
@@ -485,15 +525,15 @@ def process_json_files(folder_path):
         "problems": sorted_problems,
         "errors_LLM": errors_LLM,
         "errors_regex": errors_regex,
-    }    
+    }
 
     directory_path = os.path.abspath(RESULTS_DIRECTORY_NAME)
     os.makedirs(directory_path, exist_ok=True)
     file_path = os.path.join(directory_path, "grouped_scripts.json")
-    
+
     with open(file_path, "w") as f:
         json.dump(result, f, indent=4)
-    
+
     organizing_grouping_structure(result)
 
 
@@ -502,7 +542,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Match classification between Nmap, OpenVAS, and Nuclei"
     )
-    parser.add_argument("--input", required=False, default=CLASSIFICATION_FOLDER, help="input folder with classification results from 'distributed_classification.py'. The default folder is [%(default)s], but inform this argument if the files are stored in other place.")
+    parser.add_argument(
+        "--input",
+        required=False,
+        default=CLASSIFICATION_FOLDER,
+        help="input folder with classification results from 'distributed_classification.py'. The default folder is [%(default)s], but inform this argument if the files are stored in other place.",
+    )
 
     args = parser.parse_args()
 
