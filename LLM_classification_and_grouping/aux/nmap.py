@@ -31,7 +31,6 @@ class NmapScriptInfo:
     cves: list
     categories: str
 
-
 # REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_nmap(content) -> list:
     cves = [match.group("cve") for match in NMAP_CVE_REGEX.finditer(content)]
