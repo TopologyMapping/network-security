@@ -10,7 +10,7 @@ from aux.nuclei import analysis_nuclei_templates
 from aux.openvas import analysis_openvas_NVTS
 from aux.utils import ScriptClassificationResult
 
-
+# class to handle calling the classification functions from each tool
 @dataclasses.dataclass
 class ToolSpec:
     name: str

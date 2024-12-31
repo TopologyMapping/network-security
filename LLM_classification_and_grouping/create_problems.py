@@ -192,7 +192,7 @@ def extract_task_information(classification_text) -> dict:
 
 
 def check_if_scripts_application_contains_similar_tokens(
-    application_tokens_list: list, filtered_tokens
+    application_tokens_list: list, filtered_tokens: list
 ) -> str:
     for token in application_tokens_list:
         sub_tokens = token.split("_")
@@ -203,7 +203,7 @@ def check_if_scripts_application_contains_similar_tokens(
     return ""
 
 
-def sort_problems(problems):
+def sort_problems(problems: dict):
     """
     This function sorts the problems dictionary by the length of the innermost list. There is no need to do this, but it is useful to see the results of the grouping.
     """
@@ -224,7 +224,7 @@ def sort_problems(problems):
 
 
 def filter_classification_text(
-    classification_text, errors_LLM: list, errors_regex: list, file_info: FileInfo
+    classification_text, errors_llm: list, errors_regex: list, file_info: FileInfo
 ) -> dict:
     info = {}
 
@@ -237,7 +237,7 @@ def filter_classification_text(
     except RegexError:
         errors_regex.append(file_info)
     except LLMError:
-        errors_LLM.append(file_info)
+        errors_llm.append(file_info)
     except Exception as e:
         print("Error: ", e)
 
@@ -251,7 +251,7 @@ def grouping_info(
     classification_what_is_detected: str,
     application: str,
     file_info: FileInfo,
-    errors_LLM: list,
+    errors_llm: list,
 ):
     """
     This function groups the information extracted from the classification text.
@@ -265,7 +265,7 @@ def grouping_info(
 
     To handle the variability of the application name, the value is tokenized and then is compared the similarity between the tokens of the application name and the tokens of the already classified scripts. If the current script contains similar tokens, then they are grouped together. Otherwise, a new group is created.
 
-    This functions performs changes in the 'problems' dictionary and in the 'errors_LLM' list. So nothing is returned.
+    This functions performs changes in the 'problems' dictionary and in the 'errors_llm' list. So nothing is returned.
 
     """
 
@@ -302,7 +302,7 @@ def grouping_info(
         # if the application name contains too much tokens, it is not useful for grouping (could be a LLM error). The value 6 is arbitrary
         check_if_application_name_is_too_long = len(filtered_tokens_application)
         if check_if_application_name_is_too_long > 6:
-            errors_LLM.append(file_info)
+            errors_llm.append(file_info)
             return
 
         # starting grouping by the classified application name. Too variable info, so it is the last to be grouped
@@ -333,23 +333,6 @@ def grouping_info(
         ][key_tokens_taks1_application].append(file_info)
 
     return
-
-
-def convert_problems_for_serialization(problems):
-    serializable_problems = {}
-    for cve, classification in problems.items():
-        serializable_problems[cve] = {}
-        for category_subcategory, inner_dict in classification.items():
-            serializable_problems[cve][str(category_subcategory)] = {
-                key: (
-                    [dataclasses.asdict(item) for item in value]
-                    if isinstance(value, list) and isinstance(value[0], FileInfo)
-                    else value
-                )
-                for key, value in inner_dict.items()
-            }
-    return serializable_problems
-
 
 def organizing_grouping_structure(result: dict):
     """
@@ -428,7 +411,7 @@ def organizing_grouping_structure(result: dict):
         json.dump(organized_grouping_json, f, indent=4)
 
 
-def process_json_files(folder_path):
+def process_json_files(folder_path: str):
     """
     Processes JSON files in the folder and extracts required information.
     :param folder_path: Path to the folder containing JSON files.
@@ -441,7 +424,7 @@ def process_json_files(folder_path):
     """
 
     problems: dict = {}
-    errors_LLM: list = []
+    errors_llm: list = []
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
@@ -480,7 +463,7 @@ def process_json_files(folder_path):
                         classification_results_for_vulnerability_scanner_script[
                             "classification"
                         ],
-                        errors_LLM,
+                        errors_llm,
                         errors_regex,
                         file_info,
                     )
@@ -504,7 +487,7 @@ def process_json_files(folder_path):
                         what_is_detected,
                         application,
                         file_info,
-                        errors_LLM,
+                        errors_llm,
                     )
 
     # transform dataclasses in dicts
@@ -520,10 +503,10 @@ def process_json_files(folder_path):
 
     result = {
         "len_problems": len(sorted_problems),
-        "len_errors_LLM": len(errors_LLM),
+        "len_errors_llm": len(errors_llm),
         "len_errors_regex": len(errors_regex),
         "problems": sorted_problems,
-        "errors_LLM": errors_LLM,
+        "errors_llm": errors_llm,
         "errors_regex": errors_regex,
     }
 

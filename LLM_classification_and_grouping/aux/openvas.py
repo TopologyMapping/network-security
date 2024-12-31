@@ -218,7 +218,7 @@ def classification_openvas(content, qod_value: int, qod_type: str, llm) -> str:
 
 
 def analysis_openvas_NVTS(
-    openvas_folder, initial_range, final_range, ip_port
+    openvas_folder: str, initial_range: int, final_range: int, ip_port: str
 ) -> ScriptClassificationResult:
     """
     How the function works:

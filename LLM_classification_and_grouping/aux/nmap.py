@@ -18,6 +18,12 @@ from .utils import ScriptClassificationResult, read_file_with_fallback
 """
 FILE_EXTENSION_NMAP = ".nse"
 
+BRUTE_FORCE_CATEGORY = "brute"
+DOS_CATEGORY = "dos"
+DISCOVERY_CATEGORY = "discovery"
+SAFE_CATEGORY = "safe"
+INTRUSIVE_CATEGORIES = ["exploit", "malware", "vuln"]
+
 NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
 NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
 
@@ -55,7 +61,7 @@ def classification_nmap(categorie: str, content, llm) -> str:
 
     classification: str = ""
 
-    if "brute" in categorie:
+    if BRUTE_FORCE_CATEGORY in categorie:
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_BRUTE_DOS
         )
@@ -70,7 +76,7 @@ def classification_nmap(categorie: str, content, llm) -> str:
 
         classification += category_privileged_exploit
 
-    elif "dos" in categorie:
+    elif DOS_CATEGORY in categorie:
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_BRUTE_DOS
         )
@@ -85,7 +91,7 @@ def classification_nmap(categorie: str, content, llm) -> str:
 
         classification += category_privileged_exploit
 
-    elif "discovery" in categorie and "safe" in categorie:
+    elif DISCOVERY_CATEGORY in categorie and SAFE_CATEGORY in categorie:
         # 'safe' included because there is 'intrusive' codes that receives 'discovery' categorie, even when performs attacks
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_DISCOVERY
@@ -102,8 +108,8 @@ def classification_nmap(categorie: str, content, llm) -> str:
         classification += category_privileged_exploit
 
     elif (
-        "exploit" in categorie or "malware" in categorie or "vuln" in categorie
-    ) and "safe" not in categorie:
+        any(intrusive in categorie for intrusive in INTRUSIVE_CATEGORIES)
+    ) and SAFE_CATEGORY not in categorie:
 
         classification = llm.classification_text_generation(content, PROMPT_NMAP_ATTACK)
 
@@ -114,7 +120,7 @@ def classification_nmap(categorie: str, content, llm) -> str:
 
 
 def analysis_nmap_scripts(
-    nmap_folder, initial_range, final_range, ip_port
+    nmap_folder: str, initial_range: int, final_range: int, ip_port: str
 ) -> ScriptClassificationResult:
     """
     How the function works:
