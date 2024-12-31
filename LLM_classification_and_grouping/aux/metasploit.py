@@ -3,10 +3,13 @@ import os
 import re
 import time
 
-from .constants import (PROMPT_METASPLOIT_EXPLOIT,
-                        PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
-                        PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
-                        PROMPT_METASPLOIT_POST, PROMPT_METASPLOIT_PRIVILEGED)
+from .constants import (
+    PROMPT_METASPLOIT_EXPLOIT,
+    PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
+    PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
+    PROMPT_METASPLOIT_POST,
+    PROMPT_METASPLOIT_PRIVILEGED,
+)
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
@@ -18,6 +21,7 @@ from .utils import ScriptClassificationResult, read_file_with_fallback
 """
 from dataclasses_json import dataclass_json
 
+
 # class to organize information about the Metasploit script
 @dataclass_json
 @dataclasses.dataclass
@@ -27,6 +31,7 @@ class MetasploitModulesInfo:
     cves: list
     module: str
     classification: str
+
 
 PRIVILEGED_REGEX = re.compile(
     r"'Privileged'\s*=>\s*(?P<privileged>true|false)\s*,", re.IGNORECASE
@@ -185,10 +190,11 @@ def analysis_metasploit_modules(
             cves=cves,
             module=module,
             privileged=privileged,
-            classification=classification
+            classification=classification,
         ).to_dict()
 
         metasploit_info.append(info)
 
-    return ScriptClassificationResult(scripts_with_cves=metasploit_info, scripts_without_cves=modules_with_no_CVE)
-
+    return ScriptClassificationResult(
+        scripts_with_cves=metasploit_info, scripts_without_cves=modules_with_no_CVE
+    )

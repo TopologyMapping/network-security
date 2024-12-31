@@ -3,12 +3,12 @@ import os
 import re
 import time
 
+from dataclasses_json import dataclass_json
+
 from .constants import (PROMPT_NMAP, PROMPT_NMAP_ATTACK, PROMPT_NMAP_BRUTE_DOS,
                         PROMPT_NMAP_DISCOVERY)
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
-
-from dataclasses_json import dataclass_json
 
 """
     This file contains the functions to classify Nmap scripts.
@@ -21,6 +21,7 @@ FILE_EXTENSION_NMAP = ".nse"
 NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
 NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
 
+
 # class to organize information about the Nmap script
 @dataclass_json
 @dataclasses.dataclass
@@ -30,6 +31,7 @@ class NmapScriptInfo:
     name: str
     cves: list
     categories: str
+
 
 # REGEX FUNCTIONS TO EXTRACT INFO
 def extract_cve_nmap(content) -> list:
@@ -111,7 +113,9 @@ def classification_nmap(categorie: str, content, llm) -> str:
     return classification
 
 
-def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> ScriptClassificationResult:
+def analysis_nmap_scripts(
+    nmap_folder, initial_range, final_range, ip_port
+) -> ScriptClassificationResult:
     """
     How the function works:
         This file handles the classification of Nmap scripts. Useful information is taken from the file metadata to perform the classification, and then sent to the LLM that will perform the task.
@@ -166,11 +170,11 @@ def analysis_nmap_scripts(nmap_folder, initial_range, final_range, ip_port) -> S
             cves=cves,
             name=file_name,
             categories=categories,
-            classification=classification
+            classification=classification,
         ).to_dict()
 
         nmap_info.append(info)
 
-    return ScriptClassificationResult(scripts_with_cves=nmap_info, scripts_without_cves=scripts_with_no_CVE)
-
-
+    return ScriptClassificationResult(
+        scripts_with_cves=nmap_info, scripts_without_cves=scripts_with_no_CVE
+    )

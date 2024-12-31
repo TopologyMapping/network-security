@@ -1,11 +1,13 @@
 import dataclasses
 import os
 
+
 # class to organize results from classification
 @dataclasses.dataclass
 class ScriptClassificationResult:
     scripts_with_cves: list[str]
     scripts_without_cves: list[str]
+
 
 # Try to read file with different encodings
 def read_file_with_fallback(file_path):

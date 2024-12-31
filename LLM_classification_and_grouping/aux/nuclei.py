@@ -1,10 +1,15 @@
 import dataclasses
-from dataclasses_json import dataclass_json
 import os
 import time
-import yaml
 
-from .constants import (PROMPT_NUCLEI, PROMPT_NUCLEI_AUTH_BYPASS, PROMPT_NUCLEI_REMOTE_CODE_EXECUTION)
+import yaml
+from dataclasses_json import dataclass_json
+
+from .constants import (
+    PROMPT_NUCLEI,
+    PROMPT_NUCLEI_AUTH_BYPASS,
+    PROMPT_NUCLEI_REMOTE_CODE_EXECUTION,
+)
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
@@ -17,8 +22,9 @@ from .utils import ScriptClassificationResult, read_file_with_fallback
 
 FILE_EXTENSION_NUCLEI = ".yaml"
 
-REMOTE_CODE_EXECUTION_TAGS : set = {"rce", "sqli", "xss", "injection"}
-AUTH_BYPASS_TAGS : set = {"auth-bypass", "unauth", "default-login"}
+REMOTE_CODE_EXECUTION_TAGS: set = {"rce", "sqli", "xss", "injection"}
+AUTH_BYPASS_TAGS: set = {"auth-bypass", "unauth", "default-login"}
+
 
 # class to organize information about the Nuclei script
 @dataclass_json
@@ -28,6 +34,7 @@ class NucleiTemplateInfo:
     cves: list[str]
     id: str
     classification: str
+
 
 # get information from the Nuclei YAML file
 def parse_nuclei_yaml(content) -> dict:
@@ -40,14 +47,19 @@ def parse_nuclei_yaml(content) -> dict:
         print(f"Error parsing YAML content: {e}")
         return {}
 
+
 def extract_cve_nuclei(yaml_data: dict) -> list:
     try:
-        return yaml_data["info"]["classification"]["cve-id"] # nuclei structure to get cve-id
+        return yaml_data["info"]["classification"][
+            "cve-id"
+        ]  # nuclei structure to get cve-id
     except:
         return []
 
+
 def extract_nuclei_id(yaml_data: dict) -> str:
     return yaml_data.get("id", "")
+
 
 def extract_nuclei_tags(yaml_data: dict) -> list:
     try:
@@ -55,6 +67,7 @@ def extract_nuclei_tags(yaml_data: dict) -> list:
         return str_tags.split(",")
     except:
         return []
+
 
 def classification_nuclei(tags: list, content, llm) -> str:
     """
@@ -143,7 +156,6 @@ def analysis_nuclei_templates(
 
         cves = extract_cve_nuclei(yaml_data)
 
-
         if not cves:
 
             templates_with_no_CVE.append(nuclei_file)
@@ -167,5 +179,6 @@ def analysis_nuclei_templates(
 
         nuclei_info.append(info)
 
-    return ScriptClassificationResult(scripts_with_cves=nuclei_info, scripts_without_cves=templates_with_no_CVE)
-
+    return ScriptClassificationResult(
+        scripts_with_cves=nuclei_info, scripts_without_cves=templates_with_no_CVE
+    )
