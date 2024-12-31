@@ -40,7 +40,7 @@ def receive_arguments():
 
 
 def select_cve_to_analyze(
-    number_of_files_compared: int, cves_unique_files, info_op_nvts: dict, key: str
+    number_of_files_compared: int, cves_unique_files: list, info_op_nvts: dict, key: str
 ):
     """
     This functions selects a random CVE to be analyzed. The selected CVE must be in the list of unique files and in the list of files to be analyzed, so its possible to compare the files.
@@ -68,7 +68,7 @@ def get_similarity_classification_info(result: str):
     return answer, explanation
 
 
-def select_random_files_to_analyze(cve, info_op_nvts, key: str):
+def select_random_files_to_analyze(cve: str, info_op_nvts: dict, key: str):
     """
     This functions selects two random files to be compared. The first file is a unique file and the second file is a file from one of the categories to be compared (key = could be 'maybe_similars' or 'similars').
     """
@@ -92,7 +92,7 @@ def init_classification(file1, file2, llm):
 
 
 def compare_files_and_store_results(
-    info_op_nvts, category_to_compare: str, number_of_files_compared: int, llm
+    info_op_nvts: dict, category_to_compare: str, number_of_files_compared: int, llm
 ):
     """
     This functions realizes all the steps to compare the files and store the results. The files to be compared are selected, then classified, the answer analyzed and the results stored in a json file.
@@ -108,7 +108,7 @@ def compare_files_and_store_results(
     results["no"] = 0
     results["errors"] = []
 
-    cves_main_files = list(info_op_nvts["main_files"].keys())
+    cves_main_files : list = list(info_op_nvts["main_files"].keys())
 
     cves_selected = select_cve_to_analyze(
         number_of_files_compared, cves_main_files, info_op_nvts, category_to_compare
@@ -153,7 +153,7 @@ def main():
     llm = LLMHandler(args.ip_port)
 
     with open(args.input, "r") as file:
-        info_op_nvts = json.load(file)
+        info_op_nvts : dict = json.load(file)
 
     compare_files_and_store_results(
         info_op_nvts, COMPARE_FILES_MAYBE_SIMILARS, args.number_of_files_compared, llm

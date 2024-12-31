@@ -113,7 +113,7 @@ def classification_nuclei(tags: list, content, llm) -> str:
 
 
 def analysis_nuclei_templates(
-    nuclei_folder, initial_range, final_range, ip_port
+    nuclei_folder: str, initial_range: int, final_range: int, ip_port: str
 ) -> ScriptClassificationResult:
     """
     How the function works:

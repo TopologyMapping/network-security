@@ -124,7 +124,7 @@ def classification_metasploit(
 
 
 def analysis_metasploit_modules(
-    metasploit_folder, initial_range, final_range, ip_port
+    metasploit_folder: str, initial_range: int, final_range: int, ip_port: str
 ) -> ScriptClassificationResult:
     """
     How the function works:
