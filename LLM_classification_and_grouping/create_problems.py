@@ -55,6 +55,7 @@ VALUES_SUBCATEGORY = [
 ]
 
 # Classes to handle information storage
+@dataclass_json
 @dataclasses.dataclass
 class FileInfo:
     file_name: str
@@ -73,11 +74,6 @@ class KeysProblemsInfo:
     attack: CategorySubcategory
     vuln_type: str
     vuln_name: tuple
-
-def dataclass_to_dict(obj):
-    if dataclasses.is_dataclass(obj):
-        return {k: dataclass_to_dict(v) for k, v in obj.__dict__.items()}
-    return obj
 
 # Classes to handle exceptions
 class RegexError(Exception):
@@ -222,15 +218,18 @@ def sort_problems(problems):
 
 
 def filter_classification_text(
-    classification_text, errors_LLM, errors_regex, info_to_store
+    classification_text, errors_LLM: list, errors_regex: list, file_info: FileInfo
 ) -> dict:
     info = {}
+
+    file_info = file_info.to_dict()
+
     try:
         info = extract_task_information(classification_text)
     except RegexError:
-        errors_regex.append(info_to_store)
+        errors_regex.append(file_info)
     except LLMError:
-        errors_LLM.append(info_to_store)
+        errors_LLM.append(file_info)
     except Exception as e:
         print("Error: ", e)
 
@@ -243,7 +242,7 @@ def grouping_info(
     classification_category_subcategory: CategorySubcategory,
     classification_what_is_detected: str,
     application: str,
-    info_to_store: FileInfo,
+    file_info: FileInfo,
     errors_LLM: list,
 ):
     """
@@ -261,6 +260,9 @@ def grouping_info(
     This functions performs changes in the 'problems' dictionary and in the 'errors_LLM' list. So nothing is returned.
 
     """
+
+    file_info = file_info.to_dict() # this will help to store information
+
     # starting grouping by CVE -> most constant info
     for cve in cves:
 
@@ -285,7 +287,7 @@ def grouping_info(
         # if the application name contains too much tokens, it is not useful for grouping (could be a LLM error). The value 6 is arbitrary
         check_if_application_name_is_too_long = len(filtered_tokens_application)
         if check_if_application_name_is_too_long > 6:
-            errors_LLM.append(info_to_store)
+            errors_LLM.append(file_info)
             return
 
         # starting grouping by the classified application name. Too variable info, so it is the last to be grouped
@@ -305,7 +307,7 @@ def grouping_info(
         if match_application_tokens:
             problems[cve][classification_category_subcategory][classification_what_is_detected][
                 match_application_tokens
-            ].append(info_to_store)
+            ].append(file_info)
             return
 
         problems[cve][classification_category_subcategory][classification_what_is_detected][
@@ -313,10 +315,22 @@ def grouping_info(
         ] = []
         problems[cve][classification_category_subcategory][classification_what_is_detected][
             key_tokens_taks1_application
-        ].append(info_to_store)
+        ].append(file_info)
 
     return
 
+def convert_problems_for_serialization(problems):
+    serializable_problems = {}
+    for cve, classification in problems.items():
+        serializable_problems[cve] = {}
+        for category_subcategory, inner_dict in classification.items():
+            serializable_problems[cve][str(category_subcategory)] = {
+                key: [dataclasses.asdict(item) for item in value]
+                if isinstance(value, list) and isinstance(value[0], FileInfo)
+                else value
+                for key, value in inner_dict.items()
+            }
+    return serializable_problems
 
 def organizing_grouping_structure(result: dict):
     """
@@ -345,7 +359,7 @@ def organizing_grouping_structure(result: dict):
                             vuln_name=tuple(vuln_name.split()) if isinstance(vuln_name, str) else vuln_name,
                         )
 
-                        script_name = file_path.entry_file
+                        script_name = file_path['entry_file']
 
                         if "metasploit" in script_name:
                             continue
@@ -398,6 +412,8 @@ def process_json_files(folder_path):
 
     Important: The input file must be a JSON file containing the classification information of the scripts, performed by the code in the 'distributed_classification.py' script.
 
+    The output is stored in ./results/grouped_scripts.json
+
     """
 
     problems: dict = {}
@@ -416,30 +432,28 @@ def process_json_files(folder_path):
                 if scan_app == "tests_with_no_CVE":
                     continue
 
-                for entry in data[scan_app]:
+                for classification_results_for_vulnerability_scanner_script in data[scan_app]:
 
-                    cves = entry["cves"]
+                    cves = classification_results_for_vulnerability_scanner_script["cves"]
 
                     # if there is no CVE, it is stored as an empty string
                     if cves == []:
                         cves = [""]
 
                     # storing results of grouping as the classificaiton file where the script was classified together with the script name
-                    info_to_store = FileInfo(file_name=file_name, entry_file=entry["file"])
+                    file_info = FileInfo(file_name=file_name, entry_file=classification_results_for_vulnerability_scanner_script["file"])
 
                     classification_info_extracted = filter_classification_text(
-                        entry["classification"], errors_LLM, errors_regex, info_to_store
+                        classification_results_for_vulnerability_scanner_script["classification"], errors_LLM, errors_regex, file_info
                     )
 
                     if not classification_info_extracted:
                         continue
 
-                    info = classification_info_extracted
-
-                    what_is_detected = info["what_is_detected"]
-                    application = info["application"]
-                    category = info["category"]
-                    subcategory = info["subcategory"]
+                    what_is_detected = classification_info_extracted["what_is_detected"]
+                    application = classification_info_extracted["application"]
+                    category = classification_info_extracted["category"]
+                    subcategory = classification_info_extracted["subcategory"]
 
                     category_subcategory = CategorySubcategory(category=category, subcategory=subcategory)
 
@@ -449,11 +463,20 @@ def process_json_files(folder_path):
                         category_subcategory,
                         what_is_detected,
                         application,
-                        info_to_store,
+                        file_info,
                         errors_LLM,
                     )
 
-    sorted_problems = sort_problems(problems)
+    # transform dataclasses in dicts
+    serializable_problems = {
+        cve: {
+            str(category_subcategory): inner_dict
+            for category_subcategory, inner_dict in classification.items()
+        }
+        for cve, classification in problems.items()
+    }
+
+    sorted_problems = sort_problems(serializable_problems)
 
     result = {
         "len_problems": len(sorted_problems),
@@ -462,7 +485,14 @@ def process_json_files(folder_path):
         "problems": sorted_problems,
         "errors_LLM": errors_LLM,
         "errors_regex": errors_regex,
-    }
+    }    
+
+    directory_path = os.path.abspath(RESULTS_DIRECTORY_NAME)
+    os.makedirs(directory_path, exist_ok=True)
+    file_path = os.path.join(directory_path, "grouped_scripts.json")
+    
+    with open(file_path, "w") as f:
+        json.dump(result, f, indent=4)
     
     organizing_grouping_structure(result)
 
