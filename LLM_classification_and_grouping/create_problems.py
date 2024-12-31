@@ -16,6 +16,7 @@ from dataclasses_json import dataclass_json
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from regex import R
 
 from aux.nuclei import extract_nuclei_id, parse_nuclei_yaml
 from aux.openvas import extract_oid_openvas
@@ -65,15 +66,6 @@ class CategorySubcategory:
     category: str
     subcategory: str
 
-    """ def __hash__(self):
-        # Combine the hashes of category and subcategory for the overall hash
-        return hash((self.category, self.subcategory))
-
-    def __eq__(self, other):
-        if isinstance(other, CategorySubcategory):
-            return (self.category, self.subcategory) == (other.category, other.subcategory)
-        return False """
-
 @dataclass_json
 @dataclasses.dataclass(frozen=True)
 class KeysProblemsInfo:
@@ -82,36 +74,19 @@ class KeysProblemsInfo:
     vuln_type: str
     vuln_name: tuple
 
-    # defining functions to be able to store results in a json file
-    """ def __hash__(self):
-        return hash((self.cve, 
-                     self.attack.category, 
-                     self.attack.subcategory, 
-                     self.vuln_type, 
-                     self.vuln_name))
-
-    def __eq__(self, other):
-        if not isinstance(other, KeysProblemsInfo):
-            return False
-        return (self.cve == other.cve and 
-                self.attack.category == other.attack.category and 
-                self.attack.subcategory == other.attack.subcategory and 
-                self.vuln_type == other.vuln_type and 
-                self.vuln_name == other.vuln_name)
-
-    def to_dict(self):
-        return {
-            'cve': self.cve,
-            'attack': {'category': self.attack.category, 'subcategory': self.attack.subcategory},
-            'vuln_type': self.vuln_type,
-            'vuln_name': list(self.vuln_name)  # Convert tuple to list for JSON serialization
-        } """
-
-
 def dataclass_to_dict(obj):
     if dataclasses.is_dataclass(obj):
         return {k: dataclass_to_dict(v) for k, v in obj.__dict__.items()}
     return obj
+
+# Classes to handle exceptions
+class RegexError(Exception):
+    """Exception raised for errors related to regular expressions."""
+    pass
+
+class LLMError(Exception):
+    """Exception raised for errors related to LLM processing."""
+    pass
 
 CLASSIFICATION_RESULTS_FOLDER = './classification'
 
@@ -194,14 +169,14 @@ def extract_task_information(classification_text) -> dict:
 
     # Validation checks
     if task2_subcategory == "" or task2_category == "" or task1_what_is_detected == "":
-        raise Exception(REGEX_ERROR)
+        raise RegexError()
 
     if (
         task2_subcategory not in VALUES_SUBCATEGORY
         or task2_category not in VALUES_CATEGORY
         or task1_what_is_detected not in VALUES_WHAT_IS_DETECTED
     ):
-        raise Exception(LLM_ERROR)
+        raise LLMError()
 
     # Return extracted information
     information = {
@@ -252,11 +227,12 @@ def filter_classification_text(
     info = {}
     try:
         info = extract_task_information(classification_text)
+    except RegexError:
+        errors_regex.append(info_to_store)
+    except LLMError:
+        errors_LLM.append(info_to_store)
     except Exception as e:
-        if REGEX_ERROR in str(e):
-            errors_regex.append(info_to_store)
-        elif LLM_ERROR in str(e):
-            errors_LLM.append(info_to_store)
+        print("Error: ", e)
 
     return info
 
