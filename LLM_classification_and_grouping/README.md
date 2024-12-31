@@ -62,3 +62,5 @@ Now, to analyze the results of the LLM classification, the file `create_problems
 To run the code, just type:
 
 `python3 create_problems.py --input <INPUT_FOLDER_WITH_CLASSIFICATION_FILES>`
+
+If everything worked correctly, the input folder with classification files will be ./classification (as defined in the `distributed_classification.py` script).
