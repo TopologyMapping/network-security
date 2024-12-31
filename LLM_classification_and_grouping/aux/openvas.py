@@ -37,13 +37,11 @@ class OpenvasSimilarityResults:
     maybe_similars: dict
     NVTS_with_no_CVE: list
 
-
 @dataclass_json
 @dataclasses.dataclass(frozen=True)
 class CVE_QOD_Key:
-    cves: tuple
+    cves: tuple[str, ...] 
     qod_type: str
-
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
 QOD_VALUE = {
@@ -259,6 +257,7 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
         start_time = time.time()
 
         classification = classification_openvas(content, qod_value, qod_type, llm)
+        classification = ''
 
         end_time = time.time()
         elapsed_time = end_time - start_time
@@ -273,6 +272,7 @@ def analysis_openvas_NVTS(openvas_folder, initial_range, final_range, ip_port) -
         ).to_dict()
 
         openvas_info.append(info)
+        break
 
     return ScriptClassificationResult(scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE)
 
