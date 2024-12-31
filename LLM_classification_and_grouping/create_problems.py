@@ -240,19 +240,21 @@ def filter_classification_text(
 def grouping_info(
     problems: dict,
     cves: list,
-    category_subcategory: CategorySubcategory,
-    what_is_detected: str,
+    classification_category_subcategory: CategorySubcategory,
+    classification_what_is_detected: str,
     application: str,
     info_to_store: FileInfo,
     errors_LLM: list,
 ):
     """
     This function groups the information extracted from the classification text.
-    The ideia is to group the classified scripts by):
+    The ideia is to group the classified scripts by the clasification performed by the LLM model:
         - CVE (deterministic information, the most constant)
-        - Task2 (category and subcategory) -> not so constant, but the LLM is restricted to a few options
-        - Task1 (what is detected) -> the same case as before
-        - Task1 (application name) -> the most variable information. Could be any string
+            - Task2 (category and subcategory) -> not so constant, but the LLM is restricted to a few options
+                - Task1 (what is detected) -> the same case as before
+                    - Task1 (application name) -> the most variable information. Could be any string
+    
+    To know more about the classification, Taks1 and Taks2, see the file 'distributed_classification.py' and the folder 'prompts'.
 
     To handle the variability of the application name, the value is tokenized and then is compared the similarity between the tokens of the application name and the tokens of the already classified scripts. If the current script contains similar tokens, then they are grouped together. Otherwise, a new group is created.
 
@@ -266,11 +268,13 @@ def grouping_info(
             problems[cve] = {}
 
         # grouping by constant info again (task2 refers to the category and subcategory)
-        if category_subcategory not in problems[cve]:
-            problems[cve][category_subcategory] = {}
+        if classification_category_subcategory not in problems[cve]:
+            problems[cve][classification_category_subcategory] = {}
 
-        if what_is_detected not in problems[cve][category_subcategory]:
-            problems[cve][category_subcategory][what_is_detected] = {}
+        if classification_what_is_detected not in problems[cve][classification_category_subcategory]:
+            problems[cve][classification_category_subcategory][classification_what_is_detected] = {}
+        
+        #problems = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
         tokens_application = word_tokenize(application.lower())
 
@@ -279,8 +283,8 @@ def grouping_info(
         ]
 
         # if the application name contains too much tokens, it is not useful for grouping (could be a LLM error). The value 6 is arbitrary
-        CHECK_IF_APPLICATION_NAME_IS_TOO_LONG = len(filtered_tokens_application)
-        if CHECK_IF_APPLICATION_NAME_IS_TOO_LONG > 6:
+        check_if_application_name_is_too_long = len(filtered_tokens_application)
+        if check_if_application_name_is_too_long > 6:
             errors_LLM.append(info_to_store)
             return
 
@@ -290,8 +294,8 @@ def grouping_info(
         # (the key is a string because the information is too variable, so it is not possible to use a dataclass as a key)
         key_tokens_taks1_application = "_".join(filtered_tokens_application) + "_"
 
-        application_tokens_list = problems[cve][category_subcategory][
-            what_is_detected
+        application_tokens_list = problems[cve][classification_category_subcategory][
+            classification_what_is_detected
         ].keys()
 
         match_application_tokens = check_if_scripts_application_contains_similar_tokens(
@@ -299,15 +303,15 @@ def grouping_info(
         )
 
         if match_application_tokens:
-            problems[cve][category_subcategory][what_is_detected][
+            problems[cve][classification_category_subcategory][classification_what_is_detected][
                 match_application_tokens
             ].append(info_to_store)
             return
 
-        problems[cve][category_subcategory][what_is_detected][
+        problems[cve][classification_category_subcategory][classification_what_is_detected][
             key_tokens_taks1_application
         ] = []
-        problems[cve][category_subcategory][what_is_detected][
+        problems[cve][classification_category_subcategory][classification_what_is_detected][
             key_tokens_taks1_application
         ].append(info_to_store)
 
