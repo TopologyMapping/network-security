@@ -52,7 +52,7 @@ def receive_arguments():
     parser.add_argument(
         "--output",
         required=True,
-        help="Output JSON file name. Inform just the name, without the extension.",
+        help="Output JSON file name.",
     )
     parser.add_argument("--ip_port", required=True, help="LLM IP and port.")
 
