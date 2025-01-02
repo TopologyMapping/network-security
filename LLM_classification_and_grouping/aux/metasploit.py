@@ -31,6 +31,7 @@ class MetasploitModulesInfo:
     cves: list
     module: str
     classification: str
+    id: str # the Metasploit id is the file name
 
 
 PRIVILEGED_REGEX = re.compile(
@@ -161,7 +162,7 @@ def analysis_metasploit_modules(
 
         cves = extract_cve_from_metasploit(content)
 
-        if not (cves):
+        if not cves:
 
             modules_with_no_CVE.append(metasploit_file)
 
@@ -174,6 +175,8 @@ def analysis_metasploit_modules(
         privileged = extract_privileged_metasploit(content)
 
         executes_exploit = execute_exploit_metasploit(content)
+
+        name = extract_name_metasploit(content)
 
         start_time = time.time()
 
@@ -191,6 +194,7 @@ def analysis_metasploit_modules(
             module=module,
             privileged=privileged,
             classification=classification,
+            id=name,
         ).to_dict()
 
         metasploit_info.append(info)

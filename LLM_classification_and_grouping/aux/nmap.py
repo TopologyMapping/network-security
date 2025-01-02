@@ -34,7 +34,7 @@ NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}
 class NmapScriptInfo:
     file: str
     classification: str
-    name: str
+    id: str # the Nmap id is the file name
     cves: list
     categories: str
 
@@ -155,7 +155,7 @@ def analysis_nmap_scripts(
 
         cves = extract_cve_nmap(content)
 
-        if not (cves):
+        if not cves:
 
             scripts_with_no_CVE.append(nmap_file)
 

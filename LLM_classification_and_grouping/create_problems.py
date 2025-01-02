@@ -57,8 +57,9 @@ VALUES_SUBCATEGORY = [
 @dataclass_json
 @dataclasses.dataclass
 class FileInfo:
-    file_name: str
-    entry_file: str
+    classification_file_name: str
+    vulnerability_tool_script_name: str
+    script_id: str # the id is used to store the information in the Defect Dojo application
 
 
 @dataclass_json
@@ -346,12 +347,12 @@ def organizing_grouping_structure(result: dict):
     """
     organized_grouping = defaultdict(list)
 
-    # Traverse the nested dictionary structure -> there is not too much information to be extracted. The CVE could contain multiple values, but the other keys are more limited
+    # Traverse the nested dictionary structure -> there is not too much information to be extracted (in practice, the code is not O(n^5)). The CVE could contain multiple values, but the other keys are more limited
     for cve, attacks in result["problems"].items():
         for attack, attack_details in attacks.items():
             for vuln_type, vuln_paths in attack_details.items():
-                for vuln_name, files in vuln_paths.items():
-                    for file_path in files:
+                for vuln_name, files_info in vuln_paths.items():
+                    for file_info in files_info:
 
                         # Create the structured key using the dataclass
                         value = KeysProblemsInfo(
@@ -365,27 +366,12 @@ def organizing_grouping_structure(result: dict):
                             ),
                         )
 
-                        script_name = file_path["entry_file"]
+                        script_name = file_info["vulnerability_tool_script_name"]
 
                         if "metasploit" in script_name:
                             continue
 
-                        try:
-                            file_content = read_file_with_fallback(script_name)
-                        except:
-                            print("File not found: ", script_name)
-                            continue
-
-                        if "openvas" in script_name:
-                            id = extract_oid_openvas(file_content)
-                        elif "nuclei" in script_name:
-                            yaml_content = parse_nuclei_yaml(file_content)
-                            id = extract_nuclei_id(yaml_content)
-                        elif "nmap" in script_name:
-                            # removing file extension
-                            id = os.path.basename(script_name).split(".")[0]
-                        else:
-                            id = script_name
+                        id = file_info["script_id"]
 
                         organized_grouping[value].append(id)
 
@@ -407,6 +393,7 @@ def organizing_grouping_structure(result: dict):
     os.makedirs(directory_path, exist_ok=True)
     file_path = os.path.join(directory_path, "problems.json")
 
+    print("Saving results in ", file_path)
     with open(file_path, "w") as f:
         json.dump(organized_grouping_json, f, indent=4)
 
@@ -428,7 +415,7 @@ def process_json_files(folder_path: str):
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
-        if file_name.endswith(".json"):
+        if file_name.endswith(".json") and file_name.startswith("output_classification_40gb_7700_8150_openvas_nuclei"):
             file_path = os.path.join(folder_path, file_name)
 
             with open(file_path, "r") as file:
@@ -447,16 +434,17 @@ def process_json_files(folder_path: str):
                         "cves"
                     ]
 
-                    # if there is no CVE, it is stored as an empty string
+                    # if there is no CVE, it is stored as an empty string to be used as a key in the dictionary
                     if cves == []:
                         cves = [""]
-
+                    
                     # storing results of grouping as the classificaiton file where the script was classified together with the script name
                     file_info = FileInfo(
-                        file_name=file_name,
-                        entry_file=classification_results_for_vulnerability_scanner_script[
+                        classification_file_name=file_name,
+                        vulnerability_tool_script_name=classification_results_for_vulnerability_scanner_script[
                             "file"
                         ],
+                        script_id=classification_results_for_vulnerability_scanner_script["script_id"],
                     )
 
                     classification_info_extracted = filter_classification_text(
@@ -489,6 +477,8 @@ def process_json_files(folder_path: str):
                         file_info,
                         errors_llm,
                     )
+    
+    print(problems[""])
 
     # transform dataclasses in dicts
     serializable_problems = {
@@ -514,6 +504,7 @@ def process_json_files(folder_path: str):
     os.makedirs(directory_path, exist_ok=True)
     file_path = os.path.join(directory_path, "grouped_scripts.json")
 
+    print("Saving results in ", file_path)
     with open(file_path, "w") as f:
         json.dump(result, f, indent=4)
 

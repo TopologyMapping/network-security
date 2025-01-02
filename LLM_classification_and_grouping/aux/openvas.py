@@ -25,7 +25,7 @@ RESULTS_DIRECTORY_NAME = "./results"
 class OpenvasNVTInfo:
     file: str
     cves: list[str]
-    oid: str
+    id: str 
     classification: str
     qod_info: tuple[str, int]
 
@@ -121,7 +121,7 @@ AFFECTED_REGEX = re.compile(
 def extract_cve_from_openvas(content: str) -> list:
     cves = CVE_REGEX.findall(content)
     cves_to_list = [cve for match in cves for cve in match if cve]
-    return cves_to_list if cves_to_list else []
+    return cves_to_list
 
 
 def is_openvas_file_deprecated(file_content) -> bool:
@@ -234,7 +234,7 @@ def analysis_openvas_NVTS(
     *Classification is not performed on all Openvas files. Check the 'get_list_unique_files' function.
     """
 
-    llm = LLMHandler(ip_port)
+    #llm = LLMHandler(ip_port)
 
     NVTS_with_no_CVE: list[str] = []
 
@@ -247,9 +247,6 @@ def analysis_openvas_NVTS(
         openvas_file = os.path.abspath(openvas_file)
 
         content = read_file_with_fallback(openvas_file)
-
-        if not content: 
-            continue
 
         if is_openvas_file_deprecated(content):
             continue
@@ -271,7 +268,8 @@ def analysis_openvas_NVTS(
 
         start_time = time.time()
 
-        classification = classification_openvas(content, qod_value, qod_type, llm)
+        #classification = classification_openvas(content, qod_value, qod_type, llm)
+        classification = ""
 
         end_time = time.time()
         elapsed_time = end_time - start_time
@@ -280,7 +278,7 @@ def analysis_openvas_NVTS(
         info = OpenvasNVTInfo(
             file=openvas_file,
             cves=cves,
-            oid=oid,
+            id=oid,
             classification=classification,
             qod_info=qod_info,
         ).to_dict()
