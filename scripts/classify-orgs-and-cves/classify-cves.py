@@ -236,7 +236,7 @@ def processCvesFromMitre(
 
                     summary: str = data["containers"]["cna"]["descriptions"][0]["value"]
                     id: str = data["cveMetadata"]["cveId"]
-                except:
+                except (KeyError, TypeError):
                     continue
 
                 if id in seenCves:
