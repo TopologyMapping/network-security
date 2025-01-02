@@ -12,13 +12,15 @@ For example, if the nmap current file contains the category 'brute', the classif
 
 To run the code, you need to follow:
 
-` python3 -m venv venv `
+```bash
+python3 -m venv venv
 
-` source venv/bin/activate `
+source venv/bin/activate
 
-` pip install -r requirements.txt `
+pip install -r requirements.txt
 
-` python3 distributed_classification.py --<SCANNER_NAME> <PATH_TO_SCANNER_FILES>  --output <OUTPUT_NAME> --initialRange INITIAL_RANGE --finalRange FINAL_RANGE --ip_port <LLM_IP_PORT> `
+python3 distributed_classification.py <--nmap|--openvas|--nuclei|--metasploit> <path_to_scanner_files> --output <output_name> --initialRange INITIAL_RANGE --finalRange FINAL_RANGE --ip_port <LLM_ip_port>
+```
 
 Where:
 
