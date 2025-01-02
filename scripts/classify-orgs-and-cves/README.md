@@ -65,9 +65,37 @@ In order to get a good result, multiple classification tries are made using diff
 
 This may lead to some scans taking longer to classify than others, but nothing that severely impacts performance.
 
+## Input format
+
+This script takes a collection of Shodan scans as **.json** (JSON) or **.json.bz2** (BZ2) as input and expects the following formats:
+
+Each BZ2 file is one-line-per-object, where each object is a JSON string:
+
+```txt
+{object1}
+{object2}
+{object3}
+...
+```
+
+Each JSON file is a list-with-objects, where each object is already native JSON:
+
+```txt
+[
+  {object1},
+  {object2},
+  {object3},
+  ...
+]
+```
+
+BZ2 files are more efficient, as they are loaded into memory on demand and can hold thousands of Shodan scans, whereas JSON files are loaded fully into memory.
+
+*As such, we recommend using small JSON files for experiments only.*
+
 ## Example usage
 
-Given a directory `shodan_ips` containing several Shodan scans as **.json** or **.json.bz2** files, the classification can be done by running:
+Given a directory `shodan_ips` containing **.json** or **.json.bz2** files as described above, the classification can be done by running:
 
 ```bash
 ./classify_orgs.py path/to/shodan_ips output_file
@@ -142,7 +170,7 @@ This is done by running **classify-cves.py** over a zipfile with CVEs from Mitre
 
 The resulting classification can be saved as a **.pickle** file or a **.json** file.
 
-## Example usage
+## Input format
 
 The classifier needs a summary and other details associated with a CVE in order to perform the classification.
 
@@ -151,6 +179,8 @@ Currently, this script relies on Mitre as a supplier of this data in the [CVE JS
 The file can be downloaded here: [CVE Downloads](https://www.cve.org/Downloads). Click on the *main.zip* link, a file named *cvelistV5-main.zip* should begin downloading.
 
 *Note that this process may change should Mitre update this format.*
+
+## Example usage
 
 Given a file `cvelistV5-main.zip` downloaded from Mitre as detailed above, the classification can be done by running:
 
