@@ -210,7 +210,7 @@ def classifyOrganization(
 
     Only HTTP or HTTPS scans are considered. All text in the webpage is translated to English before classification.
 
-    In order to get a good result, multiple tries are made using different data from the scan:
+    In order to get a good result, multiple tries are made using different data sources from the scan:
     - First try with the 50% most common sentences in the webpage.
     - If the score is too low, try with the webpage title and organization.
     - If the score is still too low, try with the hostnames.
@@ -227,6 +227,11 @@ def classifyOrganization(
     -------
     `result`: dictionary with the classification result.
     """
+
+    # NOTE: We discard the data sources at each step if the classification fails, because if a failure occurs,
+    # then the data was not good enough to yield a good classification. For instance, the sentences might be
+    # nonsensical, the webpage title and organization might be empty or have just one word, etc.
+    # It is better to discard them and move on to the next data source than to carry the trash over.
 
     # Threshold to consider the classification valid
     THRESHOLD: float = 0.3
