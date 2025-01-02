@@ -1,3 +1,4 @@
+from collections import defaultdict
 import dataclasses
 import json
 import os
@@ -45,13 +46,13 @@ class OpenvasSimilarityResults:
 
 @dataclass_json
 @dataclasses.dataclass(frozen=True)
-class CVE_QOD_Key:
+class CveQodKey:
     cves: tuple[str, ...]
-    qod_type: str
+    qod_type: str # the qod_type is present on the dict QOD_TYPE_AND_VALUE below
 
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
-QOD_VALUE = {
+QOD_TYPE_AND_VALUE = {
     "exploit": 100,
     "remote_vul": 99,
     "remote_app": 98,
@@ -69,7 +70,7 @@ QOD_VALUE = {
     "timeout": 0,
 }
 
-INVERSE_QOD_VALUE = {value: key for key, value in QOD_VALUE.items()}
+INVERSE_QOD_TYPE_AND_VALUE = {value: key for key, value in QOD_TYPE_AND_VALUE.items()}
 
 FILE_EXTENSION_OPENVAS = ".nasl"
 
@@ -117,7 +118,7 @@ AFFECTED_REGEX = re.compile(
 
 
 # Functions to extract information
-def extract_cve_from_openvas(content) -> list:
+def extract_cve_from_openvas(content: str) -> list:
     cves = CVE_REGEX.findall(content)
     cves_to_list = [cve for match in cves for cve in match if cve]
     return cves_to_list
@@ -128,7 +129,7 @@ def is_openvas_file_deprecated(file_content) -> bool:
     return bool(match) if match else False
 
 
-def extract_qod_openvas(content) -> tuple:
+def extract_qod_openvas(content: str) -> tuple:
     qod_match = QOD_REGEX.search(content)
     if not qod_match:
         return ()
@@ -139,11 +140,11 @@ def extract_qod_openvas(content) -> tuple:
     if qod_match.group("qod_value").isdigit():
         qod_value = int(qod_match.group("qod_value"))
         qod_type = (
-            INVERSE_QOD_VALUE[qod_value] if qod_value in INVERSE_QOD_VALUE else None
+            INVERSE_QOD_TYPE_AND_VALUE[qod_value] if qod_value in INVERSE_QOD_TYPE_AND_VALUE else None
         )
     else:
         qod_type = qod_match.group("qod_value")
-        qod_value = QOD_VALUE[qod_type] if qod_type in QOD_VALUE else None
+        qod_value = QOD_TYPE_AND_VALUE[qod_type] if qod_type in QOD_TYPE_AND_VALUE else None
 
     if qod_value is None:
         return ()
@@ -151,57 +152,57 @@ def extract_qod_openvas(content) -> tuple:
     return qod_type if qod_type else "", qod_value if qod_value else 0
 
 
-def extract_oid_openvas(content) -> str:
+def extract_oid_openvas(content: str) -> str:
     match = OID_REGEX.search(content)
     return match.group("oid") if match else ""
 
 
-def extract_solution_type_openvas(content) -> str:
+def extract_solution_type_openvas(content: str) -> str:
     solution_type = SOLUTION_TYPE_REGEX.search(content)
     return solution_type.group("value").replace("\n", "") if solution_type else ""
 
 
-def extract_insight_openvas(content) -> str:
+def extract_insight_openvas(content: str) -> str:
     insight = INSIGHT_REGEX.search(content)
     return insight.group("value").replace("\n", "") if insight else ""
 
 
-def extract_impact_openvas(content) -> str:
+def extract_impact_openvas(content: str) -> str:
     impact = IMPACT_REGEX.search(content)
     return impact.group("value").replace("\n", "") if impact else ""
 
 
-def extract_solution_openvas(content) -> str:
+def extract_solution_openvas(content: str) -> str:
     solution = SOLUTION_REGEX.search(content)
     return solution.group("value").replace("\n", "") if solution else ""
 
 
-def extract_summary_openvas(content) -> str:
+def extract_summary_openvas(content: str) -> str:
     description = SUMMARY_REGEX.search(content)
     return description.group("value").replace("\n", "") if description else ""
 
 
-def extract_vuldetect_openvas(content) -> str:
+def extract_vuldetect_openvas(content: str) -> str:
     vuldetect = VULDETECT_REGEX.search(content)
     return vuldetect.group("value").replace("\n", "") if vuldetect else ""
 
 
-def extract_affected_openvas(content) -> str:
+def extract_affected_openvas(content: str) -> str:
     affected = AFFECTED_REGEX.search(content)
     return affected.group("value").replace("\n", "") if affected else ""
 
 
-def classification_openvas(content, qod_value: int, qod_type: str, llm) -> str:
+def classification_openvas(content: str, qod_value: int, qod_type: str, llm) -> str:
     """
     This function filters the content of the Openvas script and classifies it according to the QOD value and type.
     """
     classification: str = ""
 
-    qod_authenticated_scan = QOD_VALUE[
+    qod_authenticated_scan = QOD_TYPE_AND_VALUE[
         "package"
     ]  # QOD_VALUE['registry'] is also a authenticated scan
 
-    if qod_value >= QOD_VALUE["remote_app"] or qod_value == QOD_VALUE["remote_active"]:
+    if qod_value >= QOD_TYPE_AND_VALUE["remote_app"] or qod_value == QOD_TYPE_AND_VALUE["remote_active"]:
         classification = llm.classification_text_generation(
             content, PROMPT_OPENVAS_EXPLOIT
         )
@@ -233,13 +234,13 @@ def analysis_openvas_NVTS(
     *Classification is not performed on all Openvas files. Check the 'get_list_unique_files' function.
     """
 
-    llm = LLMHandler(ip_port)
+    #llm = LLMHandler(ip_port)
 
-    NVTS_with_no_CVE: list = []
+    NVTS_with_no_CVE: list[str] = []
 
-    openvas_info: list = []
+    openvas_info: list[dict] = []
 
-    openvas_files = get_list_unique_files(openvas_folder)
+    openvas_files : list[str] = get_list_unique_files(openvas_folder)
 
     for openvas_file in openvas_files[initial_range:final_range]:
 
@@ -267,7 +268,7 @@ def analysis_openvas_NVTS(
 
         start_time = time.time()
 
-        classification = classification_openvas(content, qod_value, qod_type, llm)
+        #classification = classification_openvas(content, qod_value, qod_type, llm)
         classification = ""
 
         end_time = time.time()
@@ -284,7 +285,7 @@ def analysis_openvas_NVTS(
 
         openvas_info.append(info)
         break
-
+    
     return ScriptClassificationResult(
         scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE
     )
@@ -311,7 +312,6 @@ def get_file_info(content) -> dict:
         "solution": file_solution,
         "insight": file_insight,
         "impact": file_impact,
-        "vuldetect": file_vuldetect,
         "qod": file_qod_info,
     }
 
@@ -347,7 +347,7 @@ def return_similarity_score(
     return score
 
 
-def get_list_unique_files(openvas_folder: str) -> list:
+def get_list_unique_files(openvas_folder: str) -> list[str]:
 
     openvas_checked_files: dict = compare_similarity_openvas(openvas_folder)
 
@@ -359,17 +359,17 @@ def get_list_unique_files(openvas_folder: str) -> list:
 
 
 def check_active_script(
-    qod_value: int, key: CVE_QOD_Key, openvas_qod_cve: dict, openvas_file: str
+    qod_value: int, key: CveQodKey, openvas_qod_cve: dict, openvas_file: str
 ) -> bool:
     """
     Function to check if a script performs actives checks or not.
     If so, it is important to separate it from the others.
     """
 
-    if qod_value >= QOD_VALUE["remote_app"] or qod_value == QOD_VALUE["remote_active"]:
+    if qod_value >= QOD_TYPE_AND_VALUE["remote_app"] or qod_value == QOD_TYPE_AND_VALUE["remote_active"]:
 
         # using a new key to separate the active codes
-        active_key = CVE_QOD_Key(cves=key.cves, qod_type=f"{key.qod_type} active")
+        active_key = CveQodKey(cves=key.cves, qod_type=f"{key.qod_type} active")
 
         if active_key not in openvas_qod_cve:
             openvas_qod_cve[active_key] = []
@@ -383,9 +383,9 @@ def check_active_script(
 
 def verifies_similarity(
     score: int,
-    key: CVE_QOD_Key,
-    similars: dict,
-    maybe_similars: dict,
+    key: CveQodKey,
+    similars: dict[CveQodKey, list[str]],
+    maybe_similars: dict[CveQodKey, list[str]],
     openvas_file: str,
 ) -> bool:
     """
@@ -441,18 +441,18 @@ def compare_similarity_openvas(openvas_folder: str) -> dict:
     * This script also saves the results in a folder 'results' in the file 'info_similarity_NVTS_openvas.json' in the current directory.
     """
 
-    openvas_files = [
+    openvas_files : list[str] = [
         os.path.join(root, file)
         for root, _, files in os.walk(openvas_folder)
         for file in files
         if file.endswith(FILE_EXTENSION_OPENVAS)
     ]
 
-    openvas_qod_cve: dict = {}
-    similars: dict = {}
-    maybe_similars: dict = {}
+    openvas_qod_cve: dict[CveQodKey, list[str]] = defaultdict(list)
+    similars: dict[CveQodKey, list[str]] = {}
+    maybe_similars: dict[CveQodKey, list[str]] = {}
 
-    files_skipped: list = []
+    files_skipped: list[str] = []
 
     NVTS_with_no_CVE: list[str] = []
 
@@ -486,11 +486,10 @@ def compare_similarity_openvas(openvas_folder: str) -> dict:
         sorted_cves = tuple(
             sorted(cves)
         )  # Ensure the CVEs are sorted and converted to a tuple
-        key = CVE_QOD_Key(cves=sorted_cves, qod_type=qod_type)
+        key = CveQodKey(cves=sorted_cves, qod_type=qod_type)
 
         # Use the tuple as a key in your dictionary
         if key not in openvas_qod_cve:
-            openvas_qod_cve[key] = []
             openvas_qod_cve[key].append(openvas_file)
             continue
 
@@ -519,7 +518,7 @@ def compare_similarity_openvas(openvas_folder: str) -> dict:
                 score, key, similars, maybe_similars, openvas_file
             )
 
-            if similar == True:
+            if similar:
                 break
 
         if similar is False:
