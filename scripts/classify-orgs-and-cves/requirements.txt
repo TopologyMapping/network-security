@@ -1,12 +1,2 @@
-argparse
-bz2
-collections
-json
-logging
-os
-pickle
-typing
-zipfile
 bs4
-dataclasses
 dataclasses-json
