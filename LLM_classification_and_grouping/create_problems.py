@@ -15,7 +15,6 @@ Output:
   - `errors`: Scripts that could not be categorized.
 """
 
-
 import argparse
 import dataclasses
 import json
@@ -71,7 +70,9 @@ VALUES_SUBCATEGORY = [
 class FileInfo:
     classification_file_name: str
     vulnerability_tool_script_name: str
-    script_id: str # the id is used to store the information in the Defect Dojo application
+    script_id: (
+        str  # the id is used to store the information in the Defect Dojo application
+    )
 
 
 @dataclass_json
@@ -347,6 +348,7 @@ def grouping_info(
 
     return
 
+
 def organizing_grouping_structure(result: dict):
     """
     This function is responsible for organizing the grouping structure of the scripts. The structure presented before as CVES -> Task2 -> Task1 -> Application on the function 'process_json_files' is good to improve the understanding of the grouping. But to store the information to be used in Defect Dojo application, it is better to store the information as a list of scripts grouped together.
@@ -427,7 +429,9 @@ def process_json_files(folder_path: str):
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
-        if file_name.endswith(".json") and file_name.startswith("output_classification_40gb_7700_8150_openvas_nuclei"):
+        if file_name.endswith(".json") and file_name.startswith(
+            "output_classification_40gb_7700_8150_openvas_nuclei"
+        ):
             file_path = os.path.join(folder_path, file_name)
 
             with open(file_path, "r") as file:
@@ -449,14 +453,16 @@ def process_json_files(folder_path: str):
                     # if there is no CVE, it is stored as an empty string to be used as a key in the dictionary
                     if cves == []:
                         cves = [""]
-                    
+
                     # storing results of grouping as the classificaiton file where the script was classified together with the script name
                     file_info = FileInfo(
                         classification_file_name=file_name,
                         vulnerability_tool_script_name=classification_results_for_vulnerability_scanner_script[
                             "file"
                         ],
-                        script_id=classification_results_for_vulnerability_scanner_script["script_id"],
+                        script_id=classification_results_for_vulnerability_scanner_script[
+                            "script_id"
+                        ],
                     )
 
                     classification_info_extracted = filter_classification_text(
@@ -489,7 +495,7 @@ def process_json_files(folder_path: str):
                         file_info,
                         errors_llm,
                     )
-    
+
     print(problems[""])
 
     # transform dataclasses in dicts

@@ -9,13 +9,14 @@ The classification process involves:
 The classification is performed in batches to efficiently handle large numbers of files.
 """
 
-from collections import defaultdict
 import dataclasses
 import json
 import os
 import re
 import time
+from collections import defaultdict
 from difflib import SequenceMatcher
+from typing import Any
 
 from dataclasses_json import dataclass_json
 
@@ -36,7 +37,7 @@ RESULTS_DIRECTORY_NAME = "./results"
 class OpenvasNVTInfo:
     file: str
     cves: list[str]
-    id: str 
+    id: str
     classification: str
     qod_info: tuple[str, int]
 
@@ -59,7 +60,7 @@ class OpenvasSimilarityResults:
 @dataclasses.dataclass(frozen=True)
 class CveQodKey:
     cves: tuple[str, ...]
-    qod_type: str # the qod_type is present on the dict QOD_TYPE_AND_VALUE below
+    qod_type: str  # the qod_type is present on the dict QOD_TYPE_AND_VALUE below
 
 
 # qod values for OpenVAS - https://docs.greenbone.net/GSM-Manual/gos-22.04/en/reports.html#quality-of-detection-concept
@@ -132,27 +133,31 @@ def is_openvas_file_deprecated(file_content) -> bool:
     return bool(match) if match else False
 
 
-def extract_qod_openvas(content: str) -> tuple:
+def extract_qod_openvas(content: str) -> tuple[str, int]:
     qod_match = QOD_REGEX.search(content)
     if not qod_match:
-        return ()
+        return ("", -1)
 
     qod_type = ""
-    qod_value = 0
+    qod_value = -1
 
     if qod_match.group("qod_value").isdigit():
         qod_value = int(qod_match.group("qod_value"))
         qod_type = (
-            INVERSE_QOD_TYPE_AND_VALUE[qod_value] if qod_value in INVERSE_QOD_TYPE_AND_VALUE else None
+            INVERSE_QOD_TYPE_AND_VALUE[qod_value]
+            if qod_value in INVERSE_QOD_TYPE_AND_VALUE
+            else ""
         )
     else:
         qod_type = qod_match.group("qod_value")
-        qod_value = QOD_TYPE_AND_VALUE[qod_type] if qod_type in QOD_TYPE_AND_VALUE else None
+        qod_value = (
+            QOD_TYPE_AND_VALUE[qod_type] if qod_type in QOD_TYPE_AND_VALUE else -1
+        )
 
-    if qod_value is None:
-        return ()
+    if qod_value == "":
+        return ("", -1)
 
-    return qod_type if qod_type else "", qod_value if qod_value else 0
+    return qod_type if qod_type else "", qod_value if qod_value else -1
 
 
 def extract_oid_openvas(content: str) -> str:
@@ -205,7 +210,10 @@ def classification_openvas(content: str, qod_value: int, qod_type: str, llm) -> 
         "package"
     ]  # QOD_VALUE['registry'] is also a authenticated scan
 
-    if qod_value >= QOD_TYPE_AND_VALUE["remote_app"] or qod_value == QOD_TYPE_AND_VALUE["remote_active"]:
+    if (
+        qod_value >= QOD_TYPE_AND_VALUE["remote_app"]
+        or qod_value == QOD_TYPE_AND_VALUE["remote_active"]
+    ):
         classification = llm.classification_text_generation(
             content, PROMPT_OPENVAS_EXPLOIT
         )
@@ -243,7 +251,7 @@ def analysis_openvas_NVTS(
 
     openvas_info: list[dict] = []
 
-    openvas_files : list[str] = get_list_unique_files(openvas_folder)
+    openvas_files: list[str] = get_list_unique_files(openvas_folder)
 
     for openvas_file in openvas_files[initial_range:final_range]:
 
@@ -254,12 +262,13 @@ def analysis_openvas_NVTS(
         if is_openvas_file_deprecated(content):
             continue
 
-        qod_info = extract_qod_openvas(content)
+        qod_info: tuple[str, int] = extract_qod_openvas(content)
 
         if not qod_info:
             continue
 
-        qod_type, qod_value = qod_info
+        qod_type: str = qod_info[0]
+        qod_value: int = qod_info[1]
 
         cves = extract_cve_from_openvas(content)
 
@@ -287,7 +296,7 @@ def analysis_openvas_NVTS(
 
         openvas_info.append(info)
         break
-    
+
     return ScriptClassificationResult(
         scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE
     )
@@ -297,15 +306,15 @@ def similarity_text(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
 
 
-def get_file_info(content) -> dict:
-    file_affected = extract_affected_openvas(content)
-    file_summary = extract_summary_openvas(content)
-    file_vuldetect = extract_vuldetect_openvas(content)
-    file_solution = extract_solution_openvas(content)
-    file_insight = extract_insight_openvas(content)
-    file_impact = extract_impact_openvas(content)
-    file_vuldetect = extract_vuldetect_openvas(content)
-    file_qod_info = extract_qod_openvas(content)
+def get_file_info(content: str) -> dict[str, Any]:
+    file_affected: str = extract_affected_openvas(content)
+    file_summary: str = extract_summary_openvas(content)
+    file_vuldetect: str = extract_vuldetect_openvas(content)
+    file_solution: str = extract_solution_openvas(content)
+    file_insight: str = extract_insight_openvas(content)
+    file_impact: str = extract_impact_openvas(content)
+    file_vuldetect: str = extract_vuldetect_openvas(content)
+    file_qod_info: tuple[str, int] = extract_qod_openvas(content)
 
     result = {
         "affected": file_affected,
@@ -368,7 +377,10 @@ def check_active_script(
     If so, it is important to separate it from the others.
     """
 
-    if qod_value >= QOD_TYPE_AND_VALUE["remote_app"] or qod_value == QOD_TYPE_AND_VALUE["remote_active"]:
+    if (
+        qod_value >= QOD_TYPE_AND_VALUE["remote_app"]
+        or qod_value == QOD_TYPE_AND_VALUE["remote_active"]
+    ):
 
         # using a new key to separate the active codes
         active_key = CveQodKey(cves=key.cves, qod_type=f"{key.qod_type} active")
@@ -394,10 +406,10 @@ def verifies_similarity(
     This functions verifies if the analyzed file is similar to another file. Based on the score received, it classifies the file as similar or maybe similar to the initial file.
     """
 
-    similar = False
+    similar: bool = False
 
-    code_is_similar = score >= SCORE_SIMILAR_FILE
-    code_is_maybe_similar = score >= SCORE_MAYBE_SIMILAR_FILE
+    code_is_similar: bool = score >= SCORE_SIMILAR_FILE
+    code_is_maybe_similar: bool = score >= SCORE_MAYBE_SIMILAR_FILE
 
     if code_is_similar:
         similar = True
@@ -443,7 +455,7 @@ def compare_similarity_openvas(openvas_folder: str) -> dict:
     * This script also saves the results in a folder 'results' in the file 'info_similarity_NVTS_openvas.json' in the current directory.
     """
 
-    openvas_files : list[str] = [
+    openvas_files: list[str] = [
         os.path.join(root, file)
         for root, _, files in os.walk(openvas_folder)
         for file in files
@@ -481,7 +493,8 @@ def compare_similarity_openvas(openvas_folder: str) -> dict:
 
             NVTS_with_no_CVE.append(openvas_file)
 
-        qod_type, qod_value = new_file_info["qod"]
+        qod_type: str = new_file_info["qod"][0]
+        qod_value: int = new_file_info["qod"][1]
 
         # the dict key is the cve checked and the qod
         # with this is possible to separate codes that verifies the same CVE

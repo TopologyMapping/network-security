@@ -39,7 +39,7 @@ NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}
 class NmapScriptInfo:
     file: str
     classification: str
-    id: str # the Nmap id is the file name
+    id: str  # the Nmap id is the file name
     cves: list
     categories: str
 
@@ -59,7 +59,9 @@ def extract_categories_nmap(content) -> str:
     return ""
 
 
-def classification_nmap(all_script_categories: str, content, llm) -> str:
+def classification_nmap(
+    all_script_categories: str, content: str, llm: LLMHandler
+) -> str:
     """
     This function filters the content of the Nmap script and classifies it according to the categorie collected.
 
@@ -98,7 +100,10 @@ def classification_nmap(all_script_categories: str, content, llm) -> str:
 
         classification += category_and_subcategory_dos
 
-    elif DISCOVERY_CATEGORY in all_script_categories and SAFE_CATEGORY in all_script_categories:
+    elif (
+        DISCOVERY_CATEGORY in all_script_categories
+        and SAFE_CATEGORY in all_script_categories
+    ):
         # 'safe' included because there is 'intrusive' codes that receives 'discovery' categorie, even when performs attacks
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_DISCOVERY
@@ -142,9 +147,9 @@ def analysis_nmap_scripts(
 
     llm = LLMHandler(ip_port)
 
-    scripts_with_no_CVE: list = []
+    scripts_with_no_CVE: list[str] = []
 
-    nmap_info: list = []
+    nmap_info: list[NmapScriptInfo] = []
 
     nmap_files = [
         os.path.join(root, file)

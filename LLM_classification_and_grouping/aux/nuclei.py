@@ -12,6 +12,7 @@ The classification is performed in batches to efficiently handle large numbers o
 import dataclasses
 import os
 import time
+from typing import Any
 
 import yaml
 from dataclasses_json import dataclass_json
@@ -41,7 +42,7 @@ class NucleiTemplateInfo:
 
 
 # get information from the Nuclei YAML file
-def parse_nuclei_yaml(content) -> dict:
+def parse_nuclei_yaml(content: str) -> dict:
     """
     Parse YAML content into a Python dictionary.
     """
@@ -52,7 +53,7 @@ def parse_nuclei_yaml(content) -> dict:
         return {}
 
 
-def extract_cve_nuclei(yaml_data: dict) -> list:
+def extract_cve_nuclei(yaml_data: dict[str, Any]) -> list:
     try:
         return yaml_data["info"]["classification"][
             "cve-id"
@@ -61,11 +62,11 @@ def extract_cve_nuclei(yaml_data: dict) -> list:
         return []
 
 
-def extract_nuclei_id(yaml_data: dict) -> str:
+def extract_nuclei_id(yaml_data: dict[str, Any]) -> str:
     return yaml_data.get("id", "")
 
 
-def extract_nuclei_tags(yaml_data: dict) -> list:
+def extract_nuclei_tags(yaml_data: dict[str, Any]) -> list:
     try:
         str_tags = yaml_data["info"]["tags"]  # nuclei structure to get tags
         return str_tags.split(",")
@@ -73,7 +74,7 @@ def extract_nuclei_tags(yaml_data: dict) -> list:
         return []
 
 
-def classification_nuclei(tags: list, content, llm) -> str:
+def classification_nuclei(tags: list, content: str, llm: LLMHandler) -> str:
     """
     This function filters the content of the Nuclei script and classifies it according to the tags collected.
     """
@@ -132,9 +133,9 @@ def analysis_nuclei_templates(
 
     llm = LLMHandler(ip_port)
 
-    templates_with_no_CVE: list = []
+    templates_with_no_CVE: list[str] = []
 
-    nuclei_info: list = []
+    nuclei_info: list[NucleiTemplateInfo] = []
 
     nuclei_files = [
         os.path.join(root, file)
