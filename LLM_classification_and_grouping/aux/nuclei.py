@@ -42,7 +42,7 @@ class NucleiTemplateInfo:
 
 
 # get information from the Nuclei YAML file
-def parse_nuclei_yaml(content: str) -> dict:
+def parse_nuclei_yaml(content: str) -> dict[str, Any]:
     """
     Parse YAML content into a Python dictionary.
     """
@@ -58,7 +58,7 @@ def extract_cve_nuclei(yaml_data: dict[str, Any]) -> list:
         return yaml_data["info"]["classification"][
             "cve-id"
         ]  # nuclei structure to get cve-id
-    except:
+    except KeyError:
         return []
 
 
@@ -70,7 +70,7 @@ def extract_nuclei_tags(yaml_data: dict[str, Any]) -> list:
     try:
         str_tags = yaml_data["info"]["tags"]  # nuclei structure to get tags
         return str_tags.split(",")
-    except:
+    except KeyError:
         return []
 
 
