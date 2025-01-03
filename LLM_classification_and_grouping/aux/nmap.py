@@ -59,7 +59,7 @@ def extract_categories_nmap(content) -> str:
     return ""
 
 
-def classification_nmap(script_categories: str, content, llm) -> str:
+def classification_nmap(all_script_categories: str, content, llm) -> str:
     """
     This function filters the content of the Nmap script and classifies it according to the categorie collected.
 
@@ -68,7 +68,7 @@ def classification_nmap(script_categories: str, content, llm) -> str:
 
     classification: str = ""
 
-    if BRUTE_FORCE_CATEGORY in script_categories:
+    if BRUTE_FORCE_CATEGORY in all_script_categories:
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_BRUTE_DOS
         )
@@ -83,7 +83,7 @@ def classification_nmap(script_categories: str, content, llm) -> str:
 
         classification += category_and_subcategory_privileged_exploit
 
-    elif DOS_CATEGORY in script_categories:
+    elif DOS_CATEGORY in all_script_categories:
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_BRUTE_DOS
         )
@@ -98,7 +98,7 @@ def classification_nmap(script_categories: str, content, llm) -> str:
 
         classification += category_and_subcategory_dos
 
-    elif DISCOVERY_CATEGORY in script_categories and SAFE_CATEGORY in script_categories:
+    elif DISCOVERY_CATEGORY in all_script_categories and SAFE_CATEGORY in all_script_categories:
         # 'safe' included because there is 'intrusive' codes that receives 'discovery' categorie, even when performs attacks
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_DISCOVERY
@@ -115,8 +115,8 @@ def classification_nmap(script_categories: str, content, llm) -> str:
         classification += category_and_subcategory_discovery_safe
 
     elif (
-        any(intrusive in script_categories for intrusive in INTRUSIVE_CATEGORIES)
-    ) and SAFE_CATEGORY not in script_categories:
+        any(intrusive in all_script_categories for intrusive in INTRUSIVE_CATEGORIES)
+    ) and SAFE_CATEGORY not in all_script_categories:
 
         classification = llm.classification_text_generation(content, PROMPT_NMAP_ATTACK)
 
