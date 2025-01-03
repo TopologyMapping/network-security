@@ -50,7 +50,7 @@ def extract_cve_nmap(content) -> list:
     return cves if cves else []
 
 
-def extract_categorie_nmap(content) -> str:
+def extract_categories_nmap(content) -> str:
     match = NMAP_CATEGORIES_REGEX.search(content)
     if match:
         categories = match.group("categories")
@@ -59,19 +59,21 @@ def extract_categorie_nmap(content) -> str:
     return ""
 
 
-def classification_nmap(categorie: str, content, llm) -> str:
+def classification_nmap(script_categories: str, content, llm) -> str:
     """
     This function filters the content of the Nmap script and classifies it according to the categorie collected.
+
+    Using some information form the script (categories), is possible to deterministcally classify the script, reducing the amount of work for the LLM.
     """
 
     classification: str = ""
 
-    if BRUTE_FORCE_CATEGORY in categorie:
+    if BRUTE_FORCE_CATEGORY in script_categories:
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_BRUTE_DOS
         )
 
-        category_privileged_exploit = """ 
+        category_and_subcategory_privileged_exploit = """ 
 
         How the script works?
         Category: {Simulated Attack}
@@ -79,14 +81,14 @@ def classification_nmap(categorie: str, content, llm) -> str:
 
         """
 
-        classification += category_privileged_exploit
+        classification += category_and_subcategory_privileged_exploit
 
-    elif DOS_CATEGORY in categorie:
+    elif DOS_CATEGORY in script_categories:
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_BRUTE_DOS
         )
 
-        category_privileged_exploit = """ 
+        category_and_subcategory_dos = """ 
 
         How the script works?
         Category: {Simulated Attack}
@@ -94,15 +96,15 @@ def classification_nmap(categorie: str, content, llm) -> str:
 
         """
 
-        classification += category_privileged_exploit
+        classification += category_and_subcategory_dos
 
-    elif DISCOVERY_CATEGORY in categorie and SAFE_CATEGORY in categorie:
+    elif DISCOVERY_CATEGORY in script_categories and SAFE_CATEGORY in script_categories:
         # 'safe' included because there is 'intrusive' codes that receives 'discovery' categorie, even when performs attacks
         classification = llm.classification_text_generation(
             content, PROMPT_NMAP_DISCOVERY
         )
 
-        category_privileged_exploit = """ 
+        category_and_subcategory_discovery_safe = """ 
 
         How the script works?
         Category: {Basic Active Requests}
@@ -110,11 +112,11 @@ def classification_nmap(categorie: str, content, llm) -> str:
 
         """
 
-        classification += category_privileged_exploit
+        classification += category_and_subcategory_discovery_safe
 
     elif (
-        any(intrusive in categorie for intrusive in INTRUSIVE_CATEGORIES)
-    ) and SAFE_CATEGORY not in categorie:
+        any(intrusive in script_categories for intrusive in INTRUSIVE_CATEGORIES)
+    ) and SAFE_CATEGORY not in script_categories:
 
         classification = llm.classification_text_generation(content, PROMPT_NMAP_ATTACK)
 
@@ -164,7 +166,7 @@ def analysis_nmap_scripts(
 
             scripts_with_no_CVE.append(nmap_file)
 
-        categories = extract_categorie_nmap(content)
+        categories = extract_categories_nmap(content)
 
         file_name = os.path.basename(nmap_file)
 
