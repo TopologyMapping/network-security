@@ -108,7 +108,7 @@ def compare_files_and_store_results(
     results["no"] = 0
     results["errors"] = []
 
-    cves_main_files : list = list(info_op_nvts["main_files"].keys())
+    cves_main_files: list = list(info_op_nvts["main_files"].keys())
 
     cves_selected = select_cve_to_analyze(
         number_of_files_compared, cves_main_files, info_op_nvts, category_to_compare
@@ -153,7 +153,7 @@ def main():
     llm = LLMHandler(args.ip_port)
 
     with open(args.input, "r") as file:
-        info_op_nvts : dict = json.load(file)
+        info_op_nvts: dict = json.load(file)
 
     compare_files_and_store_results(
         info_op_nvts, COMPARE_FILES_MAYBE_SIMILARS, args.number_of_files_compared, llm

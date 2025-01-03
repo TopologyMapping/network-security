@@ -14,17 +14,15 @@ import os
 import re
 import time
 
-from .constants import (
-    PROMPT_METASPLOIT_EXPLOIT,
-    PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
-    PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
-    PROMPT_METASPLOIT_POST,
-    PROMPT_METASPLOIT_PRIVILEGED,
-)
+from dataclasses_json import dataclass_json
+
+from .constants import (PROMPT_METASPLOIT_EXPLOIT,
+                        PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED,
+                        PROMPT_METASPLOIT_NOT_EXPLOIT_NOT_PRIVILEGED,
+                        PROMPT_METASPLOIT_POST, PROMPT_METASPLOIT_PRIVILEGED)
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
-from dataclasses_json import dataclass_json
 
 # class to organize information about the Metasploit script
 @dataclass_json
@@ -35,7 +33,7 @@ class MetasploitModulesInfo:
     cves: list
     module: str
     classification: str
-    id: str # the Metasploit id is the file name
+    id: str  # the Metasploit id is the file name
 
 
 PRIVILEGED_REGEX = re.compile(
@@ -51,40 +49,39 @@ METASPLOIT_NAME_REGEX = re.compile(r"'Name'\s*=>\s*'(?P<name>[^']+)'")
 
 
 # REGEX FUNCTIONS TO EXTRACT INFO
-def extract_privileged_metasploit(content) -> bool:
+def extract_privileged_metasploit(content: str) -> bool:
     match = PRIVILEGED_REGEX.search(content)
     return bool(match.group("privileged")) if match else False
 
 
-def extract_cve_from_metasploit(metasploit_file) -> list:
+def extract_cve_from_metasploit(content: str) -> list:
     cves = [
-        f"CVE-{match.group('cve')}"
-        for match in METASPLOIT_CVE_REGEX.finditer(metasploit_file)
+        f"CVE-{match.group('cve')}" for match in METASPLOIT_CVE_REGEX.finditer(content)
     ]
     return cves
 
 
-def extract_rank_from_metasploit(metasploit_file) -> str:
-    match = METASPLOIT_RANK_REGEX.search(metasploit_file)
+def extract_rank_from_metasploit(content: str) -> str:
+    match = METASPLOIT_RANK_REGEX.search(content)
     return match.group("rank") if match else ""
 
 
-def extract_module_metasploit(metasploit_file) -> str:
-    match = METASPLOIT_MODULE_REGEX.search(metasploit_file)
+def extract_module_metasploit(content: str) -> str:
+    match = METASPLOIT_MODULE_REGEX.search(content)
     return match.group("module") if match else ""
 
 
-def execute_exploit_metasploit(metasploit_file) -> bool:
-    return bool(METASPLOIT_EXPLOIT_REGEX.search(metasploit_file))
+def execute_exploit_metasploit(content: str) -> bool:
+    return bool(METASPLOIT_EXPLOIT_REGEX.search(content))
 
 
-def extract_name_metasploit(content) -> str:
+def extract_name_metasploit(content: str) -> str:
     match = METASPLOIT_NAME_REGEX.search(content)
     return match.group("name") if match else ""
 
 
 def classification_metasploit(
-    module: str, privileged: bool, executes_exploit: bool, content, llm
+    module: str, privileged: bool, executes_exploit: bool, content: str, llm: LLMHandler
 ) -> str:
     """
     This function filters the content of the Metasploit script and classifies it according to the module name, and execution details like if the code requires privileged information or if it is an exploit.
@@ -144,9 +141,9 @@ def analysis_metasploit_modules(
 
     llm = LLMHandler(ip_port)
 
-    modules_with_no_CVE: list = []
+    modules_with_no_CVE: list[str] = []
 
-    metasploit_info: list = []
+    metasploit_info: list[MetasploitModulesInfo] = []
 
     metasploit_files = [
         os.path.join(root, file)
