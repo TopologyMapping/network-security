@@ -1,3 +1,14 @@
+"""
+This module provides functionality for classifying Openvas scripts.
+
+The classification process involves:
+1. Analyzing the content of each script and extracting metadata using regular expressions.
+2. Sending the extracted information to a language model (LLM) with a specific prompt for classification.
+3. Organizing the scripts into appropriate categories based on the LLM's responses.
+
+The classification is performed in batches to efficiently handle large numbers of files.
+"""
+
 from collections import defaultdict
 import dataclasses
 import json
@@ -77,14 +88,6 @@ FILE_EXTENSION_OPENVAS = ".nasl"
 # these values are arbitrary and can be changed if necessary
 SCORE_SIMILAR_FILE = 31
 SCORE_MAYBE_SIMILAR_FILE = 16
-
-"""
-    This file contains the functions to classify Openvas scripts.
-    The classification is done by analyzing the content of the script, extracting metadada using regex and then sending the information to the LLM with the appropriate prompt.
-    The classification is done in batches, as there are many files to be classified.
-    In particular, Openvas contains almost 100 thousand files, so an initial filtering is done to avoid classifying all files, grouping them in similar categories.
-    Below, the functions are described in more detail.
-"""
 
 CVE_REGEX = re.compile(r'script_cve_id\("(?P<cve1>[^"]+)"(?:,\s*"(?P<cve2>[^"]+)")*\);')
 DEPRECATED_REGEX = re.compile(
@@ -234,7 +237,7 @@ def analysis_openvas_NVTS(
     *Classification is not performed on all Openvas files. Check the 'get_list_unique_files' function.
     """
 
-    #llm = LLMHandler(ip_port)
+    llm = LLMHandler(ip_port)
 
     NVTS_with_no_CVE: list[str] = []
 
@@ -268,8 +271,7 @@ def analysis_openvas_NVTS(
 
         start_time = time.time()
 
-        #classification = classification_openvas(content, qod_value, qod_type, llm)
-        classification = ""
+        classification = classification_openvas(content, qod_value, qod_type, llm)
 
         end_time = time.time()
         elapsed_time = end_time - start_time

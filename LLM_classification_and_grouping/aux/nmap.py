@@ -1,3 +1,14 @@
+"""
+This module provides functionality for classifying Nmap scripts.
+
+The classification process involves:
+1. Analyzing the content of each script and extracting metadata using regular expressions.
+2. Sending the extracted information to a language model (LLM) with a specific prompt for classification.
+3. Organizing the scripts into appropriate categories based on the LLM's responses.
+
+The classification is performed in batches to efficiently handle large numbers of files.
+"""
+
 import dataclasses
 import os
 import re
@@ -10,12 +21,6 @@ from .constants import (PROMPT_NMAP, PROMPT_NMAP_ATTACK, PROMPT_NMAP_BRUTE_DOS,
 from .llm import LLMHandler
 from .utils import ScriptClassificationResult, read_file_with_fallback
 
-"""
-    This file contains the functions to classify Nmap scripts.
-    The classification is done by analyzing the content of the script, extracting metadada using regex and then sending the information to the LLM with the appropriate prompt.
-    The classification is done in batches, as there are many files to be classified.
-    Below, the functions are described in more detail.
-"""
 FILE_EXTENSION_NMAP = ".nse"
 
 BRUTE_FORCE_CATEGORY = "brute"
