@@ -30,7 +30,7 @@ from .utils import ScriptClassificationResult, read_file_with_fallback
 class MetasploitModulesInfo:
     file: str
     privileged: bool
-    cves: list
+    cves: list[str]
     module: str
     classification: str
     id: str  # the Metasploit id is the file name
@@ -54,7 +54,7 @@ def extract_privileged_metasploit(content: str) -> bool:
     return bool(match.group("privileged")) if match else False
 
 
-def extract_cve_from_metasploit(content: str) -> list:
+def extract_cve_from_metasploit(content: str) -> list[str]:
     cves = [
         f"CVE-{match.group('cve')}" for match in METASPLOIT_CVE_REGEX.finditer(content)
     ]
@@ -81,7 +81,7 @@ def extract_name_metasploit(content: str) -> str:
 
 
 def classification_metasploit(
-    module: str, privileged: bool, executes_exploit: bool, content: str, llm: LLMHandler
+    module: str, privileged: bool, exploit_is_executed: bool, content: str, llm: LLMHandler
 ) -> str:
     """
     This function filters the content of the Metasploit script and classifies it according to the module name, and execution details like if the code requires privileged information or if it is an exploit.
@@ -90,7 +90,7 @@ def classification_metasploit(
     classification: str = ""
 
     # based on the module information, we classify the module with the correct prompt
-    if privileged is True and (module == "Exploit" or executes_exploit is True):
+    if privileged is True and (module == "Exploit" or exploit_is_executed is True):
         classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED
         )
@@ -113,7 +113,7 @@ def classification_metasploit(
         classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_PRIVILEGED
         )
-    elif module == "Exploit" or executes_exploit is True:
+    elif module == "Exploit" or exploit_is_executed is True:
         classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_EXPLOIT
         )
@@ -139,7 +139,7 @@ def analysis_metasploit_modules(
     Output: classified files and information about files without CVE.
     """
 
-    llm = LLMHandler(ip_port)
+    llm : LLMHandler = LLMHandler(ip_port)
 
     modules_with_no_CVE: list[str] = []
 
@@ -161,13 +161,16 @@ def analysis_metasploit_modules(
 
         content = read_file_with_fallback(metasploit_file)
 
-        cves = extract_cve_from_metasploit(content)
+        if not content:
+            continue
+
+        cves : list[str] = extract_cve_from_metasploit(content)
 
         if not cves:
 
             modules_with_no_CVE.append(metasploit_file)
 
-        module = extract_module_metasploit(content)
+        module : str = extract_module_metasploit(content)
 
         # skipping modules that works as 'support' to exploits, not related directly with vulnerability discovery
         if module in ["Evasion", "Payloads", "Nop", "Encoder"]:
@@ -175,14 +178,14 @@ def analysis_metasploit_modules(
 
         privileged = extract_privileged_metasploit(content)
 
-        executes_exploit = execute_exploit_metasploit(content)
+        exploit_is_executed : bool = execute_exploit_metasploit(content)
 
-        name = extract_name_metasploit(content)
+        name : str = extract_name_metasploit(content)
 
         start_time = time.time()
 
-        classification = classification_metasploit(
-            module, privileged, executes_exploit, content, llm
+        classification : str = classification_metasploit(
+            module, privileged, exploit_is_executed, content, llm
         )
 
         end_time = time.time()
