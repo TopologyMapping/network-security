@@ -10,7 +10,7 @@ class ScriptClassificationResult:
 
 
 # Try to read file with different encodings
-def read_file_with_fallback(file_path):
+def read_file_with_fallback(file_path) -> str | None:
 
     if not os.path.exists(file_path):
         print(file_path)

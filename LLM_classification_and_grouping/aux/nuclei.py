@@ -53,7 +53,7 @@ def parse_nuclei_yaml(content: str) -> dict[str, Any]:
         return {}
 
 
-def extract_cve_nuclei(yaml_data: dict[str, Any]) -> list:
+def extract_cve_nuclei(yaml_data: dict[str, Any]) -> list[str]:
     try:
         return yaml_data["info"]["classification"][
             "cve-id"
@@ -66,7 +66,7 @@ def extract_nuclei_id(yaml_data: dict[str, Any]) -> str:
     return yaml_data.get("id", "")
 
 
-def extract_nuclei_tags(yaml_data: dict[str, Any]) -> list:
+def extract_nuclei_tags(yaml_data: dict[str, Any]) -> list[str]:
     try:
         str_tags = yaml_data["info"]["tags"]  # nuclei structure to get tags
         return str_tags.split(",")
@@ -74,7 +74,7 @@ def extract_nuclei_tags(yaml_data: dict[str, Any]) -> list:
         return []
 
 
-def classification_nuclei(tags: list, content: str, llm: LLMHandler) -> str:
+def classification_nuclei(tags: list[str], content: str, llm: LLMHandler) -> str:
     """
     This function filters the content of the Nuclei script and classifies it according to the tags collected.
     """
@@ -131,7 +131,7 @@ def analysis_nuclei_templates(
     Output: classified files and information about files without CVE.
     """
 
-    llm = LLMHandler(ip_port)
+    llm : LLMHandler = LLMHandler(ip_port)
 
     templates_with_no_CVE: list[str] = []
 
@@ -152,24 +152,28 @@ def analysis_nuclei_templates(
     for nuclei_file in nuclei_files[initial_range:final_range]:
 
         content = read_file_with_fallback(nuclei_file)
-        yaml_data = parse_nuclei_yaml(content)
 
-        id = extract_nuclei_id(yaml_data)
+        if not content:
+            continue
+
+        yaml_data : dict[str, Any] = parse_nuclei_yaml(content)
+
+        id : str = extract_nuclei_id(yaml_data)
 
         if not id:
             continue
 
-        cves = extract_cve_nuclei(yaml_data)
+        cves : list[str] = extract_cve_nuclei(yaml_data)
 
         if not cves:
 
             templates_with_no_CVE.append(nuclei_file)
 
-        tags = extract_nuclei_tags(yaml_data)
+        tags :list[str] = extract_nuclei_tags(yaml_data)
 
         start_time = time.time()
 
-        classification = classification_nuclei(tags, content, llm)
+        classification :str  = classification_nuclei(tags, content, llm)
 
         end_time = time.time()
         elapsed_time = end_time - start_time

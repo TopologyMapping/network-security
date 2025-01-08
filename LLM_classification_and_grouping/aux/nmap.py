@@ -27,7 +27,10 @@ BRUTE_FORCE_CATEGORY = "brute"
 DOS_CATEGORY = "dos"
 DISCOVERY_CATEGORY = "discovery"
 SAFE_CATEGORY = "safe"
-INTRUSIVE_CATEGORIES = ["exploit", "malware", "vuln"]
+INTRUSIVE_CATEGORIES : set = {"exploit", "malware", "vuln"}
+EXPLOIT_CATEGORY = "exploit"
+MALWARE_CATEGORY = "malware"
+VULN_CATEGORY = "vuln"
 
 NMAP_CVE_REGEX = re.compile(r"IDS\s*=\s*\{.*CVE\s*=\s*'(?P<cve>[^']+)'.*\}")
 NMAP_CATEGORIES_REGEX = re.compile(r"categories\s*=\s*\{(?P<categories>[^\}]+)\}")
@@ -41,7 +44,7 @@ class NmapScriptInfo:
     classification: str
     id: str  # the Nmap id is the file name
     cves: list
-    categories: str
+    categories: list[str]
 
 
 # REGEX FUNCTIONS TO EXTRACT INFO
@@ -50,17 +53,17 @@ def extract_cve_nmap(content) -> list:
     return cves if cves else []
 
 
-def extract_categories_nmap(content) -> str:
+def extract_categories_nmap(content) -> list[str]:
     match = NMAP_CATEGORIES_REGEX.search(content)
     if match:
         categories = match.group("categories")
         words = [word.strip('"') for word in categories.split(",")]
-        return " ".join(words)
-    return ""
+        return words
+    return []
 
 
 def classification_nmap(
-    all_script_categories: str, content: str, llm: LLMHandler
+    all_script_categories: list[str], content: str, llm: LLMHandler
 ) -> str:
     """
     This function filters the content of the Nmap script and classifies it according to the categorie collected.
@@ -119,9 +122,7 @@ def classification_nmap(
 
         classification += category_and_subcategory_discovery_safe
 
-    elif (
-        any(intrusive in all_script_categories for intrusive in INTRUSIVE_CATEGORIES)
-    ) and SAFE_CATEGORY not in all_script_categories:
+    elif INTRUSIVE_CATEGORIES.intersection(all_script_categories) and SAFE_CATEGORY not in all_script_categories:
 
         classification = llm.classification_text_generation(content, PROMPT_NMAP_ATTACK)
 
@@ -171,13 +172,13 @@ def analysis_nmap_scripts(
 
             scripts_with_no_CVE.append(nmap_file)
 
-        categories = extract_categories_nmap(content)
+        categories : list[str] = extract_categories_nmap(content)
 
-        file_name = os.path.basename(nmap_file)
+        file_name : str = os.path.basename(nmap_file)
 
         start_time = time.time()
 
-        classification = classification_nmap(categories, content, llm)
+        classification : str = classification_nmap(categories, content, llm)
 
         end_time = time.time()
         elapsed_time = end_time - start_time

@@ -122,7 +122,7 @@ AFFECTED_REGEX = re.compile(
 
 
 # Functions to extract information
-def extract_cve_from_openvas(content: str) -> list:
+def extract_cve_from_openvas(content: str) -> list[str]:
     cves = CVE_REGEX.findall(content)
     cves_to_list = [cve for match in cves for cve in match if cve]
     return cves_to_list
@@ -259,6 +259,9 @@ def analysis_openvas_NVTS(
 
         content = read_file_with_fallback(openvas_file)
 
+        if not content:
+            continue
+
         if is_openvas_file_deprecated(content):
             continue
 
@@ -270,17 +273,17 @@ def analysis_openvas_NVTS(
         qod_type: str = qod_info[0]
         qod_value: int = qod_info[1]
 
-        cves = extract_cve_from_openvas(content)
+        cves : list[str] = extract_cve_from_openvas(content)
 
         if not cves:
 
             NVTS_with_no_CVE.append(openvas_file)
 
-        oid = extract_oid_openvas(content)
+        oid : str = extract_oid_openvas(content)
 
         start_time = time.time()
 
-        classification = classification_openvas(content, qod_value, qod_type, llm)
+        classification : str = classification_openvas(content, qod_value, qod_type, llm)
 
         end_time = time.time()
         elapsed_time = end_time - start_time
@@ -330,7 +333,7 @@ def get_file_info(content: str) -> dict[str, Any]:
 
 
 def return_similarity_score(
-    new_file_name: str, new_file_info: dict, old_file_name: str, old_file_info: dict
+    new_file_name: str, new_file_info: dict[str, Any], old_file_name: str, old_file_info: dict[str, Any]
 ) -> int:
     """
     This function returns a score based on the similarity of the files, involving metadada information.
@@ -370,7 +373,7 @@ def get_list_unique_files(openvas_folder: str) -> list[str]:
 
 
 def check_active_script(
-    qod_value: int, key: CveQodKey, openvas_qod_cve: dict, openvas_file: str
+    qod_value: int, key: CveQodKey, openvas_qod_cve: dict[CveQodKey, list[str]], openvas_file: str
 ) -> bool:
     """
     Function to check if a script performs actives checks or not.
@@ -477,17 +480,20 @@ def compare_similarity_openvas(openvas_folder: str) -> dict:
 
         content = read_file_with_fallback(openvas_file)
 
+        if not content:
+            continue
+
         if is_openvas_file_deprecated(content):
             files_skipped.append(openvas_file)
             continue
 
-        new_file_info = get_file_info(content)
+        new_file_info : dict[str, Any] = get_file_info(content)
 
         if not new_file_info["qod"]:
             files_skipped.append(openvas_file)
             continue
 
-        cves: list = extract_cve_from_openvas(content)
+        cves: list[str] = extract_cve_from_openvas(content)
 
         if not (cves):
 
@@ -508,35 +514,38 @@ def compare_similarity_openvas(openvas_folder: str) -> dict:
             openvas_qod_cve[key].append(openvas_file)
             continue
 
-        is_active_code = check_active_script(
+        is_active_code : bool = check_active_script(
             qod_value, key, openvas_qod_cve, openvas_file
         )
 
         if is_active_code:
             continue
 
-        similar = False
+        is_similar : bool = False
 
         for old_file in openvas_qod_cve[key]:
 
             old_file_content = read_file_with_fallback(old_file)
 
-            old_file_info = get_file_info(old_file_content)
+            if not old_file_content:
+                continue
 
-            old_file_name = os.path.basename(old_file)
+            old_file_info : dict[str, Any] = get_file_info(old_file_content)
 
-            score = return_similarity_score(
+            old_file_name : str = os.path.basename(old_file)
+
+            score : int = return_similarity_score(
                 new_file_name, new_file_info, old_file_name, old_file_info
             )
 
-            similar = verifies_similarity(
+            is_similar : bool = verifies_similarity(
                 score, key, similars, maybe_similars, openvas_file
             )
 
-            if similar:
+            if is_similar:
                 break
 
-        if similar is False:
+        if is_similar is False:
             openvas_qod_cve[key].append(openvas_file)
 
     openvas_qod_cve_serializable = {
