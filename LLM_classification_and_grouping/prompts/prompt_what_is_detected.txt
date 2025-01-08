@@ -1,0 +1,8 @@
+To complete this task, analyze the detection script code, metadata, comments and verifications to find what is detected, the application, specific targets, and other necessary information. If you cannot find one of the required information, just answer with "Uncertain".
+
+Please fill out the template below. Change only the sections within curly braces, keep the braces on the response, and follow the intructions within the braces considering the explanation above:
+
+What is detected: {select one of Vulnerability, Unmaintained Software, or Property of a System, as described above and answer directly}
+A: {answer to subitem (A) of what is detected}
+B: {answer to subitem (B) of what is detected}
+C: {answer to subitem (C) of what is detected (if applicable)}
