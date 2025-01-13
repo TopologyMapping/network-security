@@ -83,6 +83,7 @@ class DatasetManager:
         self.load_cve_classifications()
         self.load_kev_database()
         self.load_votes()
+        self.kev_set = set(self.kev_df["cveID"].values)
 
     def build_datestr2version(self):
         shodan_fn_regex = re.compile(r"BR\.(?P<date>\d+)\.json\.bz2")
@@ -285,7 +286,7 @@ class DatasetManager:
             return max(vulns, key=lambda x: x["epss"])["cve_id"]
         
         def isin_kev(vulns) -> DataFrame:
-            return any(vuln["cve_id"] in self.kev_df["cveID"].values for vuln in vulns)
+            return any(vuln["cve_id"] in self.kev_set for vuln in vulns)
 
         features_df["max_epss_cve_id"] = df["vulns"].apply(max_epss_cve_id)
         features_df["in_kev"] = df["vulns"].apply(isin_kev)
