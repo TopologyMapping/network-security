@@ -51,7 +51,7 @@ METASPLOIT_NAME_REGEX = re.compile(r"'Name'\s*=>\s*'(?P<name>[^']+)'")
 # REGEX FUNCTIONS TO EXTRACT INFO
 def extract_privileged_metasploit(content: str) -> bool:
     match = PRIVILEGED_REGEX.search(content)
-    return bool(match.group("privileged")) if match else False
+    return match.group("privileged").lower() == "true" if match else False
 
 
 def extract_cve_from_metasploit(content: str) -> list[str]:
