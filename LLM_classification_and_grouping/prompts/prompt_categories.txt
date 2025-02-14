@@ -1,0 +1,10 @@
+To complete this task, analyze the detection script code, metadata, comments and verifications to find how the detection is made. First identify the category of a script, and then the subcategory. Please, to answer the question, fill out the template below. Change only the sections within curly braces, keep the braces on the response, and follow the intructions within the braces considering the explanation above:
+
+How the script works?
+Category: {Category}
+Subcategory: {Subcategory}
+Explanations: {explanation about the code}
+
+If a subcategory matches the script, please simply report the number of the subcategory and do not provide any additional explanation. If no match is found, please propose and describe a new category or subcategory.
+
+Think carefully.

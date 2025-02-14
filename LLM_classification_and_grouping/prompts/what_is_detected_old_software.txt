@@ -1,0 +1,9 @@
+1.2 Old Software: Software that is old may no longer receive security updates. As such, these software put systems at higher risk even if there are no known vulnerabilities. Scripts can detect these unmaintained software by checking for end-of-life periods or whether libraries or frameworks have been deprecated. Another case in this category is software that has not received updates that correct security problems. For scripts that identify unmaintained software, please find: (A) the software identified as unmaintained or old software (this can be either an application, package, library, or framework); (B) the version of the software that is searched for, or classified as unmaintained.
+
+To complete this task, analyze the detection script code, metadata, comments and verifications to find what is detected, the application, specific targets, and other necessary information. If you cannot find one of the required information, just answer with "Uncertain".
+
+Please fill out the template below. Change only the sections within curly braces, keep the braces on the response, and follow the intructions within the braces considering the explanation above:
+
+What is detected: {select one of Vulnerability, Unmaintained Software, or Property of a System, as described above and answer directly}
+A: {answer to subitem (A) of what is detected}
+B: {answer to subitem (B) of what is detected}
