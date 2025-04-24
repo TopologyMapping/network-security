@@ -90,14 +90,13 @@ def anonymize(
             desc_text = desc_text.replace(host_ip, crypted_ip)
 
         host_name_elem = host_elem.find("hostname")
-        if host_name_elem is None:
-            continue
-        host_name_text = host_name_elem.text
-        if (host_name_anon := azer.anonymize_hostname(host_name_text)) is not None:
-            logging.info(f"{host_name_text} -> {host_name_anon}")
-            host_name_elem.text = host_name_anon
-            desc_text = desc_text.replace(host_name_text, host_name_anon)
-        desc_elem.text = desc_text
+        if host_name_elem is not None:
+            host_name_text = host_name_elem.text
+            if (host_name_anon := azer.anonymize_hostname(host_name_text)) is not None:
+                logging.info(f"{host_name_text} -> {host_name_anon}")
+                host_name_elem.text = host_name_anon
+                desc_text = desc_text.replace(host_name_text, host_name_anon)
+            desc_elem.text = desc_text
 
         new_results.append(result)
 
