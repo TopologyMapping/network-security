@@ -45,7 +45,6 @@ def filter_anonymize(
     for result in results:
         if result.get("id") not in oids:
             continue
-        count_results += 1
 
         host_elem = result.find("host")
         desc_elem = result.find("description")
@@ -67,6 +66,7 @@ def filter_anonymize(
             desc_text = desc_text.replace(host_name_text, host_name_anon)
         desc_elem.text = desc_text
 
+        count_results += 1
         new_results.append(result)
 
     print(f"Filtered {count_results} OIDs from {len(results)}")
