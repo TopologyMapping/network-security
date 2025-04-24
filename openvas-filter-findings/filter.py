@@ -37,7 +37,7 @@ def filter_anonymize(
     report = outer_report if inner_report is None else inner_report
 
     results = report.find("results")
-    new_tree = ET.Element("report", attrib={"id": "gt_test"})
+    new_tree = ET.Element("report", attrib={"id": "gtcrivo"})
     internal_report = ET.SubElement(new_tree, "report")
     new_results = ET.SubElement(internal_report, "results")
 
