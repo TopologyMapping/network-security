@@ -43,6 +43,7 @@ glassfish
 grafana
 gw
 hadoop
+http
 idrac
 iis
 imap
@@ -74,7 +75,6 @@ oracle
 pages
 paloalto
 plone
-pop
 portal
 postgres
 private

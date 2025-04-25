@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import pathlib
 import random
 import string
@@ -20,6 +21,12 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         default=False,
         help="Keep country-code TLDs in anonymized hostnames [%(default)s]",
+    )
+    parser.add_argument(
+        "--immediate-cctld",
+        action="store_true",
+        default=False,
+        help="Assume domain names do not have generic TLDs like .com or .org [%(default)s]",
     )
     parser.add_argument(
         "--tlds-file",
@@ -44,17 +51,16 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output-path",
-        metavar="XML",
+        metavar="DIR",
         type=pathlib.Path,
-        default="report-anonymized.xml",
+        default="anon-output",
         help="Path to the anonymized report XML [%(default)s]",
     )
     parser.add_argument(
-        "--openvas-report",
-        metavar="XML",
+        "reports",
+        nargs="+",
         type=pathlib.Path,
-        help="OpenVAS report in XML format",
-        required=True,
+        help="OpenVAS reports in XML format",
     )
     return parser
 
@@ -106,7 +112,7 @@ def anonymize(
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     cryptopan_key = "".join(
         random.choices(string.ascii_letters + string.digits + string.punctuation, k=32)
@@ -120,8 +126,11 @@ if __name__ == "__main__":
         special_cctlds_path=args.special_cctlds_file,
         dns_keywords_path=args.dns_keywords_file,
         keep_cctld=args.keep_cctld,
+        immediate_cctld=args.immediate_cctld,
     )
 
-    tree = ET.parse(args.openvas_report)
-    new_tree = anonymize(tree, cpan, azer)
-    new_tree.write(args.output_path, encoding="utf8", xml_declaration=True)
+    os.makedirs(args.output_path, exist_ok=True)
+    for reportfp in args.reports:
+        tree = ET.parse(reportfp)
+        new_tree = anonymize(tree, cpan, azer)
+        new_tree.write(args.output_path / reportfp.name, encoding="utf8", xml_declaration=True)

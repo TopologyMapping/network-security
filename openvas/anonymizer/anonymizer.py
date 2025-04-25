@@ -18,9 +18,11 @@ class HostnameAnonymizer:
         tlds_path: pathlib.Path,
         special_cctlds_path: pathlib.Path,
         dns_keywords_path: pathlib.Path,
-        keep_cctld: bool,
+        keep_cctld: bool = False,
+        immediate_cctld: bool = False,
     ) -> None:
         self.keep_cctld = keep_cctld
+        self.immediate_cctld = immediate_cctld
         self.domain2id: dict[DnsKey, int] = {}
         self.parent2entry2id: dict[DnsKey, dict[str, int]] = defaultdict(dict)
 
@@ -46,8 +48,9 @@ class HostnameAnonymizer:
     def anonymize_domain(self, parts: list[str]) -> DnsKey:
         tld = parts[-1]
         domkey = tuple(parts[-2:])
-        if self.is_cctld(tld) and not self.is_special_cctld(tld):
-            domkey = tuple(parts[-3:])
+        if not self.immediate_cctld:
+            if self.is_cctld(tld) and not self.is_special_cctld(tld):
+                domkey = tuple(parts[-3:])
         if domkey not in self.domain2id:
             self.domain2id[domkey] = len(self.domain2id) + 1
         return domkey
@@ -100,6 +103,12 @@ def create_parser() -> argparse.ArgumentParser:
         help="Keep country-code TLDs in anonymized hostnames [%(default)s]",
     )
     parser.add_argument(
+        "--immediate-cctld",
+        action="store_true",
+        default=False,
+        help="Assume domain names do not have generic TLDs like .com or .org [%(default)s]",
+    )
+    parser.add_argument(
         "--tlds-file",
         metavar="JSON",
         type=pathlib.Path,
@@ -143,6 +152,7 @@ def main() -> None:
         special_cctlds_path=args.special_cctlds_file,
         dns_keywords_path=args.dns_keywords_file,
         keep_cctld=args.keep_cctld,
+        immediate_cctld=args.immediate_cctld,
     )
 
     for hostname in hostnames:
