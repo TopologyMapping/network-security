@@ -26,7 +26,7 @@ for row in table.tbody.find_all("tr"):
         "manager": tld_manager
     })
 
-with open("tlds.json", "w") as jsonfile:
+with open("data/tlds.json", "w") as jsonfile:
     json.dump(tld_data, jsonfile, indent=4)
 
 print("TLD data written to tlds.json")
