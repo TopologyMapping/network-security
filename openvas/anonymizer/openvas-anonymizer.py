@@ -78,8 +78,8 @@ def anonymize(
     outer_report = root.find("report")
     inner_report = outer_report.find("report")
     report = outer_report if inner_report is None else inner_report
-
     results = report.find("results")
+
     new_tree = ET.Element("report", attrib={"id": "gtcrivo"})
     internal_report = ET.SubElement(new_tree, "report")
     new_results = ET.SubElement(internal_report, "results")
@@ -105,6 +105,12 @@ def anonymize(
             desc_elem.text = desc_text
 
         new_results.append(result)
+
+    for host in report.findall("host"):
+        ip = host.find("ip")
+        logging.info(f"Processing host: {ip.text}")
+        ip.text = cpan.anonymize(ip.text)
+        internal_report.append(host)
 
     return ET.ElementTree(new_tree)
 

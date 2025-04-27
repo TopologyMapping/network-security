@@ -5,15 +5,19 @@ import pathlib
 import sys
 import xml.etree.ElementTree as ET
 
-import dataclasses_json
+from pydantic import BaseModel
 
 
-@dataclasses_json.dataclass_json
-@dataclasses.dataclass
-class Config:
+DETAIL_OS_NAMES = ["OS-Detection", "OS", "best_os_cpe"]
+
+
+class Config(BaseModel):
     orig_xml_path: pathlib.Path
     output_xml_path: pathlib.Path
-    nvt_oid_list: list[str]
+    nvt_oid_list_path: pathlib.Path
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 def filter(
@@ -48,7 +52,7 @@ def filter(
 
 if __name__ == "__main__":
     with open(sys.argv[1], "r") as fd:
-        config = Config.from_json(fd.read())
+        config = Config.parse_raw(fd.read())
 
     tree = ET.parse(config.orig_xml_path)
     new_tree = filter(tree, config.nvt_oid_list)
