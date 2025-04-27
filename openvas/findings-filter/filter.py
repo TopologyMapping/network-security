@@ -40,20 +40,46 @@ def filter(
     internal_report = ET.SubElement(new_tree, "report")
     new_results = ET.SubElement(internal_report, "results")
 
-    count_results = 0
+    filtered_oid_hosts = set()
     for result in results:
         if result.get("id") not in oids:
             continue
-        count_results += 1
+        host_elem = result.find("host")
+        if (host_ip := host_elem.text) is not None:
+            filtered_oid_hosts.add(host_ip)
         new_results.append(result)
+    print(f"Filtered {len(new_results)} OIDs from {len(results)}, {len(filtered_oid_hosts)} hosts")
 
-    print(f"Filtered {count_results} OIDs from {len(results)}")
+    found_hosts = set()
+    ndetails = 0
+    for host in report.findall("host"):
+        ip = host.find("ip").text
+        if ip not in filtered_oid_hosts:
+            continue
+        new_host = None
+        for detail in host.findall("detail"):
+            name = detail.find("name")
+            if name is None or name.text not in DETAIL_OS_NAMES:
+                continue
+            if new_host is None:
+                found_hosts.add(ip)
+                new_host = ET.SubElement(internal_report, "host")
+                new_ip = ET.SubElement(new_host, "ip")
+                new_ip.text = ip
+            new_host.append(detail)
+            ndetails += 1
+    print(f"Added {len(found_hosts)} hosts with a total of {ndetails} OS detection details")
+
     return ET.ElementTree(new_tree)
+
 
 if __name__ == "__main__":
     with open(sys.argv[1], "r") as fd:
         config = Config.parse_raw(fd.read())
 
-    tree = ET.parse(config.orig_xml_path)
-    new_tree = filter(tree, config.nvt_oid_list)
-    new_tree.write(config.output_xml_path, encoding="utf8", xml_declaration=True)
+    with open(config.nvt_oid_list_path.expanduser(), "r") as fd:
+        nvt_oid_list = [line.strip() for line in fd if line.strip()]
+
+    tree = ET.parse(config.orig_xml_path.expanduser())
+    new_tree = filter(tree, nvt_oid_list)
+    new_tree.write(config.output_xml_path.expanduser(), encoding="utf8", xml_declaration=True)
