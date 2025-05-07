@@ -73,8 +73,9 @@ def classify_scripts(
     for tool_spec in tool_specs:
         tool_path = getattr(args, tool_spec.name)
         if tool_path:
+            # adding +1 because the files will be classified in range(init, end), so I need to sum +1 to avoid ignoring the last final
             result = tool_spec.handler(
-                tool_path, args.initial_range, args.final_range, args.ip_port
+                tool_path, args.initial_range, args.final_range + 1, args.ip_port
             )
             results[tool_spec.name] = {
                 "scripts_with_cves": result.scripts_with_cves,
