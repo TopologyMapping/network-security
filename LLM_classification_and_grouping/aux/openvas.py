@@ -298,7 +298,6 @@ def analysis_openvas_NVTS(
         ).to_dict()
 
         openvas_info.append(info)
-        break
 
     return ScriptClassificationResult(
         scripts_with_cves=openvas_info, scripts_without_cves=NVTS_with_no_CVE
