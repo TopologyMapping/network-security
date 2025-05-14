@@ -15,39 +15,24 @@
                     <tr>
                         <td class="header">
                             <img src="https://www.gt-crivo.dcc.ufmg.br/images/logo.png" alt="Logo gt-crivo" style="width: 100px; height: auto; display: block; margin: 0 auto; margin-bottom: 30px; margin-top: 20px">
-                            <h2 style="margin: 0; margin-top: 10px;">Report sobre Análise de Vulnerabilidades</h2>
+                            <h2 style="margin: 0; margin-top: 10px;">Relatório sobre Análise de Vulnerabilidades</h2>
                         </td>
                     </tr>
                     <!-- Conteúdo -->
                     <tr>
                         <td class="content">
-                            <h1>Olá, {{intern_name}}!</h1>
-                            <p>Estamos muito felizes em compartilhar com você nossas novidades. Esta semana, vamos apresentar um report sobre a sua participação no projeto GT-Crivo. Sua participação é de grande importância para nós.</p>
+                            <h2>Olá, {{intern_name}}!</h2>
+                            <p>Agradecemos por participar das atividades do GT-CRIVO. Nesta mensagem, apresentamos um breve relatório sobre suas análises de vulnerabilidades.</p>
                         </td>
                     </tr>
-                
-                    <tr>
-                        <td>
-                            <h2 style="color: #333333;">Status do Projeto</h2>
-                                <p>
-                                    Estamos muito satisfeitos com o progresso que temos alcançado 
-                                    até o momento. Já recebemos diversas análises de vulnerabilidades 
-                                    que estão sendo fundamentais para o andamento do projeto.
 
-                                </p>    
-                            
-                        </td>
-                    </tr>
                     <tr>
                         <td>
-                            <h2 style="color: #333333;">Resultados</h2>
-                            <p>
-                                Abaixo, você poderá visualizar como sua análise de vulnerabilidades se compara com os demais internos
-                            </p>
-                            <h3>Comparação de avaliação e média geral</h3>
+                            <h3>Comparação entre sua avaliação e a média geral</h3>
                             <img src="" alt="avaliações interno x média geral">
                             <p>
-                                O gráfico acima mostra a comparação entre a sua avaliação e a média geral dos internos.
+                                O gráfico acima apresenta a comparação entre sua avaliação (eixo <em>y</em>) e a média geral das avaliações dos demais residentes (eixo <em>x</em>). Quanto mais próximos da diagonal <em>x = y</em>, mais alinhadas estão suas análises em relação às dos demais residentes. Pontos
+                                afastados da diagonal indicam vulnerabilidades em que sua avaliação foi significativamente diferente da média. Abaixo listamos as vulnerabilidades com maiores divergências.
                             </p>
                         </td>
                     </tr>
@@ -90,67 +75,42 @@
                     {% endif %}
                     <tr>
                         <td>
-                            <h3>
-                                Comparativo de erro médio para cada risco atribuído ao decorrer do tempo
-                            </h3>
+                            <h3>Importância das propriedades das vulnerabilidades em suas análises</h3>
+                            <p>Treinamos um modelo para previsão de vulnerabilidades de acordo com o seu perfil. Abaixo, apresentamos um gráfico com as oito propriedades (<em>features</em>) mais relevantes para a previsão dos riscos, segundo seu perfil. Em geral, as propriedades mais importantes
+                                para previsão são aquelas consideradas ativamente por você na atribuição de risco; no entanto, isso pode não ocorrer devido à quantidade reduzida de análises disponíveis para treinar o modelo.</p>
+                            <img src="" alt="Gráfico de importância das features">
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            <h4>Erro Estatístico</h4>
-                            <img src="" alt="erro médio">
-                            <p>
-                                O gráfico acima mostra o erro estatístico de cada risco atribuído ao longo do tempo.
-                            </p>
-                        </td>
-                    </tr>
-                    <hr>
 
                     <tr>
-                        <td>
-                            <h3>Agrupamento com Base em Perfis de Avaliação de Risco</h3>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <h4>Grupos de Avaliação</h4>
-                            <img src="" alt="agrupamento">
-                            <p>
-                                O gráfico acima mostra os grupos de avaliação de risco, com base nas análises realizadas.
+                        <td style="padding: 25px; background-color: #457cb1; border-radius: 0px; border-left: 5px solid #4d9bbd; margin-bottom: 20px;">
+                            <h2 style="color: #ffffff;">Formulário de Avaliação</h2>
+                            <p style="color: #ffffff;">
+                                Preparamos um breve formulário no Google Forms para coletar o feedback dos residentes do Hackers do Bem sobre as atividades desenvolvidas. Sua opinião é muito importante para o aprimoramento das soluções propostas. O preenchimento leva menos de 5 minutos.
                             </p>
+                            <div style="text-align: center; margin-top: 20px;"></div>
+                                <a href="https://forms.gle/d6TBXtJy2R4S48Ra6" style="display: inline-block; background-color: #DDAF50; color: black; padding: 10px 20px; text-align: center; text-decoration: none; font-size: 16px; border-radius: 5px;">
+                                    Preencher Formulário
+                                </a>
+                            </div>
                         </td>
                     </tr>
+
+
                     <tr>
                         <td colspan="2" style="border-top: 1px solid #cccccc; height:10px; line-height:1px; font-size:0;"></td>
                     </tr>
-                    <tr>
-                        <td style="padding: 20px; background-color: #65bce1; border-radius: 0px; border-left: 5px solid  #4d9bbd">
-                            <h2>Ainda dá tempo de participar!</h3>
-                            <p>
-                                Se você ainda não submeteu seu report, não se preocupe! Ainda há tempo para participar e contribuir com suas análises.
-                            </p>
-                            <a href="https://crivo.dcc.ufmg.br/" style="text-decoration: none;">
-                                <button style="background-color: #F5F5F5; border-radius: 10px; border: 0; padding-inline: 30px; margin: 10px">
-                                        <p style="color: black;font-weight: bolder; text-decoration: none;">Acesse o GT-Crivo</p>
-                                </button>
-                            </a>
-                            <p>
-                                Lembre-se que sua perspectiva é única e pode identificar vulnerabilidades que outros podem não ter notado.
-                            
-                            </p>
-                        </td>
-                    </tr>
+
                     <tr>
                         <td colspan="2" height="10px" style="line-height:20px; font-size:0;"></td>
-                      </tr>
-                     <tr>
+                    </tr>
+                    <tr>
                         <td colspan="2" style="border-top: 1px solid #cccccc; height:10px; line-height:1px; font-size:0;"></td>
                     </tr>
                     <!-- Rodapé -->
                     <tr>
                         <td class="footer" style="text-align: center; padding: 20px; color: #666666;">
-                            <p>2025 Equipe GT-Crivo.</p>
-                            <p>Por favor, não responda diretamente a este email. Em caso de dúvidas, envie um email para </p>
+                            <p>Equipe GT-CRIVO</p>
                             <a href="mailto:gt-crivo@dcc.ufmg.br?subject=%5BDúvida%20sobre%20Análise%20de%20Vulnerabilidades%5D" style="text-decoration: none; color: #4242aa;">
                                 <p>gt-crivo@dcc.ufmg.br</p>
                             </a>
