@@ -1,10 +1,11 @@
 from jinja2 import Environment, FileSystemLoader, Undefined
+import os
 
 
 def categorical_format(value):
-    MILD_UPPER_THRESHOLD = 1.5
+    MILD_UPPER_THRESHOLD = 1.75
     MODERATE_UPPER_THRESHOLD = 2.5
-    SEVERE_UPPER_THRESHOLD = 3.5
+    SEVERE_UPPER_THRESHOLD = 3.25
     
     if value < MILD_UPPER_THRESHOLD:
         return f"Mild({value})"
@@ -38,15 +39,31 @@ TODO:
 
 """
 
-def generate_html(html_data, filename="default"):
+def generate_html(html_data, filename="default", categorical=False):
         
     if html_data["is_empty"]:
         output = template_empty.render(html_data)
+        empty_dir = "../../data/htmls/empty/"
+        if not os.path.exists(empty_dir):
+            os.makedirs(empty_dir)
+        with open(f"{empty_dir}{filename}.html", "w") as f:
+            f.write(output)
     else:
         output = template.render(html_data)
-    
-    with open(f"../../data/htmls/{filename}.html", "w") as f:
-        f.write(output)
+        
+        if categorical:
+            categorical_dir = "../../data/htmls/categorical/"
+            if not os.path.exists(categorical_dir):
+                os.makedirs(categorical_dir)
+            with open(f"{categorical_dir}{filename}.html", "w") as f:
+                f.write(output)
+                
+        else:
+            numerical_dir = "../../data/htmls/numerical/"
+            if not os.path.exists(numerical_dir):
+                os.makedirs(numerical_dir)
+            with open(f"{numerical_dir}{filename}.html", "w") as f:
+                f.write(output)
 
 if __name__ == "__main__":
 
