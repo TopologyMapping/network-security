@@ -51,7 +51,7 @@
                             </p>
                         </td>
                     </tr>
-                    
+                    {% if highlight_vuln %}
                     <tr>
                         <td>
                             <h3>Principais Divergências</h3>
@@ -60,51 +60,34 @@
                     <tr>
                         <td>
                             <table>
+                                {% for vuln in highlight_vuln %}
                                 <tr valign="top">
                                     <td style="width: 60%;">
-                                        <h4>{{highlight_vuln[0].title}}</h4>
-                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln[0].id}}">
+                                        <h4>{{vuln.title}}</h4>
+                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{vuln.id}}">
                                             <p>Visualizar finding 🔗</p>
                                         </a>
                                     </td>
+                                    {% if is_categorical %}
                                     <td>
-                                        <p>Risco atribuído: {{highlight_vuln[0].user_rank}}</p>
-                                        <p>Risco médio: {{highlight_vuln[0].avg_rank}}</p>
-                                        <p>Variancia de vulnerabilidade: {{highlight_vuln[0].variance}}</p>
+                                        <p>Risco atribuído: {{vuln.user_rank | categorical_format}}</p>
+                                        <p>Risco médio: {{vuln.avg_rank | categorical_format}}</p>
+                                        <p>Percentil variância: Top {{vuln.var_percentile}}%</p>
                                     </td>
-                                </tr>
-                                <tr valign="top">
-                                    <td style="width: 60%;">
-                                        <h4>{{highlight_vuln[1].title}}</h4>
-                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln[1].id}}">
-                                            <p>Visualizar finding 🔗</p>
-                                        </a>
+                                    {% else %}
+                                    <td>
+                                        <p>Risco atribuído: {{vuln.user_rank}}</p>
+                                        <p>Risco médio: {{vuln.avg_rank}}</p>
+                                        <p>Percentil variância: Top {{vuln.var_percentile}}%</p>
                                     </td>
-                                        <td>
-                                            <p>Risco atribuído: {{highlight_vuln[1].user_rank}}</p>
-                                            <p>Risco médio: {{highlight_vuln[1].avg_rank}}</p>
-                                            <p>Variancia de vulnerabilidade: {{highlight_vuln[2].variance}}</p>
-                                        </td>
-                                        <!-- TODO: Perguntar sobre variancia e top x -->
+                                    {% endif %}
                                 </tr>
-                                <tr valign="top">
-                                    <td style="width: 60%;">
-                                        <h4>{{highlight_vuln[2].title}}</h4>
-                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln[2].id}}">
-                                            <p>Visualizar finding 🔗</p>
-                                        </a>
-                                    </td>
-                                        <td>
-                                            <p>Risco atribuído: {{highlight_vuln[2].user_rank}}</p>
-                                            <p>Risco médio: {{highlight_vuln[2].avg_rank}}</p>
-                                            <p>Variancia de vulnerabilidade: {{highlight_vuln[2].variance}}</p>
-                                        </td>
-                                        <!-- TODO: Perguntar sobre variancia e top x -->
-                                </tr>
+                                {% endfor %}
                             </table>
                         </td>
-                            <!-- TODO: Perguntar sobre variancia e top x -->
-                    </tr>                    
+                    </tr>     
+                    
+                    {% endif %}
                     <tr>
                         <td>
                             <h3>
