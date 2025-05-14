@@ -14,7 +14,11 @@
                     <!-- Cabeçalho -->
                     <tr>
                         <td class="header">
-                            <img src="https://www.gt-crivo.dcc.ufmg.br/images/logo.png" alt="Logo gt-crivo" style="width: 100px; height: auto; display: block; margin: 0 auto; margin-bottom: 30px; margin-top: 20px">
+                            {% if is_email %}
+                                <img src="cid:logo_gt_crivo" alt="Logo gt-crivo" style="width: 100px; height: auto; display: block; margin: 0 auto; margin-bottom: 30px; margin-top: 20px">
+                            {% else %}
+                                <img src="https://www.gt-crivo.dcc.ufmg.br/images/logo.png" alt="Logo gt-crivo" style="width: 100px; height: auto; display: block; margin: 0 auto; margin-bottom: 30px; margin-top: 20px">
+                            {% endif %}
                             <h2 style="margin: 0; margin-top: 10px;">Relatório sobre Análise de Vulnerabilidades</h2>
                         </td>
                     </tr>
@@ -29,7 +33,11 @@
                     <tr halign="center">
                         <td>
                             <h3>Comparação entre sua avaliação e a média geral</h3>
-                            <img src="cid:relatorio_pessoal" alt="avaliações interno x média geral">
+                            {% if is_email %}
+                                <img src="cid:scatterplot" alt="avaliações residente x média geral">
+                            {% else %}
+                                <img src="scatterplot.png" alt="avaliações residente x média geral">
+                            {% endif %}
                             <p>
                                 O gráfico acima apresenta a comparação entre sua avaliação (eixo <em>y</em>) e a média geral das avaliações dos demais residentes (eixo <em>x</em>). Quanto mais próximos da diagonal <em>x = y</em>, mais alinhadas estão suas análises em relação às dos demais residentes. Pontos
                                 afastados da diagonal indicam vulnerabilidades em que sua avaliação foi significativamente diferente da média. Abaixo listamos as vulnerabilidades com maiores divergências.
@@ -70,15 +78,19 @@
                                 {% endfor %}
                             </table>
                         </td>
-                    </tr>     
-                    
+                    </tr>
+
                     {% endif %}
                     <tr halign="center">
                         <td>
                             <h3>Importância das propriedades das vulnerabilidades em suas análises</h3>
                             <p>Treinamos um modelo para previsão de vulnerabilidades de acordo com o seu perfil. Abaixo, apresentamos um gráfico com as oito propriedades (<em>features</em>) mais relevantes para a previsão dos riscos, segundo seu perfil. Em geral, as propriedades mais importantes
                                 para previsão são aquelas consideradas ativamente por você na atribuição de risco; no entanto, isso pode não ocorrer devido à quantidade reduzida de análises disponíveis para treinar o modelo.</p>
-                            <img style="max-width: 700px" margin-bottom="20px" src="cid:importancia" alt="Gráfico de importância das features">
+                            {% if is_email %}
+                                <img style="max-width: 700px" margin-bottom="20px" src="cid:importancia" alt="Gráfico de importância das features">
+                            {% else %}
+                                <img style="max-width: 700px" margin-bottom="20px" src="importancia.png" alt="Gráfico de importância das features">
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
@@ -112,7 +124,7 @@
                     <!-- Rodapé -->
                     <tr>
                         <td class="footer" style="text-align: center; padding: 20px; color: #666666;">
-                            <p>2025 Equipe GT-Crivo.</p>
+                            <p>Equipe GT-CRIVO</p>
                             <a href="mailto:gt-crivo@dcc.ufmg.br?subject=%5BDúvida%20sobre%20Análise%20de%20Vulnerabilidades%5D" style="text-decoration: none; color: #4242aa;">
                                 <p>gt-crivo@dcc.ufmg.br</p>
                             </a>
