@@ -62,42 +62,42 @@
                             <table>
                                 <tr valign="top">
                                     <td style="width: 60%;">
-                                        <h4>{{highlight_vuln.0.title}}</h4>
-                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln.0.id}}">
+                                        <h4>{{highlight_vuln[0].title}}</h4>
+                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln[0].id}}">
                                             <p>Visualizar finding 🔗</p>
                                         </a>
                                     </td>
                                     <td>
-                                        <p>Risco atribuido: {{highlight_vuln.0.intern_rank}}</p>
-                                        <p>Risco médio: {{highlight_vuln.0.mean_rank}}</p>
-                                        <p>Variancia de vulnerabilidade: {{highlight_vuln.0.variance}}</p>
+                                        <p>Risco atribuído: {{highlight_vuln[0].user_rank}}</p>
+                                        <p>Risco médio: {{highlight_vuln[0].avg_rank}}</p>
+                                        <p>Variancia de vulnerabilidade: {{highlight_vuln[0].variance}}</p>
                                     </td>
                                 </tr>
                                 <tr valign="top">
                                     <td style="width: 60%;">
-                                        <h4>{{highlight_vuln.1.title}}</h4>
-                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln.1.id}}">
+                                        <h4>{{highlight_vuln[1].title}}</h4>
+                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln[1].id}}">
                                             <p>Visualizar finding 🔗</p>
                                         </a>
                                     </td>
                                         <td>
-                                            <p>Risco atribuido: {{highlight_vuln.1.intern_rank}}</p>
-                                            <p>Risco médio: {{highlight_vuln.1.mean_rank}}</p>
-                                            <p>Variancia de vulnerabilidade: {{highlight_vuln.2.variance}}</p>
+                                            <p>Risco atribuído: {{highlight_vuln[1].user_rank}}</p>
+                                            <p>Risco médio: {{highlight_vuln[1].avg_rank}}</p>
+                                            <p>Variancia de vulnerabilidade: {{highlight_vuln[2].variance}}</p>
                                         </td>
                                         <!-- TODO: Perguntar sobre variancia e top x -->
                                 </tr>
                                 <tr valign="top">
                                     <td style="width: 60%;">
-                                        <h4>{{highlight_vuln.2.title}}</h4>
-                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln.2.id}}">
+                                        <h4>{{highlight_vuln[2].title}}</h4>
+                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{highlight_vuln[2].id}}">
                                             <p>Visualizar finding 🔗</p>
                                         </a>
                                     </td>
                                         <td>
-                                            <p>Risco atribuido: {{highlight_vuln.2.intern_rank}}</p>
-                                            <p>Risco médio: {{highlight_vuln.2.mean_rank}}</p>
-                                            <p>Variancia de vulnerabilidade: {{highlight_vuln.2.variance}}</p>
+                                            <p>Risco atribuído: {{highlight_vuln[2].user_rank}}</p>
+                                            <p>Risco médio: {{highlight_vuln[2].avg_rank}}</p>
+                                            <p>Variancia de vulnerabilidade: {{highlight_vuln[2].variance}}</p>
                                         </td>
                                         <!-- TODO: Perguntar sobre variancia e top x -->
                                 </tr>
@@ -165,11 +165,10 @@
                     </tr>
                     <!-- Rodapé -->
                     <tr>
-                        <td class="footer">
+                        <td class="footer" style="text-align: center; padding: 20px; color: #666666;">
                             <p>2025 Equipe GT-Crivo.</p>
-                            <!-- TODO: indicar qual é o meio de contato em caso de dúvidas -->
                             <p>Por favor, não responda diretamente a este email. Em caso de dúvidas, envie um email para </p>
-                            <a href="mailto:gt-crivo@dcc.ufmg.br?subject=%5BResposta%20sobre%20Report%20de%20Análise%20de%20Vulnerabilidades%5D" style="text-decoration: none; color: #4242aa;">
+                            <a href="mailto:gt-crivo@dcc.ufmg.br?subject=%5BDúvida%20sobre%20Análise%20de%20Vulnerabilidades%5D" style="text-decoration: none; color: #4242aa;">
                                 <p>gt-crivo@dcc.ufmg.br</p>
                             </a>
                         </td>
