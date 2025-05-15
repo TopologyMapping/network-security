@@ -6,7 +6,7 @@ def categorical_format(value):
     MILD_UPPER_THRESHOLD = 1.75
     MODERATE_UPPER_THRESHOLD = 2.5
     SEVERE_UPPER_THRESHOLD = 3.25
-    
+
     if value < MILD_UPPER_THRESHOLD:
         return f"Mild({value})"
     elif value < MODERATE_UPPER_THRESHOLD:
@@ -20,7 +20,7 @@ def categorical_format(value):
 class SilentUndefined(Undefined):
     def _fail_with_undefined_error(self, *args, **kwargs):
         return ''  # Retorna string vazia em vez de erro
-    
+
 
 
 env = Environment(loader=FileSystemLoader("./templates"),
@@ -39,31 +39,39 @@ TODO:
 
 """
 
-def generate_html(html_data, filename="default", categorical=False):
-        
+def generate_html(html_data, usermail, filename, categorical=False):
+
     if html_data["is_empty"]:
         output = template_empty.render(html_data)
         empty_dir = "../../data/htmls/empty/"
         if not os.path.exists(empty_dir):
-            os.makedirs(empty_dir)
-        with open(f"{empty_dir}{filename}.html", "w") as f:
+            os.makedirs(empty_dir, exist_ok=True)
+        with open(f"{empty_dir}/{filename}", "w") as f:
+            f.write(output)
+        user_dir = f"../../data/byuser/{usermail}"
+        if not os.path.exists(user_dir):
+            os.makedirs(user_dir, exist_ok=True)
+        with open(f"{user_dir}/{filename}", "w") as f:
             f.write(output)
     else:
         output = template.render(html_data)
-        
         if categorical:
             categorical_dir = "../../data/htmls/categorical/"
             if not os.path.exists(categorical_dir):
-                os.makedirs(categorical_dir)
-            with open(f"{categorical_dir}{filename}.html", "w") as f:
+                os.makedirs(categorical_dir, exist_ok=True)
+            with open(f"{categorical_dir}/{filename}", "w") as f:
                 f.write(output)
-                
         else:
             numerical_dir = "../../data/htmls/numerical/"
             if not os.path.exists(numerical_dir):
-                os.makedirs(numerical_dir)
-            with open(f"{numerical_dir}{filename}.html", "w") as f:
+                os.makedirs(numerical_dir, exist_ok=True)
+            with open(f"{numerical_dir}/{filename}", "w") as f:
                 f.write(output)
+        user_dir = f"../../data/byuser/{usermail}"
+        if not os.path.exists(user_dir):
+            os.makedirs(user_dir, exist_ok=True)
+        with open(f"{user_dir}/{filename}", "w") as f:
+            f.write(output)
 
 if __name__ == "__main__":
 
@@ -94,7 +102,4 @@ if __name__ == "__main__":
             }
         ]
     }
-
-
-
     generate_html("1", data)
