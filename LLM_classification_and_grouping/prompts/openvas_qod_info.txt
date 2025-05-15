@@ -1,0 +1,40 @@
+=====
+QOD Value: 99%
+QOD Name: Remote Vulnerability
+Description: Remote active checks (code execution, traversal attack, SQL injection etc.) in which the response clearly shows the presence of the vulnerability.
+
+=====
+QOD Value: 98%
+QOD Name: Remote Application
+Description: Remote active checks (code execution, traversal attack, SQL injection etc.) in which the response clearly shows the presence of the vulnerable application.
+
+=====
+
+QOD Value: 95%
+QOD Name: Remote Active
+Description: Remote active checks (code execution, traversal attack, SQL injection etc.) in which the response shows the likely presence of the vulnerable application or of the vulnerability. "Likely" means that only rare circumstances are possible in which the detection would be wrong.
+
+=====
+QOD Value: 80%
+QOD Name: Remote Banner
+Description: Remote banner checks of applications that offer patch level in version. Many proprietary products do so.
+
+=====
+QOD Value: 80 %
+QOD Name: Executable Version
+Description: Authenticated executable version checks for Linux(oid) or Microsoft Windows systems where applications offer patch level in version.
+
+=====
+QOD Value: 30 %
+QOD Name: Executable Version Unreliable
+Description: Authenticated executable version checks for Linux(oid) systems where applications do not offer patch level in version identification.
+
+=====
+QOD Value: 1 %
+QOD Name: General Note
+Description: General note on potential vulnerability without finding any present application.
+
+=====
+QOD Value: 0 %
+QOD Name: Timeout
+Description: The test was unable to determine a result before it was ended by timeout.

@@ -1,0 +1,39 @@
+=====
+
+Module name: Auxiliary modules 
+Module description: Auxiliary modules do not exploit a target, but can perform useful tasks such as:
+
+Administration - Modify, operate, or manipulate something on target machine
+Analyzing - Tools that perform analysis, mostly password cracking
+Gathering - Gather, collect, or enumerate data from a single target
+Denial of Service - Crash or slow a target machine or service
+Scanning - Scan targets for known vulnerabilities
+Server Support - Run Servers for common protocols such as SMB, FTP, etc
+
+=====
+
+Module name: Encoder modules
+Module description: Encoders take the raw bytes of a payload and run some sort of encoding algorithm, like bitwise XOR. These modules are useful for encoding bad characters such as null bytes.
+
+=====
+
+Module name: Evasion modules 
+Module description: Evasion modules give Framework users the ability to generate evasive payloads that aim to evade AntiVirus, such as Windows Defender, without having to install external tools.
+
+
+=====
+
+Module name: Nop modules
+Module description: Nop modules, short for ‘No Operation’, generate a sequence of ‘No Operation’ instructions that perform no side-effects. NOPs are often used in conjunction with stack buffer overflows.
+
+=====
+
+Module name: Payloads modules 
+Module description: In the context of Metasploit exploit modules, payload modules encapsulate the arbitrary code (shellcode) that is executed as the result of an exploit succeeding. This normally involves the creation of a Metasploit session, but may instead execute code such as adding user accounts, or executing a simple pingback command that verifies that code execution was successful against a vulnerable target.
+
+=====
+
+Module name: Post modules
+Module description: These modules are useful after a machine has been compromised and a Metasploit session has been opened. They perform useful tasks such as gathering, collecting, or enumerating data from a session.
+
+=====
