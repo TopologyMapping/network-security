@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import dataclasses
+import enum
 import json
 import logging
 import pickle
@@ -5,6 +9,7 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 import warnings
 
 import numpy as np
@@ -14,6 +19,7 @@ from deltalake import DeltaTable
 from pandas import DataFrame
 
 import config
+import datastore
 
 
 def read_pickle_dict(fp: Path, columns: list[str]) -> pandas.DataFrame:
@@ -284,7 +290,7 @@ class DatasetManager:
 
         def max_epss_cve_id(vulns):
             return max(vulns, key=lambda x: x["epss"])["cve_id"]
-        
+
         def isin_kev(vulns) -> DataFrame:
             return any(vuln["cve_id"] in self.kev_set for vuln in vulns)
 
@@ -335,7 +341,7 @@ class DatasetManager:
         for feat in config.CATEGORICAL_FEATURES:
             assert features_df[feat].dtype == "category", str(features_df[feat].dtype)
 
-        self.join_org_features(features_df, df)
+        # claude suggested this: self.join_org_features(features_df, shodan_df=df)
         features_df.drop(columns=["max_epss_cve_id"], inplace=True)
 
         return features_df
