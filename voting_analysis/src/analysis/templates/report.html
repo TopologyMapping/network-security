@@ -8,7 +8,7 @@
 <body>
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
-            <td bgcolor="#F5F5F5" align="center" style="padding: 20px 0;">
+            <td bgcolor="#ffffff" align="center" style="padding: 20px 0;">
                 <!-- Contêiner limitado -->
                 <table border="0" cellpadding="0" cellspacing="0" width="600" class="container">
                     <!-- Cabeçalho -->
@@ -26,7 +26,7 @@
                         </td>
                     </tr>
 
-                    <tr>
+                    <tr halign="center">
                         <td>
                             <h3>Comparação entre sua avaliação e a média geral</h3>
                             <img src="cid:relatorio_pessoal" alt="avaliações interno x média geral">
@@ -47,7 +47,7 @@
                             <table>
                                 {% for vuln in highlight_vuln %}
                                 <tr valign="top">
-                                    <td style="width: 60%;">
+                                    <td style="width: 60%; padding-right: 30px">
                                         <h4>{{vuln.title}}</h4>
                                         <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{vuln.id}}">
                                             <p>Visualizar finding 🔗</p>
@@ -73,12 +73,12 @@
                     </tr>     
                     
                     {% endif %}
-                    <tr>
+                    <tr halign="center">
                         <td>
                             <h3>Importância das propriedades das vulnerabilidades em suas análises</h3>
                             <p>Treinamos um modelo para previsão de vulnerabilidades de acordo com o seu perfil. Abaixo, apresentamos um gráfico com as oito propriedades (<em>features</em>) mais relevantes para a previsão dos riscos, segundo seu perfil. Em geral, as propriedades mais importantes
                                 para previsão são aquelas consideradas ativamente por você na atribuição de risco; no entanto, isso pode não ocorrer devido à quantidade reduzida de análises disponíveis para treinar o modelo.</p>
-                            <img margin-bottom="20px" src="cid:importancia" alt="Gráfico de importância das features">
+                            <img style="max-width: 700px" margin-bottom="20px" src="cid:importancia" alt="Gráfico de importância das features">
                         </td>
                     </tr>
                     <tr>
@@ -112,7 +112,7 @@
                     <!-- Rodapé -->
                     <tr>
                         <td class="footer" style="text-align: center; padding: 20px; color: #666666;">
-                            <p>Equipe GT-CRIVO</p>
+                            <p>2025 Equipe GT-Crivo.</p>
                             <a href="mailto:gt-crivo@dcc.ufmg.br?subject=%5BDúvida%20sobre%20Análise%20de%20Vulnerabilidades%5D" style="text-decoration: none; color: #4242aa;">
                                 <p>gt-crivo@dcc.ufmg.br</p>
                             </a>

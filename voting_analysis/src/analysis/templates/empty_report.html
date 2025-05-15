@@ -80,9 +80,17 @@
                         <td style="background-color: #f9f9f9; padding: 20px; border-left: 5px solid #dddddd;">
                             <h3>Suas credenciais:</h3>
                             <ul style="padding-left: 20px;">
-                                <li>Site do sistema: {SITE_INTERN}</li>
-                                <li>Login: {EMAIL_INTERN}</li>
-                                <li>Senha: {SENHA_INTERN}</li>
+                                <li style="margin-bottom: 8px;"><a style="text-decoration: none; color: #4242aa;" href="https://crivo.dcc.ufmg.br/"> Site do sistema</a></li>
+                                <li style="margin-bottom: 8px;">Login
+                                    <ul>
+                                        <li style="list-style-type: none; margin-top: 5px;  margin-left: -20px;">{{ EMAIL_INTERN|e }}</li>
+                                    </ul>
+                                </li>
+                                <li>Senha
+                                    <ul>
+                                        <li style="list-style-type: none; margin-top: 5px; margin-left: -20px;">{{ SENHA_INTERN|e }}</li>
+                                    </ul>
+                                </li>
                             </ul>
                         </td>
                     </tr>
