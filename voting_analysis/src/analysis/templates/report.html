@@ -55,23 +55,29 @@
                             <table>
                                 {% for vuln in highlight_vuln %}
                                 <tr valign="top">
+                                    {% if is_categorical %}
                                     <td style="width: 60%; padding-right: 30px">
                                         <h4>{{vuln.title}}</h4>
                                         <a style="color: #4242aa; text-decoration: none; "href="https://crivo.dcc.ufmg.br/finding/{{vuln.id}}">
                                             <p>Visualizar finding 🔗</p>
                                         </a>
                                     </td>
-                                    {% if is_categorical %}
                                     <td>
                                         <p>Risco atribuído: {{vuln.user_rank | categorical_format}}</p>
                                         <p>Risco médio: {{vuln.avg_rank | categorical_format}}</p>
-                                        <p>Percentil variância: Top {{vuln.var_percentile}}%</p>
+                                        <!-- <p>Percentil variância: Top {{vuln.var_percentile}}%</p> -->
                                     </td>
                                     {% else %}
+                                    <td style="width: 60%; padding-right: 30px">
+                                        <h4>{{vuln.title}}</h4>
+                                        <a style="color: #4242aa; text-decoration: none; "href="https://crivo-num.dcc.ufmg.br/finding/{{vuln.id}}">
+                                            <p>Visualizar finding 🔗</p>
+                                        </a>
+                                    </td>
                                     <td>
                                         <p>Risco atribuído: {{vuln.user_rank}}</p>
                                         <p>Risco médio: {{vuln.avg_rank}}</p>
-                                        <p>Percentil variância: Top {{vuln.var_percentile}}%</p>
+                                        <!-- <p>Percentil variância: Top {{vuln.var_percentile}}%</p> -->
                                     </td>
                                     {% endif %}
                                 </tr>
@@ -89,7 +95,7 @@
                             {% if is_email %}
                                 <img style="max-width: 700px" margin-bottom="20px" src="cid:importancia" alt="Gráfico de importância das features">
                             {% else %}
-                                <img style="max-width: 700px" margin-bottom="20px" src="importancia.png" alt="Gráfico de importância das features">
+                                <img style="max-width: 700px" margin-bottom="20px" src="importance.png" alt="Gráfico de importância das features">
                             {% endif %}
                         </td>
                     </tr>
