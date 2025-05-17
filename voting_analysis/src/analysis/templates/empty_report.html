@@ -14,8 +14,12 @@
                     <!-- Cabeçalho -->
                     <tr>
                         <td class="header">
-                            <img src="https://www.gt-crivo.dcc.ufmg.br/images/logo.png" alt="Logo gt-crivo" style="width: 100px; height: auto; display: block; margin: 0 auto; margin-bottom: 30px; margin-top: 20px">
-                            <h2 style="margin: 0; margin-top: 10px;">Convite para Análise de Vulnerabilidades</h2>
+                            {% if is_email %}
+                                <img src="cid:logo_gt_crivo" alt="Logo gt-crivo" style="width: 100px; height: auto; display: block; margin: 0 auto; margin-bottom: 30px; margin-top: 20px">
+                            {% else %}
+                                <img src="https://www.gt-crivo.dcc.ufmg.br/images/logo.png" alt="Logo gt-crivo" style="width: 100px; height: auto; display: block; margin: 0 auto; margin-bottom: 30px; margin-top: 20px">
+                            {% endif %}
+                            <h2 style="margin: 0; margin-top: 10px;">Relatório sobre Análise de Vulnerabilidades</h2>
                         </td>
                     </tr>
                     <!-- Conteúdo -->
@@ -25,16 +29,16 @@
                             <p>Ainda dá tempo de participar da atividade de análise de vulnerabilidades do GT-CRIVO. Sua participação é insumo importante para aprimoramento das melhoria da soluções desenvolvidas no projeto.</p>
                         </td>
                     </tr>
-                
+
                     <tr>
                         <td>
                             <h2 style="color: #333333;">Status do Projeto</h2>
                                 <p>
                                     A atividade de avaliação dos resultados do  GT-CRIVO está em andamento e diversos residentes já completaram sua participação. No entanto, notamos que ainda não recebemos suas análises, e queremos ressaltar o quanto sua perspectiva é importante para nós.
-                                </p>    
+                                </p>
                         </td>
                     </tr>
-                    
+
                     <tr>
                         <td style="padding: 25px; background-color: #457cb1; border-radius: 0px; border-left: 5px solid #4d9bbd; margin-bottom: 20px;">
                             <h2 style="color: #ffffff;">Por que precisamos da sua participação</h2>
@@ -101,11 +105,11 @@
                     <tr>
                         <td colspan="2" style="border-top: 1px solid #cccccc; height:10px; line-height:1px; font-size:0;"></td>
                     </tr>
-                    
+
                     <!-- Rodapé -->
                     <tr>
                         <td class="footer" style="text-align: center; padding: 20px; color: #666666;">
-                            <p>2025 Equipe GT-Crivo.</p>
+                            <p>Equipe GT-Crivo</p>
                             <a href="mailto:gt-crivo@dcc.ufmg.br?subject=%5BDúvida%20sobre%20Análise%20de%20Vulnerabilidades%5D" style="text-decoration: none; color: #4242aa;">
                                 <p>gt-crivo@dcc.ufmg.br</p>
                             </a>
