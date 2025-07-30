@@ -27,6 +27,7 @@ def send_email(server, name, email, has_vote):
     
     msg = MIMEMultipart("related")
     msg["From"] = SENDER
+
     msg["To"] = email
     msg["CC"] = "" # adjust
     msg["Subject"] = "" # change to a subject msg, like -> msg["Subject"] = "Bem-vindo(a) ao DefectDojo Crivo!"
