@@ -1,0 +1,2 @@
+User 1,template1@email.com,1
+User 2,template2@email.com,0
