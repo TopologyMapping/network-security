@@ -27,9 +27,9 @@ def send_email(server, name, email, has_vote):
     
     msg = MIMEMultipart("related")
     msg["From"] = SENDER
-    msg["To"] = "" # change to msg["To"] = email
-    msg["CC"] = "" # just for test
-    msg["Subject"] = "" # change to a subbject msg, like -> msg["Subject"] = "Bem-vindo(a) ao DefectDojo Crivo!"
+    msg["To"] = email
+    msg["CC"] = "" # adjust
+    msg["Subject"] = "" # change to a subject msg, like -> msg["Subject"] = "Bem-vindo(a) ao DefectDojo Crivo!"
 
     alternative = MIMEMultipart("alternative") # safeguard
     alternative.attach(MIMEText(email_body, "html"))
@@ -44,7 +44,7 @@ def send_email(server, name, email, has_vote):
         for path, cid, filename in images:
             attach_inline_image(msg, path, cid, filename)
     
-    email = ["", ""] # kind of a img list 
+    email = [email, ""] # insert o remove strings here to send copies of the email to others users
 
     try:
         server.sendmail(SENDER, email, msg.as_string())
