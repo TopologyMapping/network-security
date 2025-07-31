@@ -5,3 +5,4 @@ SMTP_PASS = "YOUR_SMTP_PASS_HERE"
 SENDER = "Equipe GT Crivo"
 USERS_FILE = "users_emails_list.txt"
 REPORT_FILES = "./reports"
+WAIT_PERIOD_SECS = 25

@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import time
 
-from settings import SENDER, SMTP_PASS, SMTP_PORT, SMTP_SERVER, SMTP_USER, USERS_FILE, REPORT_FILES
+from settings import SENDER, SMTP_PASS, SMTP_PORT, SMTP_SERVER, SMTP_USER, USERS_FILE, REPORT_FILES, WAIT_PERIOD_SECS
 
 def load_html_template(email):
     path = os.path.join(REPORT_FILES, f"{email}.html")
@@ -63,8 +63,8 @@ def send_emails():
                 for line in file:
                     name, email, has_vote = map(str.strip, line.split(","))
                     send_email(server, name, email, has_vote)
-                    time.sleep(25)
+                    time.sleep(WAIT_PERIOD_SECS)
         except Exception as e:
             print(f"Error: {e}")
-        
+
 send_emails()
