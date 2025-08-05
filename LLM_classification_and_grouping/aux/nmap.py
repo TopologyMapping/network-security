@@ -162,6 +162,8 @@ def analysis_nmap_scripts(
     # sorting files by name to ensure the order of classification
     nmap_files = sorted(nmap_files, key=lambda file: os.path.basename(file))
 
+    print("Processing files", len(nmap_files))
+
     for nmap_file in nmap_files[initial_range:final_range]:
 
         content = read_file_with_fallback(nmap_file)
@@ -187,7 +189,7 @@ def analysis_nmap_scripts(
         info = NmapScriptInfo(
             file=nmap_file,
             cves=cves,
-            name=file_name,
+            id=file_name,
             categories=categories,
             classification=classification,
         ).to_dict()

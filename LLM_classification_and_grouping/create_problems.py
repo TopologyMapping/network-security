@@ -429,74 +429,73 @@ def process_json_files(folder_path: str):
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
-        if file_name.endswith(".json") and file_name.startswith(
-            "output_classification_40gb_7700_8150_openvas_nuclei"
-        ):
+        if file_name.endswith(".json"):
             file_path = os.path.join(folder_path, file_name)
 
             with open(file_path, "r") as file:
                 data = json.load(file)
 
             for scan_app in data.keys():
-
                 if scan_app == "tests_with_no_CVE":
                     continue
 
-                for classification_results_for_vulnerability_scanner_script in data[
+                for key, list_classification in data[
                     scan_app
-                ]:
-
-                    cves = classification_results_for_vulnerability_scanner_script[
-                        "cves"
-                    ]
-
-                    # if there is no CVE, it is stored as an empty string to be used as a key in the dictionary
-                    if cves == []:
-                        cves = [""]
-
-                    # storing results of grouping as the classificaiton file where the script was classified together with the script name
-                    file_info = FileInfo(
-                        classification_file_name=file_name,
-                        vulnerability_tool_script_name=classification_results_for_vulnerability_scanner_script[
-                            "file"
-                        ],
-                        script_id=classification_results_for_vulnerability_scanner_script[
-                            "script_id"
-                        ],
-                    )
-
-                    classification_info_extracted = filter_classification_text(
-                        classification_results_for_vulnerability_scanner_script[
-                            "classification"
-                        ],
-                        errors_llm,
-                        errors_regex,
-                        file_info,
-                    )
-
-                    if not classification_info_extracted:
+                ].items():
+                    if key == "scripts_without_cves":
                         continue
+                    for classification_results_for_vulnerability_scanner_script in list_classification:
+                        cves = classification_results_for_vulnerability_scanner_script[
+                            "cves"
+                        ]
 
-                    what_is_detected = classification_info_extracted["what_is_detected"]
-                    application = classification_info_extracted["application"]
-                    category = classification_info_extracted["category"]
-                    subcategory = classification_info_extracted["subcategory"]
+                        # if there is no CVE, it is stored as an empty string to be used as a key in the dictionary
+                        if cves == None or cves == []:
+                            cves = ["No-CVE"]
+                        elif isinstance(cves, str):
+                            cves = [cves]
 
-                    category_subcategory = CategorySubcategory(
-                        category=category, subcategory=subcategory
-                    )
+                        # storing results of grouping as the classificaiton file where the script was classified together with the script name
+                        file_info = FileInfo(
+                            classification_file_name=file_name,
+                            vulnerability_tool_script_name=classification_results_for_vulnerability_scanner_script[
+                                "file"
+                            ],
+                            script_id=classification_results_for_vulnerability_scanner_script[
+                                "id"
+                            ],
+                        )
 
-                    grouping_info(
-                        problems,
-                        cves,
-                        category_subcategory,
-                        what_is_detected,
-                        application,
-                        file_info,
-                        errors_llm,
-                    )
+                        classification_info_extracted = filter_classification_text(
+                            classification_results_for_vulnerability_scanner_script[
+                                "classification"
+                            ],
+                            errors_llm,
+                            errors_regex,
+                            file_info,
+                        )
 
-    print(problems[""])
+                        if not classification_info_extracted:
+                            continue
+
+                        what_is_detected = classification_info_extracted["what_is_detected"]
+                        application = classification_info_extracted["application"]
+                        category = classification_info_extracted["category"]
+                        subcategory = classification_info_extracted["subcategory"]
+
+                        category_subcategory = CategorySubcategory(
+                            category=category, subcategory=subcategory
+                        )
+
+                        grouping_info(
+                            problems,
+                            cves,
+                            category_subcategory,
+                            what_is_detected,
+                            application,
+                            file_info,
+                            errors_llm,
+                        )
 
     # transform dataclasses in dicts
     serializable_problems = {

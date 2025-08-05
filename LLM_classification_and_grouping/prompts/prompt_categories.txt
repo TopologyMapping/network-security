@@ -5,6 +5,9 @@ Category: {Category}
 Subcategory: {Subcategory}
 Explanations: {explanation about the code}
 
-If a subcategory matches the script, please simply report the number of the subcategory and do not provide any additional explanation. If no match is found, please propose and describe a new category or subcategory.
+If a subcategory matches the script, please simply report the name of the subcategory and do not provide any additional explanation. If no match is found, please propose and describe a new category or subcategory.
+
+For example, if the category is "1. Category: Simulated Attack", change the curly braces {Category} to {Simulated Attack} and not {1. Simulated Attack}.
+Another example: if the subcategory is "1.3. Subcategory: Protected Information", change the curly braces to {Protected Information} and not {1.3. Protected Information}.
 
 Think carefully.
