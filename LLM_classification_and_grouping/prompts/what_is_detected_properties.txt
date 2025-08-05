@@ -1,0 +1,9 @@
+1.3 Properties of a System: Scripts may identify properties of a system. Although properties of a system are not vulnerabilities, they can be used by malicious actors to obtain information about the system. For scripts that identify properties of a system, please find: (A) a one-phrase description of the property being identified; (B) the value of the identified property, if applicable.
+
+To complete this task, analyze the detection script code, metadata, comments and verifications to find what is detected, the application, specific targets, and other necessary information. If you cannot find one of the required information, just answer with "Uncertain".
+
+Please fill out the template below. Change only the sections within curly braces, keep the braces on the response, and follow the intructions within the braces considering the explanation above:
+
+What is detected: {select one of Vulnerability, Unmaintained Software, or Property of a System, as described above and answer directly}
+A: {answer to subitem (A) of what is detected}
+B: {answer to subitem (B) of what is detected}

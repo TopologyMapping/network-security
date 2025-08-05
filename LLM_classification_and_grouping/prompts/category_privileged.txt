@@ -1,0 +1,5 @@
+2. Category: Privileged Scan. Description: Performs scans with privileged information, like (i) credentials provided by the user to specific services, (ii) when running inside the target machine directly or (iii) runs the tests with privileged permissions or access. The script may run internal commands and gather detailed info about installed packages and configurations.
+
+2.1. Subcategory: Package List. Description: Extracts the list of installed packages to check the versions of running services and correlate them with known vulnerabilities. If the code looks for some application or service in a list or registry of installed packages, then it falls into that subcategory.
+2.2. Subcategory: Service information. Description: Reviews the configuration of services, files, and security policies to identify misconfigurations that could expose the system to risks or collect information about the target machine.
+2.3. Subcategory: Log File Analysis. Description: Analyzes system logs for suspicious activity, potential security incidents, or errors that could indicate misconfigurations or breaches.

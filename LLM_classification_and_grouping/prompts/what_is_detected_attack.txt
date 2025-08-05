@@ -1,0 +1,10 @@
+1.1 Vulnerability: A script can perform a series of actions to detect a vulnerability or a set of vulnerabilities. In most cases a vulnerability is identified by a CVE number, and impacts a set of products identified by CPE numbers. But a vulnerability could be configurations problems on the machine, without a CVE number, allowing bad behaviours.  For scripts that scan a vulnerability, please find: (A) the application under test, which contains the vulnerability or flaw; this may be referred to in the description of the script but not clear from the script’s code. (B) the version of the application being tested, (C) the intermediary application or service, if any, used to exploit the vulnerability; this can be inferred by looking at any request being constructed, look at the contents of the request, its inputs, and where it is sent.
+
+To complete this task, analyze the detection script code, metadata, comments and verifications to find what is detected, the application, specific targets, and other necessary information. If you cannot find one of the required information, just answer with "Uncertain".
+
+Please fill out the template below. Change only the sections within curly braces, keep the braces on the response, and follow the intructions within the braces considering the explanation above:
+
+What is detected: {select one of Vulnerability, Unmaintained Software, or Property of a System, as described above and answer directly}
+A: {answer to subitem (A) of what is detected}
+B: {answer to subitem (B) of what is detected}
+C: {answer to subitem (C) of what is detected}
