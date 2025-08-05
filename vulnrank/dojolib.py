@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import dataclasses
 import enum
-import logging
-import pathlib
 import pickle
 import re
-from typing import Optional
-
+import logging
+import pathlib
 import pandas as pd
+
+from typing import ClassVar
+from settings import SEVERITY_LABELS
+from collections import defaultdict
 from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
@@ -30,20 +31,20 @@ class DojoFinding:
     mitigation: str
     cve: str
 
-    FINDING_DESCRIPTION_GET_HOSTNAME = re.compile(r"\*\*Hostname\*\*: (.+)")
-    HOSTNAME_KEYWORD_REGEX = re.compile(r"-[^0-9]")
+    FINDING_DESCRIPTION_GET_HOSTNAME: ClassVar[re.Pattern] = re.compile(r"\*\*Hostname\*\*: (.+)")
+    HOSTNAME_KEYWORD_REGEX: ClassVar[re.Pattern] = re.compile(r"-[^0-9]")
 
-    def parse_hostname(self) -> Optional[str]:
+    def parse_hostname(self) -> str | None:
         match = DojoFinding.FINDING_DESCRIPTION_GET_HOSTNAME.search(self.description)
         if not match:
             return None
         return match.group(1).strip()
 
     @staticmethod
-    def anonymized_hostname_has_keyword(anon_hostname: Optional[str]) -> bool:
+    def anonymized_hostname_has_keyword(anon_hostname: str | None) -> bool:
         if anon_hostname is None:
             return False
-        return True if DojoFinding.HOSTNAME_KEYWORD_REGEX.search(anon_hostname) else False
+        return bool(DojoFinding.HOSTNAME_KEYWORD_REGEX.search(anon_hostname))
 
     def compute_features(self, ds: datastore.DataStore) -> DojoFindingFeatures:
         cve_data = ds.get_data()
@@ -67,38 +68,39 @@ class DojoFinding:
         cross_site_scripting = 0
         in_kev = False
 
-        for cve in cve_list:
-            cve = cve.lower()
-            impact = cve_data.get(cve, {}).get('impact', {})
-            cvss_score_candidate = impact.get('cvss_score', 0)
+        for raw_cve in cve_list:
+            cve = raw_cve.lower()
+            impact = cve_data.get(cve, {}).get("impact", {})
+            cvss_score_candidate = impact.get("cvss_score", 0)
             max_cvss_score = max(max_cvss_score, cvss_score_candidate)
 
-            epss = cve_data.get(cve, {}).get('epss', {})
-            if epss.get('epss_percentile', 0) >= 0.8:
+            epss = cve_data.get(cve, {}).get("epss", {})
+            if epss.get("epss_percentile", 0) >= 0.8:
                 num_cves_epss_p80 += 1
 
-            epss_score_candidate = epss.get('epss_score', 0)
+            epss_score_candidate = epss.get("epss_score", 0)
             if max_epss_score < epss_score_candidate:
-                cve_class = cve_data.get(cve, {}).get('classification', {})
-                cwes = cve_data.get(cve, {}).get('cwes', [])
-                cpes = cve_data.get(cve, {}).get('cpes', [])
+                cve_class = cve_data.get(cve, {}).get("classification", {})
+                cwes = cve_data.get(cve, {}).get("cwes", [])
+                cpes = cve_data.get(cve, {}).get("cpes", [])
                 max_epss_score = epss_score_candidate
-                max_epss_percentile = epss.get('epss_percentile', 0)
+                max_epss_percentile = epss.get("epss_percentile", 0)
                 max_epss_num_cwes = len(set(cwes))
                 max_epss_num_cpes = len(set(cpes))
-                remote_code_execution = cve_class.get('remote code execution', 0)
-                privilege_escalation = cve_class.get('privilege escalation', 0)
-                information_disclosure = cve_class.get('information disclosure', 0)
-                denial_of_service = cve_class.get('denial of service', 0)
-                buffer_overflow = cve_class.get('buffer overflow', 0)
-                cross_site_request_forgery = cve_class.get('cross site request forgery', 0)
-                sql_injection = cve_class.get('sql injection', 0)
-                cross_site_scripting = cve_class.get('cross site scripting', 0)
+                remote_code_execution = cve_class.get("remote code execution", 0)
+                privilege_escalation = cve_class.get("privilege escalation", 0)
+                information_disclosure = cve_class.get("information disclosure", 0)
+                denial_of_service = cve_class.get("denial of service", 0)
+                buffer_overflow = cve_class.get("buffer overflow", 0)
+                cross_site_request_forgery = cve_class.get("cross site request forgery", 0)
+                sql_injection = cve_class.get("sql injection", 0)
+                cross_site_scripting = cve_class.get("cross site scripting", 0)
 
-            in_kev = max(in_kev, 'kev' in cve_data.get(cve, {}))
+            in_kev = max(in_kev, "kev" in cve_data.get(cve, {}))
 
         return DojoFindingFeatures(
             fid=self.id,
+            severity=SEVERITY_LABELS.get(self.severity, -1),
             max_cvss_score=max_cvss_score,
             max_epss_score=max_epss_score,
             max_epss_percentile=max_epss_percentile,
@@ -107,6 +109,7 @@ class DojoFinding:
             num_cves=len(cve_list),
             num_cves_epss_p80=num_cves_epss_p80,
             num_cves_2020=len([c for c in cve_list if int(c.split("-")[1]) >= 2020]),
+            cve_age=max(([int(c.split("-")[1]) for c in cve_list]), default=None),
             cve_remote_code_execution=remote_code_execution,
             cve_privilege_escalation=privilege_escalation,
             cve_information_disclosure=information_disclosure,
@@ -117,7 +120,6 @@ class DojoFinding:
             cve_cross_site_scripting=cross_site_scripting,
             in_kev=in_kev,
             has_dns_keyword=DojoFinding.anonymized_hostname_has_keyword(hostname),
-            severity=OpenvasSeverity(self.severity),
             os=OperatingSystem.from_description(self.description),
             mitigation=MitigationType.parse_raw(self.mitigation),
         )
@@ -129,11 +131,11 @@ class DojoRanking:
     user_id: int
     email: str
     timestamp: str
-    vote_class: Optional[str] = None
-    vote_num: Optional[int] = None
-    ranking: Optional[int] = dataclasses.field(init=False)
+    risk_class: str | None = None
+    risk_num: int | None = None
+    ranking: int | None = dataclasses.field(init=False)
 
-    CLASS_MAP = {
+    CLASS_MAP: ClassVar[dict[str, float | None]] = {
         "Mild": 1.0,
         "Moderate": 2.0,
         "Severe": 3.0,
@@ -142,10 +144,10 @@ class DojoRanking:
     }
 
     def __post_init__(self):
-        if self.vote_num is not None:
-            self.ranking = int(self.vote_num)
-        elif self.vote_class is not None:
-            self.ranking = DojoRanking.CLASS_MAP[self.vote_class]
+        if self.risk_num is not None:
+            self.ranking = int(self.risk_num)
+        elif self.risk_class is not None:
+            self.ranking = DojoRanking.CLASS_MAP[self.risk_class]
         else:
             self.ranking = None
 
@@ -153,12 +155,13 @@ class DojoRanking:
 @dataclasses.dataclass
 class DojoFindingsMetadata:
     cve_list: list[str]
-    hostname: Optional[str]
+    hostname: str | None
 
 
 @dataclasses.dataclass
 class DojoFindingFeatures:
     fid: int
+    severity: int
     max_cvss_score: float
     max_epss_score: float
     max_epss_percentile: float
@@ -167,6 +170,7 @@ class DojoFindingFeatures:
     num_cves: int
     num_cves_epss_p80: int
     num_cves_2020: int
+    cve_age: int
     cve_remote_code_execution: float
     cve_privilege_escalation: float
     cve_information_disclosure: float
@@ -177,11 +181,10 @@ class DojoFindingFeatures:
     cve_cross_site_scripting: float
     in_kev: bool
     has_dns_keyword: bool
-    severity: OpenvasSeverity
     os: OperatingSystem
     mitigation: MitigationType
 
-    CATEGORICAL_FEATURES = ["in_kev", "has_dns_keyword", "severity", "os", "mitigation"]
+    CATEGORICAL_FEATURES: ClassVar[list[str]] = ["in_kev", "has_dns_keyword", "os", "mitigation"]
 
 
 FEATURE_NAMES = {
@@ -221,6 +224,7 @@ OS_VENDOR_MAP = {
     None: "unknown",
 }
 
+
 class OperatingSystem(enum.StrEnum):
     LINUX = "linux"
     WINDOWS = "windows"
@@ -241,50 +245,53 @@ class MitigationType(enum.StrEnum):
     VENDORFIX = "VendorFix"
     WORKAROUND = "Workaround"
     WILLNOTFIX = "WillNotFix"
+    NONEAVAILABLE = "NoneAvailable"
+    EMPTY = "Empty"
+    OTHERS = "Others"
 
     @staticmethod
     def parse_raw(mitigation_raw: str) -> MitigationType:
-        return MitigationType(mitigation_raw.split('\n')[0])
-
-
-class OpenvasSeverity(enum.StrEnum):
-    CRITICAL = "Critical"
-    HIGH = "High"
-    MEDIUM = "Medium"
-    LOW = "Low"
-    INFO = "Info"
-    UNDEFINED = "Undefined"
+        mitigation = mitigation_raw.strip()
+        if not mitigation:
+            return MitigationType.EMPTY
+        first_line = mitigation.split("\n")[0]
+        if not first_line:
+            return MitigationType.EMPTY
+        if first_line in {"None", "N/A", "NoneAvailable"}:
+            return MitigationType.NONEAVAILABLE
+        try:
+            return MitigationType(first_line)
+        except ValueError:
+            return MitigationType.OTHERS
 
 
 def load_features_rankings(
-    basedir: pathlib.Path,
-    prefix: str,
+    features_file: pathlib.Path,
+    risk_file: pathlib.Path,
     ds: datastore.DataStore,
 ) -> tuple[list[DojoFindingFeatures], list[DojoRanking]]:
-    fp = basedir / f"{prefix}_features.pickle"
-    findings_raw: list[dict] = pickle.load(open(fp, "rb"))
+    findings_raw: list[dict] = pickle.load(open(features_file, "rb"))
     findings: list[DojoFinding] = [DojoFinding(**f) for f in findings_raw]
     features: list[DojoFindingFeatures] = [f.compute_features(ds) for f in findings]
 
-    fp = basedir / f"{prefix}_votes.pickle"
-    rankings_raw: list[dict] = pickle.load(open(fp, "rb"))
+    rankings_raw: list[dict] = pickle.load(open(risk_file, "rb"))
     rankings = [DojoRanking(**r) for r in rankings_raw]
 
     return features, rankings
 
 
 def get_merged_df(
-    findings: list[DojoFindingFeatures], rankings: list[DojoRanking]
+    findings: list[DojoFindingFeatures], rankings: list[DojoRanking],
 ) -> pd.DataFrame:
     df_features = pd.DataFrame(findings)
     for col in DojoFindingFeatures.CATEGORICAL_FEATURES:
         df_features[col] = df_features[col].astype("category")
         df_rankings = pd.DataFrame(rankings)
-    df_rankings = df_rankings.drop(columns=["user_id", "timestamp", "vote_class", "vote_num"])
-    df_merged = pd.merge(
-        df_features, df_rankings, left_on="fid", right_on="id", how="left"
-    )
-    return df_merged.drop(columns=["id", "fid"])
+    df_rankings = df_rankings.drop(columns=["user_id", "timestamp", "risk_class", "risk_num"])
+    df_merged = df_features.merge(df_rankings, left_on="fid", right_on="id", how="left")
+    if "id_y" in df_merged.columns:
+        df_merged = df_merged.drop(columns=["id_y"])
+    return df_merged
 
 
 def compute_model_accuracy(
@@ -293,21 +300,22 @@ def compute_model_accuracy(
     target_email: str,
     transfer_learning=False,  # will use user_id as category when True
     iterations=10,
-    num_estimators=1000,
-    learning_rate=0.1,
-    max_depth=10,
+    num_estimators=100,
+    learning_rate=0.3,
+    max_depth=6,
+    max_assessments=100,
 ) -> tuple[int, list[float], dict[str, list[float]]]:
     rmses = []
     feat2imps = defaultdict(list)
 
     userdf = df[df["email"] == target_email]
-    otherdf = df[df["email"] != target_email]
+    otherdf = df[(df["email"] != target_email) & df["ranking"].notnull()]
     x = userdf.drop(columns=["ranking"])
     y = userdf["ranking"]
     xother = otherdf.drop(columns=["ranking"])
     yother = otherdf["ranking"]
 
-    trainsize = int(train_frac * len(userdf))
+    trainsize = int(train_frac * max_assessments)
     testsize = len(userdf) - trainsize
     if testsize < 1:
         logging.warning("Aborting; test set size less than 1")
@@ -319,6 +327,12 @@ def compute_model_accuracy(
         xtrain, xtest, ytrain, ytest = train_test_split(
             x, y, test_size=testsize, random_state=seed, shuffle=True
         )
+
+        for cat in DojoFindingFeatures.CATEGORICAL_FEATURES:
+            if cat in xtrain.columns:
+                xtrain[cat] = xtrain[cat].astype("category")
+            if cat in xtest.columns:
+                xtest[cat] = xtest[cat].astype("category")
 
         if transfer_learning:
             xtrain = pd.concat([xtrain, xother])
@@ -343,7 +357,9 @@ def compute_model_accuracy(
         rmse = root_mean_squared_error(ytest, ypred)
         rmses.append(rmse)
 
-        for i, feature in enumerate(xtrain.columns):
-            feat2imps[feature].append(model.feature_importances_[i])
+        importances = model.get_booster().get_score(importance_type="gain")
+        for feat in xtrain.columns:
+            feat2imps[feat].append(importances.get(feat, 0.0))
+
 
     return (trainsize, rmses, feat2imps)
