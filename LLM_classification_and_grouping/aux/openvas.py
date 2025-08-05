@@ -253,10 +253,7 @@ def analysis_openvas_NVTS(
 
     openvas_files: list[str] = get_list_unique_files(openvas_folder)
 
-    i = 0
-    for openvas_file in openvas_files[initial_range:final_range]:
-
-        i+=1
+    for i, openvas_file in enumerate(openvas_files[initial_range:final_range]):
         print ("Arquivo atual:", i)
         openvas_file = os.path.abspath(openvas_file)
 
