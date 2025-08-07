@@ -91,6 +91,14 @@ class KeysProblemsInfo:
     vuln_name: tuple
 
 
+@dataclasses.dataclass
+class ClassificationResult:
+    cves: list
+    file: str
+    id: str
+    classification: str
+
+
 # Classes to handle exceptions
 class RegexError(Exception):
     """Exception raised for errors related to regular expressions."""
@@ -444,13 +452,22 @@ def process_json_files(folder_path: str):
                 ].items():
                     if key == "scripts_without_cves":
                         continue
-                    for classification_results_for_vulnerability_scanner_script in list_classification:
-                        cves = classification_results_for_vulnerability_scanner_script[
-                            "cves"
-                        ]
+                    
+                    classification_results = [
+                        ClassificationResult(
+                            cves=item.get("cves"),
+                            file=item.get("file"),
+                            id=item.get("id"),
+                            classification=item.get("classification"),
+                        )
+                        for item in list_classification
+                    ]
+
+                    for result in classification_results:
+                        cves = result.cves
 
                         # if there is no CVE, it is stored as an empty string to be used as a key in the dictionary
-                        if cves == None or cves == []:
+                        if cves is None or cves == []:
                             cves = ["No-CVE"]
                         elif isinstance(cves, str):
                             cves = [cves]
@@ -458,18 +475,12 @@ def process_json_files(folder_path: str):
                         # storing results of grouping as the classificaiton file where the script was classified together with the script name
                         file_info = FileInfo(
                             classification_file_name=file_name,
-                            vulnerability_tool_script_name=classification_results_for_vulnerability_scanner_script[
-                                "file"
-                            ],
-                            script_id=classification_results_for_vulnerability_scanner_script[
-                                "id"
-                            ],
+                            vulnerability_tool_script_name=result.file,
+                            script_id=result.id,
                         )
 
                         classification_info_extracted = filter_classification_text(
-                            classification_results_for_vulnerability_scanner_script[
-                                "classification"
-                            ],
+                            result.classification,
                             errors_llm,
                             errors_regex,
                             file_info,
