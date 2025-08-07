@@ -4,12 +4,12 @@ import json
 import regex as re
 import pickle as pkl
 
-base_path = Path(__file__).parent / "word_list"
-tar_file = base_path / 'relevant_words.tar'
+BASE_PATH = Path(__file__).parent / "word_list"
+TAR_FILE = BASE_PATH / 'relevant_words.tar'
 
 json_data_list = []
 
-with tarfile.open(tar_file, 'r') as tar:
+with tarfile.open(TAR_FILE, 'r') as tar:
     for member in tar.getmembers():
         if member.isfile():
             try:
@@ -42,15 +42,15 @@ for i, words in classes_word_dict.items():
 
 word_classes_list = list(set(word_classes_list))
 
-input_file = base_path / 'wordlist_wonumber.pkl'
-with input_file.open('rb') as f:
+INPUT_FILE = BASE_PATH / 'wordlist_wonumber.pkl'
+with INPUT_FILE.open('rb') as f:
     word_dict = pkl.load(f)
 
 word_classes_list = [(item, word_dict[item]) for item in word_classes_list if item in word_dict]
-word_classes_list = sorted(word_classes_list, key=lambda x: x[1], reverse=True)[1:] # removing "net"
+word_classes_list = sorted(word_classes_list, key=lambda x: x[1], reverse=True)
 
-output_file = base_path / 'unique_classified_words.txt'
+OUTPUT_FILE = BASE_PATH / 'unique_classified_words.txt'
 
-with output_file.open('w') as f:
+with OUTPUT_FILE.open('w') as f:
     for i, j in word_classes_list:
         f.write(f'{i},{j}\n')
