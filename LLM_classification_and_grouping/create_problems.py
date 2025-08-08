@@ -99,6 +99,14 @@ class ClassificationResult:
     classification: str
 
 
+@dataclasses.dataclass
+class ClassificationInfo:
+    what_is_detected: str = ""
+    application: str = ""
+    category: str = ""
+    subcategory: str = ""
+
+
 # Classes to handle exceptions
 class RegexError(Exception):
     """Exception raised for errors related to regular expressions."""
@@ -247,23 +255,25 @@ def sort_problems(problems: dict):
 
 def filter_classification_text(
     classification_text, errors_llm: list, errors_regex: list, file_info: FileInfo
-) -> dict:
-    info = {}
-
-    file_info = (
-        file_info.to_dict()
-    )  # this will help to store information in a JSON file
+) -> ClassificationInfo:
+    file_info_dict = file_info.to_dict()
 
     try:
         info = extract_task_information(classification_text)
+        return ClassificationInfo(
+            what_is_detected=info.get("what_is_detected", ""),
+            application=info.get("application", ""),
+            category=info.get("category", ""),
+            subcategory=info.get("subcategory", ""),
+        )
     except RegexError:
-        errors_regex.append(file_info)
+        errors_regex.append(file_info_dict)
     except LLMError:
-        errors_llm.append(file_info)
+        errors_llm.append(file_info_dict)
     except Exception as e:
         print("Error: ", e)
 
-    return info
+    return ClassificationInfo()
 
 
 def grouping_info(
@@ -486,24 +496,24 @@ def process_json_files(folder_path: str):
                             file_info,
                         )
 
-                        if not classification_info_extracted:
+                        # Skip if extraction failed (empty ClassificationInfo)
+                        ci = classification_info_extracted
+                        if not ci or (isinstance(ci, ClassificationInfo) and not any(dataclasses.asdict(ci).values())):
                             continue
 
-                        what_is_detected = classification_info_extracted["what_is_detected"]
-                        application = classification_info_extracted["application"]
-                        category = classification_info_extracted["category"]
-                        subcategory = classification_info_extracted["subcategory"]
+                        wd = ci.what_is_detected
+                        app = ci.application
+                        cat = ci.category
+                        subcat = ci.subcategory
 
-                        category_subcategory = CategorySubcategory(
-                            category=category, subcategory=subcategory
-                        )
+                        cat_subcat = CategorySubcategory(category=cat, subcategory=subcat)
 
                         grouping_info(
                             problems,
                             cves,
-                            category_subcategory,
-                            what_is_detected,
-                            application,
+                            cat_subcat,
+                            wd,
+                            app,
                             file_info,
                             errors_llm,
                         )
