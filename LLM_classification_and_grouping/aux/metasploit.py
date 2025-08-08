@@ -89,23 +89,7 @@ def classification_metasploit(
 
     classification: str = ""
 
-    # based on the module information, we classify the module with the correct prompt
-    if privileged is True and (module == "Exploit" or exploit_is_executed is True):
-        classification = llm.classification_text_generation(
-            content, PROMPT_METASPLOIT_EXPLOIT_PRIVILEGED
-        )
-
-        # in this case, the category and subcategory are already defined
-        category_privileged_exploit = """ 
-
-        How the script works?
-        Category: {Simulated Attack}
-        Subcategory: {Privileged Attack}
-
-        """
-        classification += category_privileged_exploit
-
-    elif module == "Post":
+    if module == "Post":
         classification = llm.classification_text_generation(
             content, PROMPT_METASPLOIT_POST
         )

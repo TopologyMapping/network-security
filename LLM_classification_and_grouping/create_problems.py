@@ -91,6 +91,22 @@ class KeysProblemsInfo:
     vuln_name: tuple
 
 
+@dataclasses.dataclass
+class ClassificationResult:
+    cves: list
+    file: str
+    id: str
+    classification: str
+
+
+@dataclasses.dataclass
+class ClassificationInfo:
+    what_is_detected: str = ""
+    application: str = ""
+    category: str = ""
+    subcategory: str = ""
+
+
 # Classes to handle exceptions
 class RegexError(Exception):
     """Exception raised for errors related to regular expressions."""
@@ -239,23 +255,25 @@ def sort_problems(problems: dict):
 
 def filter_classification_text(
     classification_text, errors_llm: list, errors_regex: list, file_info: FileInfo
-) -> dict:
-    info = {}
-
-    file_info = (
-        file_info.to_dict()
-    )  # this will help to store information in a JSON file
+) -> ClassificationInfo:
+    file_info_dict = file_info.to_dict()
 
     try:
         info = extract_task_information(classification_text)
+        return ClassificationInfo(
+            what_is_detected=info.get("what_is_detected", ""),
+            application=info.get("application", ""),
+            category=info.get("category", ""),
+            subcategory=info.get("subcategory", ""),
+        )
     except RegexError:
-        errors_regex.append(file_info)
+        errors_regex.append(file_info_dict)
     except LLMError:
-        errors_llm.append(file_info)
+        errors_llm.append(file_info_dict)
     except Exception as e:
         print("Error: ", e)
 
-    return info
+    return ClassificationInfo()
 
 
 def grouping_info(
@@ -429,74 +447,76 @@ def process_json_files(folder_path: str):
     errors_regex: list = []
 
     for file_name in os.listdir(folder_path):
-        if file_name.endswith(".json") and file_name.startswith(
-            "output_classification_40gb_7700_8150_openvas_nuclei"
-        ):
+        if file_name.endswith(".json"):
             file_path = os.path.join(folder_path, file_name)
 
             with open(file_path, "r") as file:
                 data = json.load(file)
 
             for scan_app in data.keys():
-
                 if scan_app == "tests_with_no_CVE":
                     continue
 
-                for classification_results_for_vulnerability_scanner_script in data[
+                for key, list_classification in data[
                     scan_app
-                ]:
-
-                    cves = classification_results_for_vulnerability_scanner_script[
-                        "cves"
+                ].items():
+                    if key == "scripts_without_cves":
+                        continue
+                    
+                    classification_results = [
+                        ClassificationResult(
+                            cves=item.get("cves"),
+                            file=item.get("file"),
+                            id=item.get("id"),
+                            classification=item.get("classification"),
+                        )
+                        for item in list_classification
                     ]
 
-                    # if there is no CVE, it is stored as an empty string to be used as a key in the dictionary
-                    if cves == []:
-                        cves = [""]
+                    for result in classification_results:
+                        cves = result.cves
 
-                    # storing results of grouping as the classificaiton file where the script was classified together with the script name
-                    file_info = FileInfo(
-                        classification_file_name=file_name,
-                        vulnerability_tool_script_name=classification_results_for_vulnerability_scanner_script[
-                            "file"
-                        ],
-                        script_id=classification_results_for_vulnerability_scanner_script[
-                            "script_id"
-                        ],
-                    )
+                        # if there is no CVE, it is stored as an empty string to be used as a key in the dictionary
+                        if cves is None or cves == []:
+                            cves = ["No-CVE"]
+                        elif isinstance(cves, str):
+                            cves = [cves]
 
-                    classification_info_extracted = filter_classification_text(
-                        classification_results_for_vulnerability_scanner_script[
-                            "classification"
-                        ],
-                        errors_llm,
-                        errors_regex,
-                        file_info,
-                    )
+                        # storing results of grouping as the classificaiton file where the script was classified together with the script name
+                        file_info = FileInfo(
+                            classification_file_name=file_name,
+                            vulnerability_tool_script_name=result.file,
+                            script_id=result.id,
+                        )
 
-                    if not classification_info_extracted:
-                        continue
+                        classification_info_extracted = filter_classification_text(
+                            result.classification,
+                            errors_llm,
+                            errors_regex,
+                            file_info,
+                        )
 
-                    what_is_detected = classification_info_extracted["what_is_detected"]
-                    application = classification_info_extracted["application"]
-                    category = classification_info_extracted["category"]
-                    subcategory = classification_info_extracted["subcategory"]
+                        # Skip if extraction failed (empty ClassificationInfo)
+                        ci = classification_info_extracted
+                        if not ci or (isinstance(ci, ClassificationInfo) and not any(dataclasses.asdict(ci).values())):
+                            continue
 
-                    category_subcategory = CategorySubcategory(
-                        category=category, subcategory=subcategory
-                    )
+                        wd = ci.what_is_detected
+                        app = ci.application
+                        cat = ci.category
+                        subcat = ci.subcategory
 
-                    grouping_info(
-                        problems,
-                        cves,
-                        category_subcategory,
-                        what_is_detected,
-                        application,
-                        file_info,
-                        errors_llm,
-                    )
+                        cat_subcat = CategorySubcategory(category=cat, subcategory=subcat)
 
-    print(problems[""])
+                        grouping_info(
+                            problems,
+                            cves,
+                            cat_subcat,
+                            wd,
+                            app,
+                            file_info,
+                            errors_llm,
+                        )
 
     # transform dataclasses in dicts
     serializable_problems = {

@@ -253,8 +253,8 @@ def analysis_openvas_NVTS(
 
     openvas_files: list[str] = get_list_unique_files(openvas_folder)
 
-    for openvas_file in openvas_files[initial_range:final_range]:
-
+    for i, openvas_file in enumerate(openvas_files[initial_range:final_range]):
+        print ("Arquivo atual:", i)
         openvas_file = os.path.abspath(openvas_file)
 
         content = read_file_with_fallback(openvas_file)
@@ -368,6 +368,7 @@ def get_list_unique_files(openvas_folder: str) -> list[str]:
     for value in openvas_checked_files["main_files"].values():
         list_unique_files += value
 
+    print("Processing files", len(list_unique_files))
     return list_unique_files
 
 
