@@ -21,10 +21,6 @@ x = np.arange(1, len(y) + 1)
 knee = KneeLocator(x, y)
 
 words_knee = list(words)[:knee.knee]
-removed_words = ["berlin", "cli", "com", "comcast", "comcastbusiness", "disa", "east", "edu", "eur", "exacttarget", "google", "googlefiber", "gov", "ide",
-            "jax", "kpn", "lax", "linode", "localhost", "mia", "mil", "net", "north", "nyc", "ord", "ovh", "pentagon", "primus", "ptr", "resnet", "reverse",
-            "south", "spectrum", "sub", "swisscom", "syd", "telecable", "telefonica", "telekom", "telia", "toyama", "telkom", "tokyo", "turktelekom",
-            "verizon", "viettel", "vodafone", "west", "wind", "yahoo", "zayo", "oraclecloud"]
 
 REMOVED_FILE = Path(__file__).parent / 'removed-words.txt'
 with REMOVED_FILE.open('r') as f:
