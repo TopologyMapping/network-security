@@ -38,7 +38,7 @@ def split_into_blocks(file_name, block_size):
         print(f"Total words read: {len(words)}")
 
     blocks = ["\n".join(words[i:i + block_size]) for i in range(0, len(words), block_size)]
-    
+
     print(f"Total blocks created: {len(blocks)}")
     return blocks
 
@@ -65,7 +65,7 @@ except Exception as e:
     print(e)
     sys.exit(1)
 
-with open('prompt.txt', 'r') as f:
+with open('data/prompt.txt', 'r') as f:
     SYSTEM_PROMPT = f.read()
 
 

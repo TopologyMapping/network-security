@@ -22,13 +22,13 @@ knee = KneeLocator(x, y)
 
 words_knee = list(words)[:knee.knee]
 
-REMOVED_FILE = Path(__file__).parent / 'removed-words.txt'
+REMOVED_FILE = Path(__file__).parent / 'data/removed-words.txt'
 with REMOVED_FILE.open('r') as f:
     removed_words = f.read().splitlines()
 
 new_word_list = set(words_knee) - set(removed_words)
 
-PRESEED_FILE = Path(__file__).parent / 'dns-keywords.txt'
+PRESEED_FILE = Path(__file__).parent / 'data/dns-initial-keywords.txt'
 with PRESEED_FILE.open('r') as f:
     preseed_words = f.read().splitlines()
 
