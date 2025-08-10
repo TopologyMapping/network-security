@@ -1,0 +1,5 @@
+{
+    "orig_xml_path": "~/gtcrivo-data/ufmg-scans/report-ufmg-a-minqod85.xml",
+    "output_xml_path": "./filtered.xml",
+    "nvt_oid_list_path": "~/gtcrivo-data/vuln-selection/vulns-ufmg-a-qod85.txt"
+}
