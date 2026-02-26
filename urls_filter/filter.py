@@ -7,142 +7,120 @@ import logging
 import pathlib 
 from typing import Optional
 
-DnsKey = tuple[str, ...]
-
 TLDS_PATH = "./data/tlds.json"  
 SPECIAL_CCTLD_PATH = "./data/special-cctlds-list.txt"  
-KEEP_CCTLD = False  
 IMMEDIATE_CCTLD = True  
-PATH_LEVELS_TO_KEEP = 1  
-SUBDOMAIN_CONTEXT_LEVELS = 1  
+PATH_LEVELS_TO_KEEP = 1 # Number of path levels to keep in the anonymized URL (e.g., 1 keeps the first level, 2 keeps the first two levels, etc.) 
+SUBDOMAIN_CONTEXT_LEVELS = 1 # Number of subdomain levels to keep as context before anonymizing the rest (e.g., 1 keeps the immediate subdomain, 2 keeps the immediate and next subdomain, etc.)
 
 class UrlFilter:
     def __init__(
         self,
-        tlds_path: pathlib.Path = TLDS_PATH, 
-        special_cctlds_path: pathlib.Path = SPECIAL_CCTLD_PATH, 
-        keep_cctld: bool = KEEP_CCTLD, 
-        immediate_cctld: bool = IMMEDIATE_CCTLD,
+        tlds_path: pathlib.Path = pathlib.Path(TLDS_PATH), 
+        special_cctlds_path: pathlib.Path = pathlib.Path(SPECIAL_CCTLD_PATH), 
         path_levels_to_keep: int = PATH_LEVELS_TO_KEEP,
         subdomain_context_levels: int = SUBDOMAIN_CONTEXT_LEVELS,
+        immediate_cctld: bool = IMMEDIATE_CCTLD,
     ) -> None:
 
-        self.keep_cctld = keep_cctld
         self.immediate_cctld = immediate_cctld
         self.path_levels_to_keep = path_levels_to_keep
         self.subdomain_context_levels = subdomain_context_levels
-        self.domain2id: dict[DnsKey, int] = {}
-        self.parent2entry2id: dict[DnsKey, dict[str, int]] = defaultdict(dict)
 
-        with open(tlds_path, "r") as f:
-            tlds_data = json.load(f)
-            self.tlds = {}
-            for entry in tlds_data:
-                tld = entry["domain"].lstrip(".")
-                self.tlds[tld] = entry.get("type", "")
+        try:
+            with open(tlds_path, "r") as f:
+                tlds_data = json.load(f)
+                self.tlds = {entry["domain"].lstrip("."): entry.get("type", "") for entry in tlds_data}
+        except FileNotFoundError:
+            logging.error(f"TLDs file not found: {tlds_path}")
+            exit(1)
 
-        with open(special_cctlds_path, "r") as f:
-            self.special_cctlds = set(line.strip() for line in f if line.strip())
+        try:
+            with open(special_cctlds_path, "r") as f:
+                self.special_cctlds = set(line.strip() for line in f if line.strip())
+        except FileNotFoundError:
+            logging.warning(f"Special ccTLDs file not found: {special_cctlds_path}. Proceeding without special ccTLDs.")
+            self.special_cctlds = set()
 
     def is_cctld(self, tld: str) -> bool:
         return tld in self.tlds and self.tlds[tld] == "country-code"
 
     def is_special_cctld(self, tld: str) -> bool:
         return tld in self.special_cctlds
-    
-    def anonymize_domain(self, parts: list[str]) -> DnsKey:
+
+    def get_domkey_parts(self, parts: list[str]) -> list[str]:
         tld = parts[-1]
-        domkey = tuple(parts[-2:])
+        domkey_parts = parts[-2:]
         if not self.immediate_cctld:
             if self.is_cctld(tld) and not self.is_special_cctld(tld):
-                domkey = tuple(parts[-3:])
-        if domkey not in self.domain2id:
-            self.domain2id[domkey] = len(self.domain2id) + 1
-        return domkey
+                domkey_parts = parts[-3:]
+        return domkey_parts
     
-    def anonymize_subdomain(self, subdomain: str, parentkey: DnsKey) -> str:
-        nextid = len(self.parent2entry2id[parentkey]) + 1
-        subid = self.parent2entry2id[parentkey].setdefault(subdomain, nextid)
-        wordcnt = len(subdomain.split("-"))
-        wordstr = f"-{wordcnt}w" if wordcnt > 1 else ""
-        return f"n{subid}{wordstr}"
-
-    def anonymize_subdomain_words(self, subdomain: str) -> str:
+    def get_word_count_str(self, subdomain: str) -> str:
         wordcnt = len(subdomain.split("-"))
         return f"{wordcnt}w" 
 
+    def anonymize_paths(self, paths: list[str]) -> list[str]:
+        anon_paths = []
+        num_keep_paths = min(self.path_levels_to_keep, len(paths))
+
+        # Keeps the first N path levels as they are
+        anon_paths.extend(paths[:num_keep_paths])
+
+        # Turn the rest into word counts
+        for path in paths[num_keep_paths:]:
+            anon_paths.append(self.get_word_count_str(path))
+
+        return anon_paths
+
     def anonymize_url(self, url: str) -> Optional[str]:
-        if not url: 
-            return None
+        if not url: return None
          
         # Extracts query string
         query_string = ""
         if '?' in url:
-            url_parts = url.split('?', 1)
-            url = url_parts[0]
-            query_string = url_parts[1]
+            url, query_string = url.split('?', 1)
 
-        # Erases protocol
-        parts = []
-        if "://" in url:
-            parts = url.split("://", 1)[1]
-
-        # Divides URL into domain and paths
-        parts = parts.split("/")
-        domain = parts[0]  
-        parts.pop(0)  
+        # Extracts protocol and host 
+        if "://" not in url: return None
+        protocol, rest = url.split("://", 1)
+        if protocol not in ("http", "https"):
+            logging.warning("skipping [%s]: unsupported protocol", url)
+            return None
+        url_parts = rest.split("/", 1) 
+        domain_str, path_str = url_parts[0], (url_parts[1] if len(url_parts) > 1 else "")
 
         # Splits the domain into parts (subdomains + domain + TLD)
-        domain_parts = domain.split(".")
-
+        domain_parts = domain_str.split(".")
+        
         # Checks if the domain has at least 2 parts (domain.tld)
         if len(domain_parts) < 2:
-            logging.warning("skipping [%s]: insufficient levels", url)
+            logging.warning("skipping [%s]: insufficient levels in host", url)
             return None
         
         ccTLD = domain_parts[-1]
-        
-        domkey = self.anonymize_domain(domain_parts)
-        domain_id_str = f"n{self.domain2id[domkey]}"
 
-        subdomains = domain_parts[: -len(domkey)]
+        domkey_parts = self.get_domkey_parts(domain_parts)
+        base_domain_str = ".".join(domkey_parts)
+
+        subdomains = domain_parts[: -len(domkey_parts)]
         anon_subdomains = []
-
-        parentkey = domkey
         for i, subdomain in enumerate(reversed(subdomains)):
             if i < self.subdomain_context_levels:
-                anonymized = self.anonymize_subdomain(subdomain, parentkey)
-
-                parentkey = (subdomain,) + parentkey
+                anon_subdomains.append(subdomain)
             else:
-                anonymized = self.anonymize_subdomain_words(subdomain)
-            
-            anon_subdomains.append(anonymized)
+                anon_subdomains.append(self.get_word_count_str(subdomain))
         anon_subdomains.reverse()
-        
-        anon_sub_str = ".".join(anon_subdomains) + "." if anon_subdomains else ""
+        anon_subdomain_str = ".".join(anon_subdomains) + "." if anon_subdomains else ""
 
-        paths = parts
-        anon_paths = []
+        # Process paths
+        anon_paths = self.anonymize_paths(path_str.split("/")) 
+        anon_path_str = ("/" + "/".join(anon_paths)) if anon_paths != [''] else ""
 
-        # Keeps the first N path levels as is,
-        # only counts the additional levels
-        num_keep_paths = min(self.path_levels_to_keep, len(paths))
-        kept_paths = paths[:num_keep_paths]
-        remaining_paths = paths[num_keep_paths:]
-
-        anon_paths.extend(kept_paths)
-         
-        if remaining_paths:
-            wordcnt = len(remaining_paths)
-            wordstr = f"{wordcnt}p"
-            anon_paths.append(wordstr)
-        anon_path_str = ("/" + "/".join(anon_paths)) if anon_paths else ""
- 
+        # Normalizes query string by keeping only parameter names and sorting them
         anon_query_str = ""
         if query_string:
             param_names = []
-
             for param in query_string.split('&'):
                 if '=' in param:
                     param_name = param.split('=', 1)[0]
@@ -156,16 +134,12 @@ class UrlFilter:
                 param_names = sorted(param_names) 
                 anon_query_str = "?" + "&".join(param_names)
 
-        if self.keep_cctld and self.is_cctld(ccTLD) and not self.is_special_cctld(ccTLD):
-            return f"{anon_sub_str}{domain_id_str}.{ccTLD}{anon_path_str}{anon_query_str}"
-        else:
-            return f"{anon_sub_str}{domain_id_str}{anon_path_str}{anon_query_str}"
-            
+        return f"{protocol}://{anon_subdomain_str}{base_domain_str}{anon_path_str}{anon_query_str}"
+
     def filter_urls(self, urls: list) -> list:
         anonymized_urls = dict()
         for url in urls:
             anonymized = self.anonymize_url(url)
-
             if anonymized != None and anonymized not in anonymized_urls:
                 anonymized_urls[anonymized] = url
         return list(anonymized_urls.values())
@@ -237,7 +211,6 @@ def main() -> None:
     filter = UrlFilter(
         tlds_path=args.tlds_file,
         special_cctlds_path=args.special_cctlds_file, 
-        keep_cctld=args.keep_cctld,
         immediate_cctld=args.immediate_cctld,
         path_levels_to_keep=args.path_levels,
         subdomain_context_levels=args.subdomain_context_levels,

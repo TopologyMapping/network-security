@@ -8,10 +8,6 @@ def filter_instance():
     return UrlFilter()
 
 @pytest.fixture
-def filter_instance_keep_cctld():
-    return UrlFilter(keep_cctld=True)
-
-@pytest.fixture
 def filter_instance_immediate_cctld():
     return UrlFilter(immediate_cctld=True)
 
@@ -26,7 +22,7 @@ class TestFilterUrls:
         """Testing a single URL identity key."""
         url = "http://example.com/unique"
         result = filter_instance.anonymize_url(url)
-        expected = "n1/unique"
+        expected = "http://example.com/unique"
         assert result == expected
 
     def test_multiple_urls(self, filter_instance):
@@ -86,24 +82,39 @@ class TestFilterUrls:
         ]
         result = [filter_instance.anonymize_url(url) for url in urls]
         expected = [
-            "1w.n1.n1/page",
-            "1w.n2.n1/page",
-            "1w.n1.n1/page", 
-            "1w.n3.n1/page" 
+            "http://1w.b.example.com/page",
+            "http://1w.c.example.com/page",
+            "http://1w.b.example.com/page", 
+            "http://1w.d.example.com/page" 
         ]
         assert sorted(result) == sorted(expected)
 
     def test_hyphenated_subdomains(self, filter_instance):
         """Test filtering of URLs with hyphenated subdomains."""
         urls = [
-            "http://sub-domain.example.com/page",
-            "http://sub-domain.example.com/page",
-            "http://another-sub.example.com/page" 
+            "http://sub-domain.a.example.com/page",
+            "http://sub-domain.b.a.example.com/page",
+            "http://another-sub.a.example.com/page" 
         ]
         result = filter_instance.filter_urls(urls)
         expected = [
-            "http://sub-domain.example.com/page", 
-            "http://another-sub.example.com/page",
+            "http://sub-domain.a.example.com/page", 
+            "http://sub-domain.b.a.example.com/page"
+        ]
+        assert sorted(result) == sorted(expected)
+
+    def test_hyphenated_subdomains_identity_key(self, filter_instance):
+        """Test the identity key of URLs with hyphenated subdomains."""
+        urls = [
+            "http://sub-domain.a.example.com/page",
+            "http://another-sub.a.example.com/page",
+            "http://sub-domain.a.example.com/page" 
+        ]
+        result = [filter_instance.anonymize_url(url) for url in urls]
+        expected = [
+            "http://2w.a.example.com/page", 
+            "http://2w.a.example.com/page", 
+            "http://2w.a.example.com/page" 
         ]
         assert sorted(result) == sorted(expected)
 
@@ -159,10 +170,10 @@ class TestFilterUrls:
         ]
         result = [filter_instance.anonymize_url(url) for url in urls] 
         expected = [
-            "n1/page1",
-            "n1/page1/1p",
-            "n1/page1/2p",
-            "n1/page1/2p"
+            "http://example.com/page1",
+            "http://example.com/page1/1w",
+            "http://example.com/page1/1w/1w",
+            "http://example.com/page1/1w/1w"
         ]
         assert sorted(result) == sorted(expected)
 
@@ -170,14 +181,14 @@ class TestFilterUrls:
         """Test URL with a single query parameter."""
         url = "http://example.com/page?id=123"
         result = filter_instance.anonymize_url(url)
-        expected = "n1/page?id"
+        expected = "http://example.com/page?id"
         assert result == expected
 
     def test_url_with_multiple_query_params_identity_key(self, filter_instance):
         """Test URL with multiple query parameters."""
         url = "http://example.com/page?p=X&q=Y"
         result = filter_instance.anonymize_url(url)
-        expected = "n1/page?p&q"
+        expected = "http://example.com/page?p&q"
         assert result == expected
 
     def test_url_with_multiple_query_params_different_order(self, filter_instance):
@@ -216,28 +227,28 @@ class TestFilterUrls:
         """Test URL with query parameter that has no value."""
         url = "http://example.com/page?flag&other=value"
         result = filter_instance.anonymize_url(url)
-        expected = "n1/page?flag&other"
+        expected = "http://example.com/page?flag&other"
         assert result == expected
 
     def test_url_with_query_and_path(self, filter_instance):
         """Test URL with both path and query parameters."""
         url = "http://example.com/api/search?query=test&limit=10"
         result = filter_instance.anonymize_url(url) 
-        expected = "n1/api/1p?limit&query"
+        expected = "http://example.com/api/1w?limit&query"
         assert result == expected
     
     def test_url_with_query_without_path(self, filter_instance):
         """Test URL with query parameters but no path."""
         url = "http://example.com?search=test&sort=date"
         result = filter_instance.anonymize_url(url)
-        expected = "n1?search&sort"
+        expected = "http://example.com?search&sort"
         assert result == expected
 
     def test_url_with_three_path_levels(self, filter_instance):
         """Test that path levels beyond 1 are counted with path suffix."""
         url = "http://example.com/api/search/results"
         result = filter_instance.anonymize_url(url)
-        expected = "n1/api/2p"
+        expected = "http://example.com/api/1w/1w"
         assert result == expected
 
     def test_url_with_many_path_levels_deduplication(self, filter_instance):
@@ -251,36 +262,28 @@ class TestFilterUrls:
         result = filter_instance.filter_urls(urls) 
         assert len(result) == 3
 
+    def test_url_with_hyphenated_path_segments(self, filter_instance):
+        """Test URL with hyphenated path segments."""
+        url = "http://example.com/api/v1-search/results-page-1"
+        result = filter_instance.anonymize_url(url)
+        expected = "http://example.com/api/2w/3w"
+        assert result == expected
+
     def test_regular_cctld(self, filter_instance):
         """Test URL with regular ccTLD (not special) identity key."""
         url = "http://example.uk/page"
         result = filter_instance.anonymize_url(url)
         # Regular ccTLDs use 3-level domain key (domain + cc tld)
-        expected = "n1/page"
-        assert result == expected
-
-    def test_regular_cctld_with_keep_flag(self, filter_instance_keep_cctld):
-        """Test URL with regular ccTLD and keep_cctld flag identity key."""
-        url = "http://example.uk/page"
-        result = filter_instance_keep_cctld.anonymize_url(url) 
-        expected = "n1.uk/page"
+        expected = "http://example.uk/page"
         assert result == expected
 
     def test_special_cctld(self, filter_instance):
         """Test URL with special ccTLD identity key."""
-        url = "http://example.co/page"
+        url = "http://a.b.c.d.example.co/page"
         result = filter_instance.anonymize_url(url)
-        expected = "n1/page"
+        expected = "http://1w.1w.1w.d.example.co/page"
         assert result == expected
 
-    def test_special_cctld_with_keep_flag(self, filter_instance_keep_cctld):
-        """Test URL with special ccTLD and keep_cctld flag."""
-        url = "http://example.co/page"
-        result = filter_instance_keep_cctld.anonymize_url(url)
-        # Special CC TLDs don't get kept even with keep_cctld=True
-        expected = "n1/page"
-        assert result == expected
-    
     def test_no_urls(self, filter_instance):
         """Test filtering with an empty URL list."""
         urls = []
