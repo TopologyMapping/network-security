@@ -134,7 +134,8 @@ class UrlFilter:
                 param_names = sorted(param_names) 
                 anon_query_str = "?" + "&".join(param_names)
 
-        return f"{protocol}://{anon_subdomain_str}{base_domain_str}{anon_path_str}{anon_query_str}"
+        identity_key = f"{protocol}://{anon_subdomain_str}{base_domain_str}{anon_path_str}{anon_query_str}"
+        return identity_key 
 
     def filter_urls(self, urls: list) -> list:
         anonymized_urls = dict()
