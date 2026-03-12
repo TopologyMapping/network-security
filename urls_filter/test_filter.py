@@ -272,74 +272,74 @@ class TestFilterUrls:
     def test_regular_cctld(self, filter_instance):
         """Test URL with regular ccTLD (not special) identity key."""
         urls = [
-            "http://example.uk/page",
-            "http://a.example.uk/page",
-            "http://a.b.example.uk/page",
-            "http://a.b.c.example.uk/page",
+            "http://example.co.uk/page",
+            "http://a.example.co.uk/page",
+            "http://a.b.example.co.uk/page",
+            "http://a.b.c.example.co.uk/page",
         ]
         result = [filter_instance.anonymize_url(url) for url in urls]
         expected = [
-            "http://example.uk/page", 
-            "http://a.example.uk/page",
-            "http://1w.b.example.uk/page",
-            "http://1w.1w.c.example.uk/page"
+            "http://example.co.uk/page", 
+            "http://a.example.co.uk/page",
+            "http://1w.b.example.co.uk/page",
+            "http://1w.1w.c.example.co.uk/page"
         ]
         assert result == expected
 
     def test_regular_cctld_with_hyphenated_subdomains(self, filter_instance):
         """Test URL with regular ccTLD and hyphenated subdomains."""
         urls = [
-            "http://sub-domain.example.uk/page",
-            "http://sub-domain.a.example.uk/page",
-            "http://another-sub.sub-domain.a.example.uk/page",
-            "http://sub-domain.another-sub.example.uk/page",
-            "http://sub-domain.b.a.example.uk/page",
+            "http://sub-domain.example.co.uk/page",
+            "http://sub-domain.a.example.co.uk/page",
+            "http://another-sub.sub-domain.a.example.co.uk/page",
+            "http://sub-domain.another-sub.example.co.uk/page",
+            "http://sub-domain.b.a.example.co.uk/page",
         ]
         result = [filter_instance.anonymize_url(url) for url in urls]
         expected = [
-            "http://sub-domain.example.uk/page", 
-            "http://2w.a.example.uk/page", 
-            "http://2w.2w.a.example.uk/page",
-            "http://2w.another-sub.example.uk/page",
-            "http://2w.1w.a.example.uk/page",
+            "http://sub-domain.example.co.uk/page", 
+            "http://2w.a.example.co.uk/page", 
+            "http://2w.2w.a.example.co.uk/page",
+            "http://2w.another-sub.example.co.uk/page",
+            "http://2w.1w.a.example.co.uk/page",
         ]
         assert sorted(result) == sorted(expected)
 
     def test_special_cctld(self, filter_instance):
         """Test URL with special ccTLD identity key."""
         urls = [
-            "http://example.co/page",
-            "http://a.example.co/page",
-            "http://a.b.example.co/page",
-            "http://a.b.c.example.co/page",
-            "http://a.b.c.d.example.co/page",
+            "http://example.gov.us/page",
+            "http://a.example.com.au/page",
+            "http://a.b.example.edu.au/page",
+            "http://a.b.c.example.co.uk/page",
+            "http://a.b.c.d.example.co.uk.co/page",
         ]
         result = [filter_instance.anonymize_url(url) for url in urls]
         expected = [
-            "http://example.co/page",
-            "http://a.example.co/page",
-            "http://1w.b.example.co/page",
-            "http://1w.1w.c.example.co/page",
-            "http://1w.1w.1w.d.example.co/page",
+            "http://example.gov.us/page",
+            "http://a.example.com.au/page",
+            "http://1w.b.example.edu.au/page",
+            "http://1w.1w.c.example.co.uk/page",
+            "http://1w.1w.1w.d.example.co.uk.co/page",
         ]
         assert result == expected
 
     def test_special_cctld_with_hyphenated_subdomains(self, filter_instance):
         """Test URL with special ccTLD and hyphenated subdomains."""
         urls = [
-            "http://sub-domain.example.co/page",
-            "http://sub-domain.a.example.co/page",
-            "http://another-sub.sub-domain.a.example.co/page",
-            "http://sub-domain.another-sub.example.co/page",
-            "http://sub-domain.b.a.example.co/page",
+            "http://sub-domain.example.co.uk/page",
+            "http://sub-domain.a.example.co.uk/page",
+            "http://another-sub.sub-domain.a.example.co.uk/page",
+            "http://sub-domain.another-sub.example.co.uk/page",
+            "http://sub-domain.b.a.example.co.uk/page",
         ]
         result = [filter_instance.anonymize_url(url) for url in urls]
         expected = [
-            "http://sub-domain.example.co/page", 
-            "http://2w.a.example.co/page", 
-            "http://2w.2w.a.example.co/page",
-            "http://2w.another-sub.example.co/page",
-            "http://2w.1w.a.example.co/page",
+            "http://sub-domain.example.co.uk/page", 
+            "http://2w.a.example.co.uk/page", 
+            "http://2w.2w.a.example.co.uk/page",
+            "http://2w.another-sub.example.co.uk/page",
+            "http://2w.1w.a.example.co.uk/page",
         ]
         assert sorted(result) == sorted(expected)
 

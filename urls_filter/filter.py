@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-from collections import defaultdict
 import json
 import logging
 import pathlib 
@@ -42,6 +41,9 @@ class UrlFilter:
             logging.warning(f"Special ccTLDs file not found: {special_cctlds_path}. Proceeding without special ccTLDs.")
             self.special_cctlds = set()
 
+    def is_tld(self, tld: str) -> bool:
+        return tld in self.tlds
+
     def is_cctld(self, tld: str) -> bool:
         return tld in self.tlds and self.tlds[tld] == "country-code"
 
@@ -49,11 +51,14 @@ class UrlFilter:
         return tld in self.special_cctlds
 
     def get_domkey_parts(self, parts: list[str]) -> list[str]:
-        tld = parts[-1]
-        domkey_parts = parts[-2:]
-        if not self.immediate_cctld:
-            if self.is_cctld(tld) and not self.is_special_cctld(tld):
-                domkey_parts = parts[-3:]
+        tlds = list() 
+        for part in reversed(parts):
+            if self.is_tld(part):
+                tlds.append(part)
+            else:
+                break
+        
+        domkey_parts = parts[-(len(tlds) + 1):]
         return domkey_parts
     
     def get_word_count_str(self, subdomain: str) -> str:
@@ -90,7 +95,7 @@ class UrlFilter:
         url_parts = rest.split("/", 1) 
         domain_str, path_str = url_parts[0], (url_parts[1] if len(url_parts) > 1 else "")
 
-        # Splits the domain into parts (subdomains + domain + TLD)
+        # Splits the domain into parts (subdomains + domain + TLDs)
         domain_parts = domain_str.split(".")
         
         # Checks if the domain has at least 2 parts (domain.tld)
@@ -98,8 +103,6 @@ class UrlFilter:
             logging.warning("skipping [%s]: insufficient levels in host", url)
             return None
         
-        ccTLD = domain_parts[-1]
-
         domkey_parts = self.get_domkey_parts(domain_parts)
         base_domain_str = ".".join(domkey_parts)
 
