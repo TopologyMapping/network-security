@@ -1,15 +1,13 @@
 services:
   zaproxy:
-    image: zaproxy/zap-weekly
+    image: zaproxy/zap-stable
     command: ["zap.sh", "-config", "api.key=${ZAP_API_KEY}", "-daemon", "-host", "0.0.0.0", "-port", "8080", "-config", "api.addrs.addr.name=.*", "-config", "api.addrs.addr.regex=true"]
-    ports:
-      - "8080:8080"
-    networks:
-      - zapnet
-    environment:
-      - ZAP_API_KEY=${ZAP_API_KEY}
+    # ports:
+    #   - "8080:8080"
+    env_file:
+      - ./config.env
     volumes:
-      - shared_data:/shared_data
+      - ./data:/data
 
   framework:
     build: ./framework
@@ -18,17 +16,10 @@ services:
       - ZAP_API_KEY=${ZAP_API_KEY}
       - ZAP_PROXY_ADDRESS=zaproxy
       - ZAP_PROXY_PORT=8080
-    networks:
-      - zapnet
+    env_file:
+      - ./config.env
     depends_on:
       - zaproxy
     volumes:
-      - ./framework:/app
-      - shared_data:/shared_data
-
-networks:
-  zapnet:
-    driver: bridge
-
-volumes:
-  shared_data:
+      - ./config.json:/data/config.json
+      - ./data:/data
