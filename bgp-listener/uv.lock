@@ -1,0 +1,23 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[[package]]
+name = "exabgp"
+version = "5.0.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/cb/bfe2206ecda11daf0f0636956bbb7b758c0f1a71345adae710d3dbe39b23/exabgp-5.0.5.tar.gz", hash = "sha256:f9771cbf8658fb708b512f42c257d2605873afbac268781f3373110a7decf470", size = 372174, upload-time = "2026-03-17T12:47:37.856Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/10/f1/dfadb82a49a51678d836605953f14cf241c4f416a4a6fc8d65f423f0c117/exabgp-5.0.5-py3-none-any.whl", hash = "sha256:683b70f5b38a48ab7a55f1a183d8940e06e68f4c38116407ce45f5b780115374", size = 612231, upload-time = "2026-03-17T12:47:36.275Z" },
+]
+
+[[package]]
+name = "exabgp-announce"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "exabgp" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "exabgp", specifier = ">=5.0" }]

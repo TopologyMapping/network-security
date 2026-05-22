@@ -1,0 +1,7 @@
+[project]
+name = "exabgp-announce"
+version = "0.1.0"
+description = "Simple ExaBGP route announcer"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["exabgp>=5.0"]
